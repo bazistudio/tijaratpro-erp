@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import "@/lib/api/interceptors"; // registers Axios interceptors (device-id + 401 refresh)
 import AuthHydrator from "@/components/auth/AuthHydrator";
 
 const geistSans = Geist({

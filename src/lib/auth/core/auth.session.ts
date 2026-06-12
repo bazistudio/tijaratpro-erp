@@ -47,28 +47,7 @@ export function isSessionValid(session: AuthSession | null): boolean {
   return session.expiresAt > Date.now();
 }
 
-/**
- * Get access token safely
- */
-export function getAccessToken(): string | null {
-  const session = getSession();
-
-  if (!session) return null;
-  if (!isSessionValid(session)) return null;
-
-  return session.accessToken;
-}
-
-/**
- * Get refresh token safely
- */
-export function getRefreshToken(): string | null {
-  const session = getSession();
-
-  if (!session) return null;
-
-  return session.refreshToken;
-}
+// Removed getAccessToken and getRefreshToken to prevent mixed sources of truth
 
 /**
  * Get device ID (Electron + browser safe)
@@ -87,21 +66,15 @@ export function getDeviceId(): string {
 }
 
 /**
- * Update session tokens (used after refresh)
+ * Update session expiry (used after refresh)
  */
-export function updateSessionTokens(
-  accessToken: string,
-  refreshToken: string,
-  expiresAt: number
-) {
+export function updateSessionExpiry(expiresAt: number) {
   const session = getSession();
 
   if (!session) return;
 
   const updated: AuthSession = {
     ...session,
-    accessToken,
-    refreshToken,
     expiresAt,
   };
 

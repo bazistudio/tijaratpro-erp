@@ -13,22 +13,34 @@
 import { useEffect } from "react";
 import { useAuthStore } from "@/lib/auth/core/auth.store";
 import { getSession, isSessionValid } from "@/lib/auth/core/auth.session";
+import { getMeUser } from "@/lib/auth/core/auth.client";
 
 export default function AuthHydrator() {
   const setAuth = useAuthStore((s) => s.setAuth);
   const logout = useAuthStore((s) => s.logout);
+  const setHydrated = useAuthStore((s) => s.setHydrated);
 
   useEffect(() => {
-    const session = getSession();
+    const hydrate = async () => {
+      const session = getSession();
 
-    if (session && isSessionValid(session)) {
-      // Restore store from persisted session
-      setAuth(session.user, session);
-    } else if (session) {
-      // Session exists but expired → clean up
-      logout();
-    }
-    // If no session at all, middleware already handles redirect
+      if (session && isSessionValid(session)) {
+        try {
+          // Fetch fresh user data from backend via tp_token cookie
+          const freshUser = await getMeUser();
+          setAuth(freshUser, session); // also sets isHydrated: true
+        } catch {
+          // Token invalid or expired — backend returned 401
+          logout(); // also sets isHydrated: true
+        }
+      } else {
+        // No session or expired — mark hydrated so dashboard can redirect
+        if (session) logout(); // clean up stale session
+        else setHydrated();    // no session at all — still mark done
+      }
+    };
+
+    hydrate();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return null; // renders nothing

@@ -1,61 +1,44 @@
 import axiosInstance from "./axios";
-import { getAccessToken, updateSessionTokens, clearSession } from "@/lib/auth/core/auth.session";
-import { logoutUser } from "@/lib/auth/core/auth.client";
+import { clearSession } from "@/lib/auth/core/auth.session";
 
-/**
- * REQUEST INTERCEPTOR
- * Automatically attaches access token
- */
+// ─── REQUEST INTERCEPTOR ──────────────────────────────────────────────────────
+// Attach device ID header for POS session tracking
 axiosInstance.interceptors.request.use(
   (config) => {
-    const token = getAccessToken();
-
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    // tp_token cookie sent automatically via withCredentials: true
+    // Attach device ID for POS terminal tracking (key matches auth.session.ts)
+    if (typeof window !== "undefined") {
+      const deviceId = localStorage.getItem("tijarat_device_id");
+      if (deviceId) {
+        config.headers["x-device-id"] = deviceId;
+      }
     }
-
     return config;
   },
   (error) => Promise.reject(error)
 );
 
-/**
- * RESPONSE INTERCEPTOR
- * Handles auth failures globally
- */
+// ─── RESPONSE INTERCEPTOR ─────────────────────────────────────────────────────
+// On 401: session is definitively expired — clear local state and redirect.
+// We use a 7-day httpOnly cookie; no separate refresh token exists yet.
+// When real refresh tokens are added, this is the only place to update.
 axiosInstance.interceptors.response.use(
   (response) => response,
   async (error) => {
-    // ---------------------------
-    // 1. HANDLE 401 UNAUTHORIZED
-    // ---------------------------
     if (error.response?.status === 401) {
-      try {
-        /**
-         * FUTURE UPGRADE:
-         * Here we will call refresh token API
-         * and retry original request
-         */
+      clearSession();
 
-        // If token invalid → logout safely
-        logoutUser();
-        clearSession();
+      // Lazy import to avoid circular dependency at module load time
+      const { useAuthStore } = await import("@/lib/auth/core/auth.store");
+      useAuthStore.getState().logout();
 
-        if (typeof window !== "undefined") {
-          window.location.href = "/auth/login";
-        }
-
-        return Promise.reject(error);
-      } catch (err) {
-        logoutUser();
-        clearSession();
-
-        if (typeof window !== "undefined") {
-          window.location.href = "/auth/login";
-        }
+      if (typeof window !== "undefined") {
+        window.location.href = "/auth/login";
       }
     }
 
     return Promise.reject(error);
   }
-);
+);
+
+
