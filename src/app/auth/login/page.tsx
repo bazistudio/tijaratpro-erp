@@ -1,42 +1,23 @@
-"use client";
+import LoginForm from "./form"
 
-import { useRouter } from "next/navigation";
+export const metadata = {
+  title: "Sign In — TijaratPro",
+  description: "Sign in to your TijaratPro account",
+};
 
-export default function DashboardPage() {
-  const router = useRouter();
-
-  const role = "SUPER_ADMIN";
-
-  const goDashboard = () => {
-    switch (role) {
-      case "SUPER_ADMIN":
-        router.push("/dashboard/super-admin");
-        break;
-
-      case "MULTI_ADMIN":
-        router.push("/dashboard/multi-admin");
-        break;
-
-      case "SHOP_ADMIN":
-        router.push("/dashboard/shop-admin");
-        break;
-
-      case "STAFF":
-        router.push("/dashboard/staff");
-        break;
-    }
-  };
-
+export default function LoginPage() {
   return (
-    <div className="p-10">
-      <h1>Dashboard Router</h1>
+    <main className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="bg-white border rounded-xl shadow-sm p-8 w-full max-w-sm">
+        <div className="mb-6">
+          <h1 className="text-2xl font-semibold tracking-tight">Sign In</h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Enter your credentials to continue
+          </p>
+        </div>
 
-      <button
-        onClick={goDashboard}
-        className="px-4 py-2 border rounded"
-      >
-        Continue
-      </button>
-    </div>
+        <LoginForm />
+      </div>
+    </main>
   );
 }

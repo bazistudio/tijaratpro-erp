@@ -26,8 +26,6 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (response) => response,
   async (error) => {
-    const originalRequest = error.config;
-
     // ---------------------------
     // 1. HANDLE 401 UNAUTHORIZED
     // ---------------------------
@@ -39,14 +37,12 @@ axiosInstance.interceptors.response.use(
          * and retry original request
          */
 
-        const sessionError = error.response?.data?.message;
-
         // If token invalid → logout safely
         logoutUser();
         clearSession();
 
         if (typeof window !== "undefined") {
-          window.location.href = "/login";
+          window.location.href = "/auth/login";
         }
 
         return Promise.reject(error);
@@ -55,11 +51,11 @@ axiosInstance.interceptors.response.use(
         clearSession();
 
         if (typeof window !== "undefined") {
-          window.location.href = "/login";
+          window.location.href = "/auth/login";
         }
       }
     }
 
     return Promise.reject(error);
   }
-);
+);

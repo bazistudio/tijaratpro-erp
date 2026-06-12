@@ -2,35 +2,43 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useAuthStore } from "@/lib/auth/core/auth.store";
 
 export default function DashboardPage() {
   const router = useRouter();
-
-  const role = "SUPER_ADMIN";
+  const user = useAuthStore((s) => s.user);
 
   useEffect(() => {
-    switch (role) {
-      case "SUPER_ADMIN":
-        router.push("/dashboard/super-admin");
-        break;
-
-      case "MULTI_ADMIN":
-        router.push("/dashboard/multi-admin");
-        break;
-
-      case "SHOP_ADMIN":
-        router.push("/dashboard/shop-admin");
-        break;
-
-      case "STAFF":
-        router.push("/dashboard/staff");
-        break;
+    if (!user) {
+      // no user in store — middleware should have caught this,
+      // but guard here as a fallback
+      router.replace("/auth/login");
+      return;
     }
-  }, [router]);
+
+    switch (user.role) {
+      case "SUPER_ADMIN":
+        router.replace("/dashboard/super-admin");
+        break;
+      case "MULTI_ADMIN":
+        router.replace("/dashboard/multi-admin");
+        break;
+      case "SHOP_ADMIN":
+        router.replace("/dashboard/shop-admin");
+        break;
+      case "STAFF":
+        router.replace("/dashboard/staff");
+        break;
+      default:
+        router.replace("/auth/login");
+    }
+  }, [router, user]);
 
   return (
-    <div className="p-10">
-      <h1>Redirecting to dashboard...</h1>
+    <div className="min-h-screen flex items-center justify-center">
+      <p className="text-gray-500 text-sm animate-pulse">
+        Redirecting to your dashboard…
+      </p>
     </div>
   );
 }

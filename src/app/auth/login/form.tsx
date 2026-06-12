@@ -1,26 +1,103 @@
+"use client";
 
-import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { useAuthStore } from "@/lib/auth/store/auth.store";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAuthStore } from "@/lib/auth/core/auth.store";
 import { loginUser } from "@/lib/auth/core/auth.client";
-import { LoginFormData } from "@/lib/auth/auth.schema";
+import type { LoginFormData } from "@/lib/auth/auth.schema";
 
-const onSubmit = async (data: LoginFormData) => {
-  setIsLoading(true);
-  setError(null);
+export default function LoginForm() {
+  const router = useRouter();
+  const { setAuth } = useAuthStore();
 
-  try {
-    const { user, token } = await loginUser(
-      data.identifier,
-      data.password
-    );
+  const [formData, setFormData] = useState<LoginFormData>({
+    identifier: "",
+    password: "",
+  });
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-    setAuth(user, token);
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError(null);
 
-    router.push("/dashboard");
-  } catch (err: any) {
-    setError(err.message || "Login failed");
-  } finally {
-    setIsLoading(false);
-  }
-};
+    try {
+      const { user, session } = await loginUser(
+        formData.identifier,
+        formData.password
+      );
+
+      // hydrate zustand store
+      setAuth(user, session);
+
+      router.push("/dashboard");
+    } catch (err: any) {
+      setError(err.message || "Login failed. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <form onSubmit={onSubmit} className="flex flex-col gap-4 w-full max-w-sm">
+      <div className="flex flex-col gap-1">
+        <label htmlFor="identifier" className="text-sm font-medium">
+          Email or Username
+        </label>
+        <input
+          id="identifier"
+          type="text"
+          autoComplete="username"
+          placeholder="you@example.com"
+          value={formData.identifier}
+          onChange={(e) =>
+            setFormData((prev) => ({ ...prev, identifier: e.target.value }))
+          }
+          required
+          className="border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2"
+        />
+      </div>
+
+      <div className="flex flex-col gap-1">
+        <label htmlFor="password" className="text-sm font-medium">
+          Password
+        </label>
+        <input
+          id="password"
+          type="password"
+          autoComplete="current-password"
+          placeholder="••••••••"
+          value={formData.password}
+          onChange={(e) =>
+            setFormData((prev) => ({ ...prev, password: e.target.value }))
+          }
+          required
+          className="border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2"
+        />
+      </div>
+
+      {error && (
+        <p role="alert" className="text-red-500 text-sm">
+          {error}
+        </p>
+      )}
+
+      <button
+        type="submit"
+        disabled={isLoading}
+        className="bg-blue-600 text-white rounded px-4 py-2 text-sm font-medium disabled:opacity-50"
+      >
+        {isLoading ? "Signing in…" : "Sign In"}
+      </button>
+
+      <div className="text-center text-sm mt-4">
+        Don&apos;t have an account?{" "}
+        <Link href="/auth/signup" className="text-blue-600 font-medium">
+          Create one
+        </Link>
+      </div>
+    </form>
+  );
+}
