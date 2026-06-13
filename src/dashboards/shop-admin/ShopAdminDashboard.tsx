@@ -4,8 +4,8 @@ import React from 'react';
 import { DollarSign, TrendingUp, CreditCard, Receipt } from 'lucide-react';
 import { KPIGrid } from '../../components/kpi/KPIGrid';
 import { KPIData } from '../../types/dashboard/kpi.types';
+import { InventoryWidget } from '../../components/inventory/InventoryWidget';
 
-// Mock data for initial render
 const mockKpiData: KPIData[] = [
   {
     title: 'Total Revenue',
@@ -46,7 +46,7 @@ export const ShopAdminDashboard = () => {
           Dashboard Overview
         </h1>
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          Here's what's happening in your shop today.
+          Here&apos;s what&apos;s happening in your shop today.
         </p>
       </div>
 
@@ -56,21 +56,23 @@ export const ShopAdminDashboard = () => {
         <KPIGrid data={mockKpiData} />
       </section>
 
-      {/* Placeholders for future sections */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-white dark:bg-gray-900 rounded-2xl min-h-[400px] border border-gray-100 dark:border-gray-800 flex items-center justify-center text-gray-400">
-          {/* Phase 3: InventoryWidget will go here */}
-          [Inventory Widget Placeholder]
+      {/* Inventory Brain */}
+      <section aria-labelledby="inventory-heading">
+        <div className="rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 shadow-sm p-5 sm:p-6">
+          <InventoryWidget />
         </div>
-        <div className="bg-white dark:bg-gray-900 rounded-2xl min-h-[400px] border border-gray-100 dark:border-gray-800 flex items-center justify-center text-gray-400">
-          {/* Phase 4: AlertsPanel will go here */}
-          [Alerts Panel Placeholder]
+      </section>
+
+      {/* Placeholders for Phase 4 + 5 */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl min-h-[280px] border border-gray-100 dark:border-gray-800 flex items-center justify-center text-gray-400 text-sm">
+          {/* Phase 4: AlertsPanel */}
+          [Alerts Panel — Phase 4]
         </div>
-      </div>
-      
-      <div className="bg-white dark:bg-gray-900 rounded-2xl min-h-[300px] border border-gray-100 dark:border-gray-800 flex items-center justify-center text-gray-400">
-        {/* Phase 5: OutstandingBalances will go here */}
-        [Outstanding Balances Placeholder]
+        <div className="bg-white dark:bg-gray-900 rounded-2xl min-h-[280px] border border-gray-100 dark:border-gray-800 flex items-center justify-center text-gray-400 text-sm">
+          {/* Phase 5: OutstandingBalances */}
+          [Outstanding Balances — Phase 5]
+        </div>
       </div>
     </div>
   );
