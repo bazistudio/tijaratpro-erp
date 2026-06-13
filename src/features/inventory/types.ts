@@ -27,6 +27,11 @@ export enum InventoryAdjustmentType {
   RETURN = 'RETURN'
 }
 
+export interface ProductCategory {
+  id: string;
+  name: string;
+}
+
 export interface InventoryProduct {
   id: string;
   name: string;

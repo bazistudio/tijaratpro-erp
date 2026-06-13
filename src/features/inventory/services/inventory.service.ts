@@ -4,7 +4,8 @@ import { inventoryRepository } from '../repositories/inventory.repository';
 import { inventoryMapper } from '../mappers/inventory.mapper';
 import { retry } from '@/shared/lib/retry';
 import { RETRY_COUNT, LOW_STOCK_DEFAULT } from '../constants/inventory.constants';
-import { InventoryProduct, PaginationParams, InventoryAdjustmentType, StockStatus } from '../types';
+import { InventoryProduct, PaginationParams, InventoryAdjustmentType, StockStatus, ProductCategory } from '../types';
+import { CreateProductDTO } from '../dto/inventory.dto';
 
 /**
  * Service Layer
@@ -48,5 +49,45 @@ export const inventoryService = {
     }
     
     return response.newStock;
+  },
+
+  getCategories: async (): Promise<ProductCategory[]> => {
+    const dtos = await retry(() => inventoryRepository.getCategories(), RETRY_COUNT);
+    return dtos.map(dto => ({
+      id: dto._id,
+      name: dto.name
+    }));
+  },
+
+  createProduct: async (productData: CreateProductDTO, imageFile?: File): Promise<InventoryProduct> => {
+    const formData = new FormData();
+    
+    // Auto-generate SKU if empty to prepare for Phase 4.2 PDF matching
+    const skuToUse = productData.sku && productData.sku.trim() !== '' 
+      ? productData.sku 
+      : `SKU-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
+    formData.append('name', productData.name);
+    formData.append('price', productData.price.toString());
+    formData.append('quantity', productData.quantity.toString());
+    formData.append('category', productData.category);
+    formData.append('sku', skuToUse);
+    
+    if (productData.purchasePrice !== undefined) formData.append('purchasePrice', productData.purchasePrice.toString());
+    if (productData.barcode) formData.append('barcode', productData.barcode);
+    if (productData.brand) formData.append('brand', productData.brand);
+    if (productData.description) formData.append('description', productData.description);
+    if (productData.lowStockThreshold !== undefined) formData.append('lowStockThreshold', productData.lowStockThreshold.toString());
+
+    // Image upload (optional, never blocks creation)
+    if (imageFile) {
+      formData.append('image', imageFile);
+    }
+
+    const response = await inventoryRepository.createProduct(formData);
+    
+    // Process mapping with business rules applied
+    const status = inventoryService.calculateStockStatus(response.product.quantity, response.product.lowStockThreshold);
+    return inventoryMapper.dtoToProduct(response.product, status);
   }
 };

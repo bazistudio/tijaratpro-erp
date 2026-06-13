@@ -40,3 +40,17 @@ export interface AdjustStockResponseDTO {
   message?: string;
   newStock?: number;
 }
+
+export interface CreateProductDTO {
+  name: string;
+  price: number;
+  quantity: number;
+  category: string;
+  purchasePrice?: number;
+  sku?: string;
+  barcode?: string;
+  brand?: string;
+  description?: string;
+  lowStockThreshold?: number;
+}
+

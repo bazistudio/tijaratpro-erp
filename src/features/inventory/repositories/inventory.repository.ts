@@ -18,5 +18,14 @@ export const inventoryRepository = {
   adjustStock: async (productId: string, quantity: number, type: InventoryAdjustmentType, reason?: string) => {
     // Future Phase 5: Add to local sync queue if offline
     return await inventoryApi.adjustStock(productId, quantity, type, reason);
+  },
+
+  getCategories: async () => {
+    return await inventoryApi.getCategories();
+  },
+
+  createProduct: async (formData: FormData) => {
+    // Future Phase 5: Add to local sync queue if offline
+    return await inventoryApi.createProduct(formData);
   }
 };
