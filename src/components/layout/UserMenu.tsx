@@ -7,7 +7,8 @@ import { useAuthStore } from '@/lib/auth/core/auth.store';
 export const UserMenu = () => {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-  const logout = useAuthStore((s) => s.logout);
+  const logoutAsync = useAuthStore((s) => s.logoutAsync);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -73,9 +74,11 @@ export const UserMenu = () => {
           </a>
           <div className="border-t border-gray-100 dark:border-gray-800 my-1"></div>
           <button
-            onClick={() => {
+            onClick={async () => {
+              if (isLoggingOut) return;
               setIsOpen(false);
-              logout();
+              setIsLoggingOut(true);
+              await logoutAsync();
             }}
             className="w-full text-left group flex items-center px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
             role="menuitem"
