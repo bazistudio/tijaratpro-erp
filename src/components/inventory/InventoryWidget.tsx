@@ -3,7 +3,7 @@
 import React, { useEffect } from 'react';
 import { Package, AlertTriangle, XCircle, CheckCircle, Download } from 'lucide-react';
 import { 
-  selectInventoryActions, 
+  selectFetchProducts, 
   selectProducts, 
   selectInventoryStatus, 
   selectInventoryError 
@@ -18,7 +18,8 @@ import { ErrorState } from '../../shared/components/error-state/ErrorState';
 import { LoadingState } from '../../shared/components/loading-state/LoadingState';
 
 export const InventoryWidget = () => {
-  const { fetchProducts } = selectInventoryActions();
+  console.log("[DEBUG] INVENTORY WIDGET MOUNTED");
+  const fetchProducts = selectFetchProducts();
   const products = selectProducts();
   const reqStatus = selectInventoryStatus();
   const error = selectInventoryError();
@@ -27,6 +28,7 @@ export const InventoryWidget = () => {
   const { filtered, stats } = useInventoryData();
 
   useEffect(() => {
+    console.log("[DEBUG] FETCH PRODUCTS TRIGGERED");
     // Phase 4: Fetch products from actual backend mapping architecture
     fetchProducts();
   }, [fetchProducts]);

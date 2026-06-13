@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { ArrowUpDown, ArrowUp, ArrowDown, Edit3, RefreshCw, Eye } from 'lucide-react';
 import { InventoryProduct, SortField, SortDirection, StockStatus } from '../../features/inventory/types';
 import { StockStatusBadge } from './StockStatusBadge';
-import { selectSortConfig, selectInventoryActions } from '../../features/inventory/store/inventory.selectors';
+import { selectSortConfig, selectSetSort, selectUpdateStock } from '../../features/inventory/store/inventory.selectors';
 
 interface InventoryTableProps {
   products: InventoryProduct[];
@@ -20,7 +20,8 @@ function SortIcon({ field, activeField, direction }: { field: SortField; activeF
 
 export const InventoryTable = ({ products, isLoading }: InventoryTableProps) => {
   const sort = selectSortConfig();
-  const { setSort, updateStock } = selectInventoryActions();
+  const setSort = selectSetSort();
+  const updateStock = selectUpdateStock();
   
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState<string>('');

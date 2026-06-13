@@ -13,10 +13,8 @@ export const selectSearchTerm = () => useInventoryStore(state => state.searchTer
 export const selectActiveFilter = () => useInventoryStore(state => state.activeFilter);
 export const selectSortConfig = () => useInventoryStore(state => state.sort);
 
-export const selectInventoryActions = () => useInventoryStore(useShallow(state => ({
-  setSearch: state.setSearch,
-  setFilter: state.setFilter,
-  setSort: state.setSort,
-  fetchProducts: state.fetchProducts,
-  updateStock: state.updateStock
-})));
+export const selectSetSearch = () => useInventoryStore(state => state.setSearch);
+export const selectSetFilter = () => useInventoryStore(state => state.setFilter);
+export const selectSetSort = () => useInventoryStore(state => state.setSort);
+export const selectFetchProducts = () => useInventoryStore(state => state.fetchProducts);
+export const selectUpdateStock = () => useInventoryStore(state => state.updateStock);

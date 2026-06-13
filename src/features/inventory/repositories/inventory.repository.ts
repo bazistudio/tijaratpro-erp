@@ -10,6 +10,7 @@ import { PaginationParams, InventoryAdjustmentType } from '../types';
  */
 export const inventoryRepository = {
   getProducts: async (params: PaginationParams) => {
+    console.log("[DEBUG] REPOSITORY CALLED");
     // Future Phase 5: Check IndexedDB / Network Status here
     return await inventoryApi.getProducts(params);
   },

@@ -5,6 +5,7 @@ import { clearSession } from "@/lib/auth/core/auth.session";
 // Attach device ID header for POS session tracking
 axiosInstance.interceptors.request.use(
   (config) => {
+    console.log("[DEBUG] AXIOS REQUEST interceptor:", config.baseURL, config.url);
     // tp_token cookie sent automatically via withCredentials: true
     // Attach device ID for POS terminal tracking (key matches auth.session.ts)
     if (typeof window !== "undefined") {

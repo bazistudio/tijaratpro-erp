@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { selectActiveFilter, selectInventoryActions } from '../../features/inventory/store/inventory.selectors';
+import { selectActiveFilter, selectSetFilter } from '../../features/inventory/store/inventory.selectors';
 import { InventoryFilterType } from '../../features/inventory/types';
 
 const filters: { label: string; value: InventoryFilterType }[] = [
@@ -12,7 +12,7 @@ const filters: { label: string; value: InventoryFilterType }[] = [
 
 export const InventoryFilters = () => {
   const activeFilter = selectActiveFilter();
-  const { setFilter } = selectInventoryActions();
+  const setFilter = selectSetFilter();
 
   return (
     <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-1">

@@ -22,6 +22,7 @@ export const inventoryService = {
   },
 
   getProducts: async (params: PaginationParams): Promise<{ products: InventoryProduct[], total: number }> => {
+    console.log("[DEBUG] SERVICE CALLED");
     // Execute repository call with resilient exponential backoff
     const data = await retry(() => inventoryRepository.getProducts(params), RETRY_COUNT);
     

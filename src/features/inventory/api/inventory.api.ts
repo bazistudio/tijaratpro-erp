@@ -7,6 +7,7 @@ import { InventoryAdjustmentType, PaginationParams } from '../types';
 
 export const inventoryApi = {
   getProducts: async (params: PaginationParams) => {
+    console.log("[DEBUG] API CALLED", params);
     const { page, limit, category } = params;
     
     // Using URLSearchParams cleanly formats the query string
