@@ -2,24 +2,37 @@
 
 import React, { useEffect } from 'react';
 import { Package, AlertTriangle, XCircle, CheckCircle, Download } from 'lucide-react';
-import { useInventoryStore } from '../../features/inventory/store';
+import { 
+  selectInventoryActions, 
+  selectProducts, 
+  selectInventoryStatus, 
+  selectInventoryError 
+} from '../../features/inventory/store/inventory.selectors';
 import { useInventoryData } from '../../features/inventory/hooks/useInventoryData';
 import { InventorySearchBar } from './InventorySearchBar';
 import { InventoryFilters } from './InventoryFilters';
 import { InventoryTable } from './InventoryTable';
 import { LowStockAlert } from './LowStockAlert';
+import { StockStatus } from '../../features/inventory/types';
+import { ErrorState } from '../../shared/components/error-state/ErrorState';
+import { LoadingState } from '../../shared/components/loading-state/LoadingState';
 
 export const InventoryWidget = () => {
-  const { loadMockData } = useInventoryStore();
-  const { filtered, stats, isLoading } = useInventoryData();
-  const { products } = useInventoryStore();
+  const { fetchProducts } = selectInventoryActions();
+  const products = selectProducts();
+  const reqStatus = selectInventoryStatus();
+  const error = selectInventoryError();
+  
+  // Custom hook extracts memoized filtered data and live stats
+  const { filtered, stats } = useInventoryData();
 
   useEffect(() => {
-    loadMockData();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    // Phase 4: Fetch products from actual backend mapping architecture
+    fetchProducts();
+  }, [fetchProducts]);
 
   const alertProducts = products.filter(
-    (p) => p.status === 'OUT_OF_STOCK' || p.status === 'LOW_STOCK'
+    (p) => p.status === StockStatus.OUT_OF_STOCK || p.status === StockStatus.LOW_STOCK
   );
 
   return (
@@ -40,6 +53,14 @@ export const InventoryWidget = () => {
           Export
         </button>
       </div>
+
+      {/* Global Error Fallback */}
+      {reqStatus === 'error' && (
+        <ErrorState 
+          message={error || 'Failed to sync with backend inventory'} 
+          onRetry={() => fetchProducts()} 
+        />
+      )}
 
       {/* Stats Row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -113,14 +134,19 @@ export const InventoryWidget = () => {
         <InventoryFilters />
       </div>
 
-      {/* Table */}
+      {/* Table Section */}
       <div className="rounded-xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 overflow-hidden">
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-800">
           <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
             Showing <strong className="text-gray-900 dark:text-white">{filtered.length}</strong> of {stats.totalProducts} products
           </span>
         </div>
-        <InventoryTable products={filtered} isLoading={isLoading} />
+        
+        {reqStatus === 'loading' && products.length === 0 ? (
+          <LoadingState rows={5} />
+        ) : (
+          <InventoryTable products={filtered} isLoading={reqStatus === 'loading'} />
+        )}
       </div>
     </div>
   );

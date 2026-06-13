@@ -1,20 +1,27 @@
 // src/features/inventory/hooks/useInventoryData.ts
 
 import { useMemo } from 'react';
-import { useInventoryStore } from '../store';
+import { 
+  selectProducts, 
+  selectSearchTerm, 
+  selectActiveFilter, 
+  selectSortConfig,
+  selectInventoryStatus,
+  selectInventoryError
+} from '../store/inventory.selectors';
 import { filterBySearch, computeInventoryStats } from '../utils';
-import { InventoryProduct, InventoryFilterType, SortField, SortDirection } from '../types';
+import { InventoryProduct, InventoryFilterType, SortField, SortDirection, StockStatus } from '../types';
 
 function applyStatusFilter(products: InventoryProduct[], filter: InventoryFilterType) {
-  if (filter === 'low_stock') return products.filter((p) => p.status === 'LOW_STOCK');
-  if (filter === 'out_of_stock') return products.filter((p) => p.status === 'OUT_OF_STOCK');
+  if (filter === 'low_stock') return products.filter((p) => p.status === StockStatus.LOW_STOCK);
+  if (filter === 'out_of_stock') return products.filter((p) => p.status === StockStatus.OUT_OF_STOCK);
   return products;
 }
 
 function applySort(products: InventoryProduct[], field: SortField, direction: SortDirection) {
   return [...products].sort((a, b) => {
-    let aVal: string | number = a[field];
-    let bVal: string | number = b[field];
+    let aVal: string | number = a[field] ?? '';
+    let bVal: string | number = b[field] ?? '';
 
     if (typeof aVal === 'string') aVal = aVal.toLowerCase();
     if (typeof bVal === 'string') bVal = bVal.toLowerCase();
@@ -26,7 +33,12 @@ function applySort(products: InventoryProduct[], field: SortField, direction: So
 }
 
 export function useInventoryData() {
-  const { products, searchTerm, activeFilter, sort, isLoading } = useInventoryStore();
+  const products = selectProducts();
+  const searchTerm = selectSearchTerm();
+  const activeFilter = selectActiveFilter();
+  const sort = selectSortConfig();
+  const status = selectInventoryStatus();
+  const error = selectInventoryError();
 
   const filtered = useMemo(() => {
     let result = filterBySearch(products, searchTerm);
@@ -37,5 +49,5 @@ export function useInventoryData() {
 
   const stats = useMemo(() => computeInventoryStats(products), [products]);
 
-  return { filtered, stats, isLoading };
+  return { filtered, stats, status, error };
 }

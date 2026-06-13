@@ -2,10 +2,11 @@
 
 import React, { useRef } from 'react';
 import { Search, X } from 'lucide-react';
-import { useInventoryStore } from '../../features/inventory/store';
+import { selectSearchTerm, selectInventoryActions } from '../../features/inventory/store/inventory.selectors';
 
 export const InventorySearchBar = () => {
-  const { searchTerm, setSearch } = useInventoryStore();
+  const searchTerm = selectSearchTerm();
+  const { setSearch } = selectInventoryActions();
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {

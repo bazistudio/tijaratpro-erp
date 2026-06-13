@@ -1,11 +1,31 @@
 // src/features/inventory/types.ts
 
-export type StockStatus = 'HEALTHY' | 'LOW_STOCK' | 'OUT_OF_STOCK';
+export enum StockStatus {
+  HEALTHY = 'HEALTHY',
+  LOW_STOCK = 'LOW_STOCK',
+  OUT_OF_STOCK = 'OUT_OF_STOCK'
+}
+
+export type RequestStatus = 'idle' | 'loading' | 'success' | 'error';
 
 export type InventoryFilterType = 'all' | 'low_stock' | 'out_of_stock';
 
 export type SortField = 'name' | 'stock' | 'category' | 'price';
 export type SortDirection = 'asc' | 'desc';
+
+export interface PaginationParams {
+  page: number;
+  limit: number;
+  search?: string;
+  category?: string;
+}
+
+export enum InventoryAdjustmentType {
+  INCREASE = 'INCREASE',
+  DECREASE = 'DECREASE',
+  DAMAGE = 'DAMAGE',
+  RETURN = 'RETURN'
+}
 
 export interface InventoryProduct {
   id: string;
@@ -16,7 +36,7 @@ export interface InventoryProduct {
   minStockThreshold: number;
   price: number;
   unit?: string;
-  status: StockStatus; // auto-computed
+  status: StockStatus;
 }
 
 export interface InventoryStats {

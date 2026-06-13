@@ -2,9 +2,9 @@
 
 import React, { useState } from 'react';
 import { ArrowUpDown, ArrowUp, ArrowDown, Edit3, RefreshCw, Eye } from 'lucide-react';
-import { InventoryProduct, SortField, SortDirection } from '../../features/inventory/types';
+import { InventoryProduct, SortField, SortDirection, StockStatus } from '../../features/inventory/types';
 import { StockStatusBadge } from './StockStatusBadge';
-import { useInventoryStore } from '../../features/inventory/store';
+import { selectSortConfig, selectInventoryActions } from '../../features/inventory/store/inventory.selectors';
 
 interface InventoryTableProps {
   products: InventoryProduct[];
@@ -19,7 +19,9 @@ function SortIcon({ field, activeField, direction }: { field: SortField; activeF
 }
 
 export const InventoryTable = ({ products, isLoading }: InventoryTableProps) => {
-  const { sort, setSort, updateStock } = useInventoryStore();
+  const sort = selectSortConfig();
+  const { setSort, updateStock } = selectInventoryActions();
+  
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState<string>('');
 
@@ -35,10 +37,10 @@ export const InventoryTable = ({ products, isLoading }: InventoryTableProps) => 
     setEditValue(String(product.stock));
   };
 
-  const commitEdit = (productId: string) => {
+  const commitEdit = async (productId: string) => {
     const newStock = parseInt(editValue, 10);
     if (!isNaN(newStock) && newStock >= 0) {
-      updateStock(productId, newStock);
+      await updateStock(productId, newStock);
     }
     setEditingId(null);
   };
@@ -49,8 +51,8 @@ export const InventoryTable = ({ products, isLoading }: InventoryTableProps) => 
   };
 
   const rowBg = (product: InventoryProduct) => {
-    if (product.status === 'OUT_OF_STOCK') return 'bg-red-50/50 dark:bg-red-900/5';
-    if (product.status === 'LOW_STOCK') return 'bg-amber-50/50 dark:bg-amber-900/5';
+    if (product.status === StockStatus.OUT_OF_STOCK) return 'bg-red-50/50 dark:bg-red-900/5';
+    if (product.status === StockStatus.LOW_STOCK) return 'bg-amber-50/50 dark:bg-amber-900/5';
     return '';
   };
 
@@ -64,23 +66,7 @@ export const InventoryTable = ({ products, isLoading }: InventoryTableProps) => 
     { label: 'Actions' },
   ];
 
-  if (isLoading) {
-    return (
-      <div className="divide-y divide-gray-100 dark:divide-gray-800">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="flex items-center gap-4 px-4 py-3 animate-pulse">
-            <div className="h-4 w-36 rounded bg-gray-200 dark:bg-gray-700" />
-            <div className="h-4 w-20 rounded bg-gray-200 dark:bg-gray-700" />
-            <div className="h-4 w-24 rounded bg-gray-200 dark:bg-gray-700" />
-            <div className="h-4 w-10 rounded bg-gray-200 dark:bg-gray-700" />
-            <div className="h-5 w-20 rounded-full bg-gray-200 dark:bg-gray-700" />
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  if (products.length === 0) {
+  if (products.length === 0 && !isLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
         <div className="text-4xl mb-3">📦</div>
@@ -91,7 +77,12 @@ export const InventoryTable = ({ products, isLoading }: InventoryTableProps) => 
   }
 
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto relative">
+      {isLoading && (
+        <div className="absolute inset-0 z-10 bg-white/50 dark:bg-gray-900/50 flex items-start justify-center pt-8 pointer-events-none">
+           <div className="h-6 w-6 rounded-full border-2 border-[#006970] border-t-transparent animate-spin"></div>
+        </div>
+      )}
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-gray-100 dark:border-gray-800">
@@ -141,8 +132,8 @@ export const InventoryTable = ({ products, isLoading }: InventoryTableProps) => 
                 ) : (
                   <span
                     className={`font-semibold cursor-pointer hover:text-[#006970] dark:hover:text-[#00B4BB] transition-colors ${
-                      product.status === 'OUT_OF_STOCK' ? 'text-red-600 dark:text-red-400' :
-                      product.status === 'LOW_STOCK' ? 'text-amber-600 dark:text-amber-400' :
+                      product.status === StockStatus.OUT_OF_STOCK ? 'text-red-600 dark:text-red-400' :
+                      product.status === StockStatus.LOW_STOCK ? 'text-amber-600 dark:text-amber-400' :
                       'text-gray-900 dark:text-white'
                     }`}
                     onClick={() => startEdit(product)}
