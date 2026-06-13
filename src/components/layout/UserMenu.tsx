@@ -2,10 +2,12 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { User, Settings, LogOut, ChevronDown } from 'lucide-react';
+import { useAuthStore } from '@/lib/auth/core/auth.store';
 
 export const UserMenu = () => {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const logout = useAuthStore((s) => s.logout);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -50,7 +52,7 @@ export const UserMenu = () => {
             <p className="text-sm font-medium text-gray-900 dark:text-white">Shop Admin</p>
             <p className="text-xs text-gray-500 dark:text-gray-400 truncate">admin@tijaratpro.com</p>
           </div>
-          
+
           <a
             href="#"
             className="group flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
@@ -70,15 +72,18 @@ export const UserMenu = () => {
             Settings
           </a>
           <div className="border-t border-gray-100 dark:border-gray-800 my-1"></div>
-          <a
-            href="#"
-            className="group flex items-center px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+          <button
+            onClick={() => {
+              setIsOpen(false);
+              logout();
+            }}
+            className="w-full text-left group flex items-center px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
             role="menuitem"
             tabIndex={-1}
           >
             <LogOut className="mr-3 h-4 w-4 text-red-500 dark:text-red-400" />
             Sign out
-          </a>
+          </button>
         </div>
       )}
     </div>
