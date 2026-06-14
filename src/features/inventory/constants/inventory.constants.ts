@@ -9,4 +9,7 @@ export const INVENTORY_ENDPOINTS = {
   ADJUST_STOCK: '/api/inventory/adjust',
   CREATE_PRODUCT: '/api/products/add',
   GET_CATEGORIES: '/api/categories/my-categories',
+  UPDATE_PRODUCT: '/api/products/update',   // PUT /api/products/update/:id
+  DELETE_PRODUCT: '/api/products/delete',   // DELETE /api/products/delete/:id
+  CHECK_DUPLICATE: '/api/products/check-duplicate',
 };

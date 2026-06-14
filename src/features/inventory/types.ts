@@ -36,12 +36,20 @@ export interface InventoryProduct {
   id: string;
   name: string;
   sku: string;
+  barcode?: string;
   category: string;
+  categoryId?: string;
+  brand?: string;
+  description?: string;
   stock: number;
   minStockThreshold: number;
   price: number;
+  purchasePrice?: number;
   unit?: string;
   status: StockStatus;
+  image?: string;
+  updatedAt?: string;
+  version?: number;
 }
 
 export interface InventoryStats {

@@ -27,5 +27,18 @@ export const inventoryRepository = {
   createProduct: async (formData: FormData) => {
     // Future Phase 5: Add to local sync queue if offline
     return await inventoryApi.createProduct(formData);
+  },
+
+  updateProduct: async (id: string, data: import('../dto/inventory.dto').UpdateProductDTO | FormData) => {
+    return await inventoryApi.updateProduct(id, data);
+  },
+
+  deleteProduct: async (id: string) => {
+    // Soft delete — backend sets status: 'inactive'
+    return await inventoryApi.deleteProduct(id);
+  },
+
+  checkDuplicate: async (params: { sku?: string; barcode?: string; name?: string }) => {
+    return await inventoryApi.checkDuplicate(params);
   }
 };

@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { Package, AlertTriangle, XCircle, CheckCircle, Download } from 'lucide-react';
+import { Package, AlertTriangle, XCircle, CheckCircle, Download, RefreshCw } from 'lucide-react';
 import { 
-  selectFetchProducts, 
+  selectFetchProducts,
+  selectForceSync,
   selectProducts, 
   selectInventoryStatus, 
   selectInventoryError 
@@ -18,8 +19,8 @@ import { ErrorState } from '../../shared/components/error-state/ErrorState';
 import { LoadingState } from '../../shared/components/loading-state/LoadingState';
 
 export const InventoryWidget = () => {
-  console.log("[DEBUG] INVENTORY WIDGET MOUNTED");
   const fetchProducts = selectFetchProducts();
+  const forceSync = selectForceSync();
   const products = selectProducts();
   const reqStatus = selectInventoryStatus();
   const error = selectInventoryError();
@@ -50,9 +51,13 @@ export const InventoryWidget = () => {
             Real-time stock intelligence
           </p>
         </div>
-        <button className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors self-start">
-          <Download className="h-3.5 w-3.5" />
-          Export
+        <button 
+          onClick={() => forceSync()}
+          disabled={reqStatus === 'loading'}
+          className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors self-start disabled:opacity-50"
+        >
+          <RefreshCw className={`h-3.5 w-3.5 ${reqStatus === 'loading' ? 'animate-spin' : ''}`} />
+          Sync Now
         </button>
       </div>
 

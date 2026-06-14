@@ -1,5 +1,6 @@
 import axiosInstance from "./axios";
 import { clearSession } from "@/lib/auth/core/auth.session";
+import toast from "react-hot-toast";
 
 // ─── REQUEST INTERCEPTOR ──────────────────────────────────────────────────────
 // Attach device ID header for POS session tracking
@@ -35,6 +36,15 @@ axiosInstance.interceptors.response.use(
 
       if (typeof window !== "undefined") {
         window.location.href = "/auth/login";
+      }
+    } else {
+      // Global API Error Handler
+      const errorMessage = error.response?.data?.message || error.message || "An unexpected network error occurred";
+      
+      // Stop silent failures
+      console.error("[API Error]", errorMessage);
+      if (typeof window !== "undefined") {
+        toast.error(errorMessage);
       }
     }
 

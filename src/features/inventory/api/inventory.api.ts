@@ -2,7 +2,7 @@
 
 import axiosInstance from '@/lib/api/axios';
 import { INVENTORY_ENDPOINTS } from '../constants/inventory.constants';
-import { PaginatedProductsDTO, AdjustStockResponseDTO, ProductCategoryDTO } from '../dto/inventory.dto';
+import { PaginatedProductsDTO, AdjustStockResponseDTO, ProductCategoryDTO, UpdateProductDTO, CheckDuplicateResponseDTO } from '../dto/inventory.dto';
 import { InventoryAdjustmentType, PaginationParams } from '../types';
 import { ProductDTO } from '../dto/inventory.dto';
 
@@ -63,6 +63,34 @@ export const inventoryApi = {
           'Content-Type': 'multipart/form-data',
         },
       }
+    );
+    return response.data;
+  },
+
+  updateProduct: async (id: string, data: UpdateProductDTO | FormData) => {
+    const isFormData = data instanceof FormData;
+    const response = await axiosInstance.put<{ message: string; product: ProductDTO }>(
+      `${INVENTORY_ENDPOINTS.UPDATE_PRODUCT}/${id}`,
+      data,
+      isFormData ? { headers: { 'Content-Type': 'multipart/form-data' } } : {}
+    );
+    return response.data;
+  },
+
+  deleteProduct: async (id: string) => {
+    const response = await axiosInstance.delete<{ message: string }>(
+      `${INVENTORY_ENDPOINTS.DELETE_PRODUCT}/${id}`
+    );
+    return response.data;
+  },
+
+  checkDuplicate: async (params: { sku?: string; barcode?: string; name?: string }) => {
+    const query = new URLSearchParams();
+    if (params.sku) query.append('sku', params.sku);
+    if (params.barcode) query.append('barcode', params.barcode);
+    if (params.name) query.append('name', params.name);
+    const response = await axiosInstance.get<CheckDuplicateResponseDTO>(
+      `${INVENTORY_ENDPOINTS.CHECK_DUPLICATE}?${query.toString()}`
     );
     return response.data;
   }

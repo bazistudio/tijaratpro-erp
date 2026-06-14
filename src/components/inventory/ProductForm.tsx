@@ -5,7 +5,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useRouter } from 'next/navigation';
-import { Package, UploadCloud, ArrowLeft, Loader2, DollarSign, Tag, Hash, FileText } from 'lucide-react';
+import { Package, UploadCloud, ArrowLeft, Loader2, Tag, Hash, FileText } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 import { 
   selectCategories, 
@@ -47,6 +48,8 @@ export const ProductForm = () => {
     register,
     handleSubmit,
     setValue,
+    reset,
+    setFocus,
     formState: { errors },
   } = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),
@@ -74,7 +77,15 @@ export const ProductForm = () => {
       setIsSubmitting(true);
       setSubmitError(null);
       await createProduct(data, imageFile || undefined);
-      router.push('/dashboard/shop-admin/inventory');
+      
+      toast.success('Product Added Successfully');
+      reset();
+      setImageFile(null);
+      setImagePreview(null);
+      setFocus('name');
+      
+      // Optionally stay on the page, or you could navigate back if preferred.
+      // We will stay on the page for rapid bulk entry as requested.
     } catch (error: any) {
       const msg = error.response?.data?.message || error.message || 'An error occurred while creating the product.';
       setSubmitError(msg);
@@ -157,14 +168,14 @@ export const ProductForm = () => {
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Selling Price *</label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                  <DollarSign className="h-4 w-4" />
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500 font-medium text-sm">
+                  PKR
                 </div>
                 <input
                   type="number"
                   {...register("price", { valueAsNumber: true })}
                   placeholder="0.00"
-                  className="pl-10 block w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 py-3 px-4 text-sm focus:border-[#006970] focus:ring-[#006970] dark:text-white transition-colors"
+                  className="pl-12 block w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 py-3 px-4 text-sm focus:border-[#006970] focus:ring-[#006970] dark:text-white transition-colors"
                 />
               </div>
               {errors.price && <p className="mt-1 text-xs text-red-500">{errors.price.message}</p>}
@@ -173,14 +184,14 @@ export const ProductForm = () => {
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Purchase Price</label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                  <DollarSign className="h-4 w-4" />
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500 font-medium text-sm">
+                  PKR
                 </div>
                 <input
                   type="number"
                   {...register("purchasePrice", { valueAsNumber: true })}
                   placeholder="0.00"
-                  className="pl-10 block w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 py-3 px-4 text-sm focus:border-[#006970] focus:ring-[#006970] dark:text-white transition-colors"
+                  className="pl-12 block w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 py-3 px-4 text-sm focus:border-[#006970] focus:ring-[#006970] dark:text-white transition-colors"
                 />
               </div>
             </div>

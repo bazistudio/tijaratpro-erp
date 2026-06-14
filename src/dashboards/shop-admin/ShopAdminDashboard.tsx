@@ -1,10 +1,12 @@
 'use client';
 
 import React from 'react';
-import { DollarSign, TrendingUp, CreditCard, Receipt } from 'lucide-react';
+import Link from 'next/link';
+import { DollarSign, TrendingUp, CreditCard, Receipt, Plus, FileUp, RefreshCw } from 'lucide-react';
 import { KPIGrid } from '../../components/kpi/KPIGrid';
 import { KPIData } from '../../types/dashboard/kpi.types';
 import { InventoryWidget } from '../../components/inventory/InventoryWidget';
+import { selectForceSync, selectStatus } from '../../features/inventory/store/inventory.selectors';
 
 const mockKpiData: KPIData[] = [
   {
@@ -38,6 +40,10 @@ const mockKpiData: KPIData[] = [
 ];
 
 export const ShopAdminDashboard = () => {
+  const forceSync = selectForceSync();
+  const inventoryStatus = selectStatus();
+  const isSyncing = inventoryStatus === 'loading';
+
   return (
     <div className="flex flex-col gap-6 sm:gap-8 w-full">
       {/* Dashboard Header */}
@@ -49,6 +55,35 @@ export const ShopAdminDashboard = () => {
           Here&apos;s what&apos;s happening in your shop today.
         </p>
       </div>
+
+      {/* Quick Actions */}
+      <section aria-labelledby="quick-actions-heading">
+        <h2 id="quick-actions-heading" className="sr-only">Quick Actions</h2>
+        <div className="flex flex-wrap gap-3">
+          <Link
+            href="/dashboard/shop-admin/products/new"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#006970] hover:bg-[#005a60] text-white text-sm font-medium transition-colors shadow-sm"
+          >
+            <Plus className="h-4 w-4" />
+            Add Product
+          </Link>
+          <Link
+            href="/dashboard/shop-admin/products/import"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm font-medium transition-colors"
+          >
+            <FileUp className="h-4 w-4" />
+            Import from PDF
+          </Link>
+          <button
+            onClick={() => forceSync()}
+            disabled={isSyncing}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm font-medium transition-colors disabled:opacity-50"
+          >
+            <RefreshCw className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
+            Sync Inventory
+          </button>
+        </div>
+      </section>
 
       {/* KPI Section */}
       <section aria-labelledby="kpi-heading">

@@ -20,5 +20,10 @@ export const selectSetFilter = () => useInventoryStore(state => state.setFilter)
 export const selectSetSort = () => useInventoryStore(state => state.setSort);
 export const selectUpdateStock = () => useInventoryStore(state => state.updateStock);
 export const selectFetchProducts = () => useInventoryStore(state => state.fetchProducts);
+export const selectForceSync = () => useInventoryStore(state => state.forceSync);
 export const selectFetchCategories = () => useInventoryStore(state => state.fetchCategories);
 export const selectCreateProduct = () => useInventoryStore(state => state.createProduct);
+export const selectUpdateProduct = () => useInventoryStore(state => state.updateProduct);
+export const selectDeleteProduct = () => useInventoryStore(state => state.deleteProduct);
+export const selectTotalProducts = () => useInventoryStore(state => state.totalProducts);
+export const selectStatus = () => useInventoryStore(state => state.status);

@@ -32,7 +32,10 @@ interface InventoryState {
   
   // async thunks
   fetchProducts: (params?: Partial<PaginationParams>) => Promise<void>;
+  forceSync: () => Promise<void>;
   updateStock: (productId: string, newStock: number) => Promise<void>;
+  updateProduct: (id: string, data: import('../dto/inventory.dto').UpdateProductDTO, image?: File) => Promise<void>;
+  deleteProduct: (id: string) => Promise<void>;
   fetchCategories: () => Promise<void>;
   createProduct: (data: CreateProductDTO, image?: File) => Promise<void>;
 }
@@ -81,6 +84,12 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
     }
   },
 
+  forceSync: async () => {
+    // Clear cache completely and force refetch from backend
+    set({ products: [], totalProducts: 0, status: 'loading', error: null });
+    await get().fetchProducts();
+  },
+
   updateStock: async (productId, newStock) => {
     try {
       const currentProducts = get().products;
@@ -108,6 +117,28 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
       // Revert optimism by re-fetching (or manually reversing)
       get().fetchProducts();
       set({ error: error.message || 'Failed to sync stock update' });
+    }
+  },
+
+  updateProduct: async (id, data, image) => {
+    try {
+      set({ status: 'loading', error: null });
+      await inventoryService.updateProduct(id, data, image);
+      await get().fetchProducts(); // single refresh from backend
+    } catch (error: any) {
+      set({ status: 'error', error: error.message || 'Failed to update product' });
+      throw error;
+    }
+  },
+
+  deleteProduct: async (id) => {
+    try {
+      set({ status: 'loading', error: null });
+      await inventoryService.deleteProduct(id);
+      await get().fetchProducts(); // single refresh — soft-deleted product disappears from list
+    } catch (error: any) {
+      set({ status: 'error', error: error.message || 'Failed to delete product' });
+      throw error;
     }
   },
 
@@ -145,13 +176,8 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
 
       const newProduct = await inventoryService.createProduct(productData, image);
       
-      // Optimistically add to store
-      set(state => ({
-        products: [newProduct, ...state.products],
-        totalProducts: state.totalProducts + 1,
-        status: 'success',
-        error: null
-      }));
+      // Auto-refresh: Completely reload inventory from backend source of truth
+      await get().fetchProducts();
 
     } catch (error: any) {
       set({ 
