@@ -1,4 +1,4 @@
-import { ProductForm } from "@/components/inventory/ProductForm";
+import { ProductForm } from '@/features/inventory/product/components/ProductForm';
 import { Metadata } from "next";
 
 export const metadata: Metadata = {

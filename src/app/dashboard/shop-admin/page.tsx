@@ -1,11 +1,6 @@
 import React from 'react';
-import { ShopAdminDashboardLayout } from '../../../dashboards/shop-admin/ShopAdminDashboardLayout';
-import { ShopAdminDashboard } from '../../../dashboards/shop-admin/ShopAdminDashboard';
+import { ShopAdminDashboard } from '@/features/dashboard/components/shop-admin/ShopAdminDashboard';
 
 export default function ShopAdminPage() {
-  return (
-    <ShopAdminDashboardLayout>
-      <ShopAdminDashboard />
-    </ShopAdminDashboardLayout>
-  );
+  return <ShopAdminDashboard />;
 }

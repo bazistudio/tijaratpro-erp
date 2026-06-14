@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { X } from 'lucide-react';
 import { shopAdminNavigation } from '../../constants/navigation/shop-admin-navigation';
+import { validateRoute } from '../../lib/navigation/route-validator';
 
 interface MobileSidebarProps {
   isOpen: boolean;
@@ -58,6 +59,7 @@ export const MobileSidebar = ({ isOpen, setIsOpen }: MobileSidebarProps) => {
                   )}
                   <div className="space-y-1">
                     {group.items.map((item) => {
+                      validateRoute(item.href, item.name);
                       const isActive =
                         item.href === '/dashboard/shop-admin'
                           ? pathname === item.href

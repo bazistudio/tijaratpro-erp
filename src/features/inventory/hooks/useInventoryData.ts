@@ -8,7 +8,7 @@ import {
   selectSortConfig,
   selectInventoryStatus,
   selectInventoryError
-} from '../store/inventory.selectors';
+} from '../core/inventory.selectors';
 import { filterBySearch, computeInventoryStats } from '../utils';
 import { InventoryProduct, InventoryFilterType, SortField, SortDirection, StockStatus } from '../types';
 

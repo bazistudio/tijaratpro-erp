@@ -9,6 +9,9 @@ import {
   History,
   Receipt,
   Settings,
+  BarChart3,
+  FileUp,
+  Bug,
 } from 'lucide-react';
 import { NavigationGroup } from '../../types/navigation';
 
@@ -22,6 +25,7 @@ export const shopAdminNavigation: NavigationGroup[] = [
     label: 'Sales',
     items: [
       { name: 'POS', href: '/dashboard/shop-admin/pos', icon: MonitorPlay },
+      { name: 'Sales Analytics', href: '/dashboard/shop-admin/sales', icon: BarChart3 },
     ],
   },
   {
@@ -29,6 +33,7 @@ export const shopAdminNavigation: NavigationGroup[] = [
     items: [
       { name: 'Products', href: '/dashboard/shop-admin/products', icon: Tags },
       { name: 'Stock', href: '/dashboard/shop-admin/stock', icon: Layers },
+      { name: 'Import', href: '/dashboard/shop-admin/import', icon: FileUp },
     ],
   },
   {
@@ -56,4 +61,11 @@ export const shopAdminNavigation: NavigationGroup[] = [
       { name: 'Settings', href: '/dashboard/shop-admin/settings', icon: Settings },
     ],
   },
+  // Dev-only — not rendered in production
+  ...(process.env.NODE_ENV === 'development' ? [{
+    label: 'Developer',
+    items: [
+      { name: 'Audit Panel', href: '/dashboard/shop-admin/audit', icon: Bug },
+    ],
+  }] : []),
 ];

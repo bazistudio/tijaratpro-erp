@@ -24,7 +24,8 @@ export enum InventoryAdjustmentType {
   INCREASE = 'INCREASE',
   DECREASE = 'DECREASE',
   DAMAGE = 'DAMAGE',
-  RETURN = 'RETURN'
+  RETURN = 'RETURN',
+  RESTOCK = 'RESTOCK'
 }
 
 export interface ProductCategory {

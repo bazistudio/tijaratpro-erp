@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { shopAdminNavigation } from '../../constants/navigation/shop-admin-navigation';
+import { validateRoute } from '../../lib/navigation/route-validator';
 
 export const Sidebar = () => {
   const pathname = usePathname();
@@ -32,6 +33,7 @@ export const Sidebar = () => {
                 )}
                 <div className="space-y-1">
                   {group.items.map((item) => {
+                    validateRoute(item.href, item.name);
                     const isActive =
                       item.href === '/dashboard/shop-admin'
                         ? pathname === item.href
