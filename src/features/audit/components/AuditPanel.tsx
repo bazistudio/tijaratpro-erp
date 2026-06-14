@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   ShieldCheck, ShieldAlert, AlertTriangle, CheckCircle2, XCircle,
   Loader2, RefreshCw, FlaskConical, Database, GitBranch, Clock
@@ -57,6 +57,15 @@ export const AuditPanel = () => {
     setViolations(domainBoundaryEnforcer.getViolations());
     setTransactions(transactionLedger.getRecent(20));
   };
+
+  // Phase 6: Live stream audit data
+  useEffect(() => {
+    if (activeTab === 'boundaries' || activeTab === 'transactions') {
+      loadBoundaryData(); // initial load
+      const interval = setInterval(loadBoundaryData, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [activeTab]);
 
   const tabs: { id: ActiveTab; label: string; icon: React.ReactNode }[] = [
     { id: 'consistency', label: 'Data Consistency', icon: <Database className="w-4 h-4" /> },

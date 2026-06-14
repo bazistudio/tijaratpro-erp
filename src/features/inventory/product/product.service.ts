@@ -5,6 +5,7 @@ import { retry } from '@/shared/lib/retry';
 import { RETRY_COUNT } from '../constants/inventory.constants';
 import { CreateProductDTO, UpdateProductDTO } from '../dto/inventory.dto';
 import { ProductEntity } from './product.types';
+import { syncEngine } from '@/features/realtime-sync/sync.engine';
 
 export const productService = {
   /**
@@ -75,6 +76,14 @@ export const productService = {
 
     // Call repository
     const response = await inventoryRepository.createProduct(formData);
+    
+    // Emit real-time event
+    syncEngine.emit('PRODUCT_CREATED', {
+      productId: response.product._id,
+      product: response.product,
+      timestamp: new Date().toISOString()
+    });
+
     return response.product;
   },
 
@@ -91,10 +100,22 @@ export const productService = {
     }
 
     const response = await inventoryRepository.updateProduct(id, payload);
+    
+    syncEngine.emit('PRODUCT_UPDATED', {
+      productId: id,
+      changes: data,
+      timestamp: new Date().toISOString()
+    });
+
     return response.product;
   },
 
   deleteProduct: async (id: string): Promise<void> => {
     await inventoryRepository.deleteProduct(id);
+    
+    syncEngine.emit('PRODUCT_DELETED', {
+      productId: id,
+      timestamp: new Date().toISOString()
+    });
   }
 };

@@ -4,6 +4,8 @@ import React, { useEffect, useState } from 'react';
 import { BarChart3, TrendingUp, ShoppingCart, Target, Loader2 } from 'lucide-react';
 import { salesService, SalesMetrics, SalesPeriod } from '../services/sales.service';
 
+import { salesAdapter } from '@/features/realtime-sync/sync.adapters/sales.adapter';
+
 export const SalesAnalyticsWidget = () => {
   const [period, setPeriod] = useState<SalesPeriod>('today');
   const [metrics, setMetrics] = useState<SalesMetrics | null>(null);
@@ -11,19 +13,32 @@ export const SalesAnalyticsWidget = () => {
 
   useEffect(() => {
     let isMounted = true;
-    setIsLoading(true);
 
-    salesService.getMetrics(period).then((data) => {
-      if (isMounted) {
-        setMetrics(data);
-        setIsLoading(false);
-      }
-    }).catch(err => {
-      console.error(err);
-      if (isMounted) setIsLoading(false);
+    const fetchMetrics = () => {
+      setIsLoading(true);
+      salesService.getMetrics(period).then((data) => {
+        if (isMounted) {
+          setMetrics(data);
+          setIsLoading(false);
+        }
+      }).catch(err => {
+        console.error(err);
+        if (isMounted) setIsLoading(false);
+      });
+    };
+
+    // Initial fetch
+    fetchMetrics();
+
+    // Subscribe to real-time inventory events
+    const unsubscribe = salesAdapter.onInvalidate(() => {
+      if (isMounted) fetchMetrics();
     });
 
-    return () => { isMounted = false; };
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
   }, [period]);
 
   const tabs: { value: SalesPeriod; label: string }[] = [

@@ -5,6 +5,7 @@ import { Sidebar } from '@/components/layout/Sidebar';
 import { MobileSidebar } from '@/components/layout/MobileSidebar';
 import { Topbar } from '@/components/layout/Topbar';
 import { DashboardShell } from '@/components/layout/DashboardShell';
+import { useSyncEngine } from '@/features/realtime-sync/hooks/useSyncEngine';
 
 interface ShopAdminDashboardLayoutProps {
   children: React.ReactNode;
@@ -12,6 +13,9 @@ interface ShopAdminDashboardLayoutProps {
 
 export const ShopAdminDashboardLayout = ({ children }: ShopAdminDashboardLayoutProps) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  
+  // Initialize Real-Time Sync Engine for the entire dashboard
+  useSyncEngine();
 
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50 dark:bg-gray-950">
