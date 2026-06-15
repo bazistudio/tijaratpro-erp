@@ -55,6 +55,7 @@ export const ProductForm = () => {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
+  const [isNewSession, setIsNewSession] = useState(false);
 
   const {
     register,
@@ -77,6 +78,8 @@ export const ProductForm = () => {
   }, [fetchCategories, fetchProducts]);
 
   const recentProducts = useMemo(() => {
+    if (isNewSession) return [];
+
     // Sort descending by updatedAt or just take the end of the array if no updatedAt
     const sorted = [...products].sort((a: any, b: any) => {
       const dateA = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
@@ -90,7 +93,7 @@ export const ProductForm = () => {
       return [...products].reverse().slice(0, 10);
     }
     return sorted.slice(0, 10);
-  }, [products]);
+  }, [products, isNewSession]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -406,8 +409,29 @@ export const ProductForm = () => {
       {/* Verification Table Row */}
       <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/50 flex justify-between items-center sticky top-0 z-10">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Recently Added Products</h2>
-          <span className="text-xs font-medium px-2 py-1 bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg">Last 10 items</span>
+          <div className="flex items-center gap-3">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Recently Added Products</h2>
+            {!isNewSession && (
+              <span className="text-xs font-medium px-2 py-1 bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg">Last 10 items</span>
+            )}
+          </div>
+          <div>
+            {isNewSession ? (
+              <button
+                onClick={() => setIsNewSession(false)}
+                className="text-sm text-blue-500 hover:text-blue-700 transition-colors font-medium"
+              >
+                Restore
+              </button>
+            ) : (
+              <button
+                onClick={() => setIsNewSession(true)}
+                className="px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg transition-colors font-medium"
+              >
+                Start New Session
+              </button>
+            )}
+          </div>
         </div>
         
         <div className="overflow-x-auto overflow-y-auto max-h-[400px]">
@@ -436,6 +460,7 @@ export const ProductForm = () => {
                   const currentStock = product.stock !== undefined ? product.stock : product.quantity;
                   const currentMinStock = product.minStockThreshold !== undefined ? product.minStockThreshold : (product.lowStockThreshold || 5);
                   const isLowStock = currentStock <= currentMinStock;
+                  const currentCost = product.purchasePrice ?? product.costPrice ?? product.cost ?? 0;
                   
                   return (
                     <tr key={product._id || product.id || idx} className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
@@ -449,7 +474,7 @@ export const ProductForm = () => {
                           {currentStock}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-right">PKR {product.purchasePrice?.toLocaleString() || '0'}</td>
+                      <td className="px-6 py-4 text-right">PKR {currentCost.toLocaleString()}</td>
                       <td className="px-6 py-4 text-right font-medium text-gray-900 dark:text-gray-200">PKR {product.price?.toLocaleString()}</td>
                       <td className="px-6 py-4 text-center">
                         {isLowStock ? (
