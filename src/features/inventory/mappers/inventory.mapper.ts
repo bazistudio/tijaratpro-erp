@@ -21,9 +21,17 @@ export const inventoryMapper = {
       name: dto.name,
       sku: dto.sku || '',
       category: categoryName,
+      categoryId: typeof dto.category === 'object' && dto.category !== null ? dto.category._id : dto.category,
       stock: dto.quantity,
       minStockThreshold: dto.lowStockThreshold,
       price: dto.price,
+      purchasePrice: dto.purchasePrice,
+      barcode: dto.barcode,
+      brand: dto.brand,
+      description: dto.description,
+      image: dto.image,
+      updatedAt: dto.updatedAt,
+      version: dto.version,
       unit: 'pcs',
       status: status
     };
@@ -35,8 +43,14 @@ export const inventoryMapper = {
       name: product.name,
       sku: product.sku,
       price: product.price,
+      purchasePrice: product.purchasePrice,
       quantity: product.stock,
       lowStockThreshold: product.minStockThreshold,
+      barcode: product.barcode,
+      brand: product.brand,
+      description: product.description,
+      image: product.image,
+      version: product.version,
     };
   }
 };
