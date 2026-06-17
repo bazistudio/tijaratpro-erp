@@ -8,41 +8,46 @@ import { KPIData } from '@/types/dashboard/kpi.types';
 import { StockWidget } from '@/features/inventory/stock/StockWidget';
 import { selectForceSync, selectStatus } from '@/features/inventory/core/inventory.selectors';
 
-const mockKpiData: KPIData[] = [
-  {
-    title: 'Total Revenue',
-    value: '₨ 4,250,000',
-    trend: 12.5,
-    icon: <DollarSign className="h-5 w-5" />,
-    format: 'currency',
-  },
-  {
-    title: 'Net Profit',
-    value: '₨ 850,000',
-    trend: 8.2,
-    icon: <TrendingUp className="h-5 w-5" />,
-    format: 'currency',
-  },
-  {
-    title: 'Pending Payments',
-    value: '₨ 125,000',
-    trend: -2.4,
-    icon: <CreditCard className="h-5 w-5" />,
-    format: 'currency',
-  },
-  {
-    title: 'Expenses',
-    value: '₨ 320,000',
-    trend: 4.1,
-    icon: <Receipt className="h-5 w-5" />,
-    format: 'currency',
-  },
-];
+import { useState } from 'react';
+import { useDashboardAnalytics } from '@/features/analytics/selectors/dashboard.selectors';
 
 export const ShopAdminDashboard = () => {
+  const [filter, setFilter] = useState<'today' | 'week' | 'month'>('today');
+  const analytics = useDashboardAnalytics(filter);
   const forceSync = selectForceSync();
   const inventoryStatus = selectStatus();
   const isSyncing = inventoryStatus === 'loading';
+
+  const kpiData: KPIData[] = [
+    {
+      title: 'Net Revenue',
+      value: `₨ ${analytics.totalRevenue.toLocaleString()}`,
+      trend: 0,
+      icon: <DollarSign className="h-5 w-5" />,
+      format: 'currency',
+    },
+    {
+      title: 'Net Profit',
+      value: `₨ ${analytics.netProfit.toLocaleString()}`,
+      trend: 0,
+      icon: <TrendingUp className="h-5 w-5" />,
+      format: 'currency',
+    },
+    {
+      title: 'Pending Payments',
+      value: `₨ ${analytics.pendingPayments.toLocaleString()}`,
+      trend: 0,
+      icon: <CreditCard className="h-5 w-5" />,
+      format: 'currency',
+    },
+    {
+      title: 'Total Refunds',
+      value: `₨ ${analytics.totalRefunds.toLocaleString()}`,
+      trend: 0,
+      icon: <Receipt className="h-5 w-5" />,
+      format: 'currency',
+    },
+  ];
 
   return (
     <div className="flex flex-col gap-6 sm:gap-8 w-full">
@@ -87,8 +92,19 @@ export const ShopAdminDashboard = () => {
 
       {/* KPI Section */}
       <section aria-labelledby="kpi-heading">
-        <h2 id="kpi-heading" className="sr-only">Key Performance Indicators</h2>
-        <KPIGrid data={mockKpiData} />
+        <div className="flex justify-between items-center mb-4">
+          <h2 id="kpi-heading" className="text-lg font-bold text-gray-900 dark:text-white">Key Performance Indicators</h2>
+          <select 
+            value={filter} 
+            onChange={(e) => setFilter(e.target.value as any)}
+            className="px-3 py-1.5 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 rounded-lg text-sm font-medium"
+          >
+            <option value="today">Today</option>
+            <option value="week">This Week</option>
+            <option value="month">This Month</option>
+          </select>
+        </div>
+        <KPIGrid data={kpiData} />
       </section>
 
       {/* Inventory Brain */}

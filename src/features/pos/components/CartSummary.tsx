@@ -95,7 +95,7 @@ export const CartSummary = () => {
     setCustomerModalOpen(true);
   };
 
-  const processTransaction = (method: PaymentMethod, cashReceived: number, customerObj: {id: string, name: string} | null = null) => {
+  const processTransaction = async (method: PaymentMethod, cashReceived: number = 0, customerObj: {id: string, name: string} | null = null) => {
     if (!activeSession) return;
     
     const isRefund = grandTotal < 0;
@@ -122,10 +122,10 @@ export const CartSummary = () => {
     // For now, log the invoice for verification
     console.log("INVOICE GENERATED:", invoice);
 
-    toast.success(isRefund ? `Refund Processed. Paid: Rs ${Math.abs(grandTotal)}` : "Sale Saved & Receipt Printing...");
-    
     // Save to store, which triggers rendering of InvoiceReceipt, then print
-    completeTransaction(txn, invoice);
+    await completeTransaction(txn, invoice);
+    
+    toast.success(isRefund ? `Refund Processed. Paid: Rs ${Math.abs(grandTotal)}` : "Sale Saved & Receipt Printing...");
     
     setTimeout(() => {
       window.print();

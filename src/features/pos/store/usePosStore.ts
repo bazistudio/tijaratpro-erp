@@ -1,8 +1,13 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { Product, ShopProfile } from './posMockData';
+import { ShopProfile } from './posMockData';
 import toast from 'react-hot-toast';
 import { Invoice } from '../services/invoice.service';
+import { DBInventory, db } from '@/lib/db';
+import { ledgerService } from '../../ledger/services/ledger.service';
+import { auditService } from '../../audit/services/audit.service';
+import { generateSHA256 } from '@/lib/hash';
+import { useInventoryStore } from '../../inventory/store/useInventoryStore';
 
 export interface CartItem {
   productId: string;
@@ -10,6 +15,7 @@ export interface CartItem {
   barcode: string;
   productName: string;
   unitPrice: number;
+  costPrice: number;
   maxStock: number;
   quantity: number;
   discount: number;
@@ -21,7 +27,7 @@ export type PaymentMethod = 'cash' | 'card' | 'bank' | 'easypaisa' | 'jazzcash' 
 export interface Transaction {
   transactionId: string;
   transactionType: 'sale' | 'replace_exchange' | 'return_only';
-  status: 'pending' | 'completed' | 'void' | 'refunded';
+  status: 'pending' | 'completed' | 'void' | 'refunded' | 'locked';
   
   items: CartItem[]; // New items (for sales/exchanges)
   returnedItems: CartItem[]; // Returned items (for returns/exchanges)
@@ -40,6 +46,12 @@ export interface Transaction {
   } | null;
   
   createdAt: number;
+
+  // Locking Mechanics
+  lockedAt?: number;
+  hash?: string;
+  version?: number;
+  previousHash?: string;
 }
 
 export interface SaleSession {
@@ -80,13 +92,13 @@ interface PosStore {
 
   // Cart Actions (operates on active tab)
   setSessionMode: (mode: 'sale' | 'replace') => void;
-  addToCart: (product: Product, isReturn?: boolean) => void;
+  addToCart: (product: DBInventory, isReturn?: boolean) => void;
   updateQuantity: (productId: string, quantity: number, isReturn?: boolean) => void;
   removeFromCart: (productId: string, isReturn?: boolean) => void;
   clearCart: () => void;
 
   // Transaction Lifecycle
-  completeTransaction: (transaction: Transaction, invoice: Invoice) => void;
+  completeTransaction: (transaction: Transaction, invoice: Invoice) => Promise<void>;
   setLastInvoice: (invoice: Invoice | null) => void;
 
   // Selectors
@@ -202,7 +214,7 @@ export const usePosStore = create<PosStore>()(
         return saleTabs.find(t => t.id === activeTabId);
       },
 
-      addToCart: (product: Product, isReturn = false) => {
+      addToCart: (product: DBInventory, isReturn = false) => {
         const { saleTabs, activeTabId } = get();
         
         set({
@@ -240,7 +252,8 @@ export const usePosStore = create<PosStore>()(
               sku: product.sku,
               barcode: product.barcode,
               productName: product.name,
-              unitPrice: product.price,
+              unitPrice: product.salePrice,
+              costPrice: product.costPrice,
               maxStock: product.stock, // Original stock limit, for returns we usually don't care about max stock limits strictly during entry
               quantity: 1,
               discount: 0,
@@ -310,15 +323,53 @@ export const usePosStore = create<PosStore>()(
         });
       },
 
-      completeTransaction: (transaction: Transaction, invoice: Invoice) => {
+      completeTransaction: async (transaction: Transaction, invoice: Invoice) => {
         const { transactions } = get();
-        // Idempotency guard: prevent duplicate transactions
         if (transactions.some(t => t.transactionId === transaction.transactionId)) {
           console.warn(`Transaction ${transaction.transactionId} already exists. Skipping duplicate save.`);
           return;
         }
+
+        // 1. Transaction Locking (Tamper-proof hash)
+        const lockedAt = Date.now();
+        const hashPayload = { ...transaction, lockedAt };
+        const hash = await generateSHA256(hashPayload);
+        
+        const lockedTransaction: Transaction = {
+          ...transaction,
+          status: 'locked',
+          lockedAt,
+          version: 1,
+          hash
+        };
+
+        // 2. Persist to Dexie (DBTransaction maps exactly to our lockedTransaction structure)
+        await db.transactions.add(lockedTransaction as any);
+
+        // 3. Ledger System (Double-Entry)
+        await ledgerService.processTransaction(lockedTransaction as any);
+
+        // 4. Inventory flow (Update stock dynamically)
+        const { decreaseStock, increaseStock } = useInventoryStore.getState();
+        for (const item of lockedTransaction.items) {
+          await decreaseStock(item.productId, item.quantity);
+        }
+        for (const retItem of lockedTransaction.returnedItems) {
+          await increaseStock(retItem.productId, retItem.quantity);
+        }
+
+        // 5. Audit Logging
+        await auditService.logAction(
+          'transaction', 
+          'SALE', 
+          transaction, 
+          lockedTransaction, 
+          'system'
+        );
+
+        // 6. Update local UI state
         set({
-          transactions: [...transactions, transaction],
+          transactions: [...transactions, lockedTransaction],
           lastInvoice: invoice
         });
         get().clearCart();

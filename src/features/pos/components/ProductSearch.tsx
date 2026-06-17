@@ -2,16 +2,22 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, ArrowDownToLine, ArrowUpFromLine } from 'lucide-react';
-import { mockProducts, Product } from '../store/posMockData';
 import { usePosStore } from '../store/usePosStore';
+import { useInventoryStore } from '../../inventory/store/useInventoryStore';
+import { DBInventory } from '@/lib/db';
 
 export const ProductSearch = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedTerm, setDebouncedTerm] = useState('');
-  const [results, setResults] = useState<Product[]>([]);
+  const [results, setResults] = useState<DBInventory[]>([]);
   
   const activeSession = usePosStore(state => state.getActiveSession());
   const addToCart = usePosStore(state => state.addToCart);
+  const { products, initializeStore } = useInventoryStore();
+
+  useEffect(() => {
+    initializeStore();
+  }, [initializeStore]);
   
   const isReplaceMode = activeSession?.mode === 'replace';
   const [targetBucket, setTargetBucket] = useState<'new' | 'return'>('new');
@@ -39,7 +45,7 @@ export const ProductSearch = () => {
     }
     
     const lowerTerm = debouncedTerm.toLowerCase();
-    const filtered = mockProducts.filter(p => 
+    const filtered = products.filter(p => 
       p.name.toLowerCase().includes(lowerTerm) || 
       p.sku.toLowerCase().includes(lowerTerm) || 
       p.barcode.includes(lowerTerm)
@@ -68,7 +74,7 @@ export const ProductSearch = () => {
     if (e.key === 'Enter') {
       e.preventDefault();
       // Auto-add on exact barcode or SKU match
-      const exactMatch = mockProducts.find(p => 
+      const exactMatch = products.find(p => 
         p.barcode === searchTerm.trim() || p.sku.toLowerCase() === searchTerm.trim().toLowerCase()
       );
       
@@ -78,7 +84,7 @@ export const ProductSearch = () => {
     }
   };
 
-  const handleAdd = (product: Product) => {
+  const handleAdd = (product: DBInventory) => {
     addToCart(product, targetBucket === 'return');
     setSearchTerm('');
     // Auto focus back to input for rapid scanning
