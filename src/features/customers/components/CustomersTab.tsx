@@ -1,19 +1,26 @@
 import React, { useState } from 'react';
 import { Plus, Search, Edit, Trash2, BookOpen } from 'lucide-react';
-import { useLiveQuery } from 'dexie-react-hooks';
-import { db } from '@/lib/db';
+import { useQuery } from '@tanstack/react-query';
+import { customerApi } from '@/services/customer.api';
 import { useRouter } from 'next/navigation';
 
 export const CustomersTab = () => {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
 
-  const customers = useLiveQuery(() => db.customers.toArray()) || [];
+  const { data: customerResponse, isLoading } = useQuery({
+    queryKey: ['customers'],
+    queryFn: () => customerApi.getCustomers(),
+    staleTime: 30000,
+    retry: 1,
+    refetchOnWindowFocus: false,
+  });
+
+  const customers = customerResponse?.data || [];
 
   const filteredCustomers = customers.filter(c => 
     c.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    c.mobile.includes(searchTerm) ||
-    c.accountCode.toLowerCase().includes(searchTerm.toLowerCase())
+    (c.phone || c.mobile || '').includes(searchTerm)
   );
 
   const navigateToLedger = (customerId: string) => {
@@ -93,7 +100,7 @@ export const CustomersTab = () => {
             {filteredCustomers.length === 0 && (
               <tr>
                 <td colSpan={6} className="px-6 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
-                  No customers found.
+                  {isLoading ? 'Loading customers...' : 'No customers found.'}
                 </td>
               </tr>
             )}

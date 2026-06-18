@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Search } from 'lucide-react';
-import { DBCustomer } from '@/lib/db';
+import { DBCustomer } from '@/types/db.types';
 
 interface CustomerListPanelProps {
   customers: DBCustomer[];

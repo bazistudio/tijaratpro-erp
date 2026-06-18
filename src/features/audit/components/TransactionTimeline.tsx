@@ -1,24 +1,34 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useLiveQuery } from 'dexie-react-hooks';
-import { db, DBTransaction } from '@/lib/db';
+import { useQuery } from '@tanstack/react-query';
+import { salesApi } from '@/services/sales.api';
 import { Search, Printer, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 
 export const TransactionTimeline = () => {
   const [searchTerm, setSearchTerm] = useState('');
   
-  const transactions = useLiveQuery(
-    () => db.transactions
-      .orderBy('createdAt')
-      .reverse()
-      .toArray()
-  ) || [];
+  const { data: ordersResponse, isLoading } = useQuery({
+    queryKey: ['orders'],
+    queryFn: () => salesApi.getOrders(),
+    staleTime: 30000,
+    retry: 1,
+    refetchOnWindowFocus: false,
+  });
 
-  const filteredTransactions = transactions.filter(t => 
+  const orders = ordersResponse?.data || [];
+
+  const filteredTransactions = orders.map((order: any) => ({
+    transactionId: order.orderNumber,
+    createdAt: new Date(order.createdAt).getTime(),
+    transactionType: 'sale', // Default to sale
+    customer: order.customerId ? { name: order.customerId.name } : null,
+    grandTotal: order.totalAmount,
+    status: order.status
+  })).filter(t => 
     t.transactionId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    t.customer?.name.toLowerCase().includes(searchTerm.toLowerCase())
+    (t.customer?.name || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -51,7 +61,7 @@ export const TransactionTimeline = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
-            {filteredTransactions.map((txn: DBTransaction) => (
+            {filteredTransactions.map((txn: any) => (
               <tr key={txn.transactionId} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
                 <td className="px-4 py-3 whitespace-nowrap">
                   <div className="flex items-center gap-2">
@@ -102,7 +112,7 @@ export const TransactionTimeline = () => {
             {filteredTransactions.length === 0 && (
               <tr>
                 <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
-                  No transactions found matching your search.
+                  {isLoading ? 'Loading transactions...' : 'No transactions found matching your search.'}
                 </td>
               </tr>
             )}

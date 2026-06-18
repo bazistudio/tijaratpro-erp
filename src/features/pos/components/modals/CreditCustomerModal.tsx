@@ -2,11 +2,13 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, X } from 'lucide-react';
-import { mockCustomers, CreditCustomer } from '../../store/posMockData';
+import { useQuery } from '@tanstack/react-query';
+import { customerApi } from '@/services/customer.api';
+import { DBCustomer } from '@/types/db.types';
 
 interface Props {
   onClose: () => void;
-  onSelect: (customer: CreditCustomer) => void;
+  onSelect: (customer: DBCustomer) => void;
 }
 
 export const CreditCustomerModal: React.FC<Props> = ({ onClose, onSelect }) => {
@@ -14,10 +16,20 @@ export const CreditCustomerModal: React.FC<Props> = ({ onClose, onSelect }) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const filtered = mockCustomers.filter(c => 
+  const { data: customerResponse, isLoading } = useQuery({
+    queryKey: ['customers'],
+    queryFn: () => customerApi.getCustomers(),
+    staleTime: 30000,
+    retry: 1,
+    refetchOnWindowFocus: false,
+  });
+
+  const customers = customerResponse?.data || [];
+
+  const filtered = customers.filter(c => 
     c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    c.mobile.includes(searchTerm) ||
-    c.accountCode.toLowerCase().includes(searchTerm.toLowerCase())
+    (c.mobile || '').includes(searchTerm) ||
+    (c.accountCode || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   useEffect(() => {
@@ -77,17 +89,21 @@ export const CreditCustomerModal: React.FC<Props> = ({ onClose, onSelect }) => {
         </div>
 
         <div className="max-h-80 overflow-y-auto p-2">
-          {filtered.length > 0 ? (
+          {isLoading ? (
+            <div className="p-8 text-center text-sm text-gray-500">
+              Loading customers...
+            </div>
+          ) : filtered.length > 0 ? (
             filtered.map((customer, idx) => (
               <div 
-                key={customer.id}
+                key={customer.id || customer._id}
                 onClick={() => onSelect(customer)}
                 onMouseEnter={() => setSelectedIndex(idx)}
                 className={`p-3 rounded-lg cursor-pointer flex justify-between items-center transition-colors ${idx === selectedIndex ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800/50 border' : 'border border-transparent hover:bg-gray-50 dark:hover:bg-gray-800'}`}
               >
                 <div>
                   <p className="font-bold text-gray-900 dark:text-gray-100 text-sm">{customer.name}</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 font-mono mt-0.5">{customer.accountCode} • {customer.mobile}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 font-mono mt-0.5">{customer.accountCode || 'NO-CODE'} • {customer.mobile}</p>
                 </div>
                 <div className="text-right">
                   <p className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Balance</p>

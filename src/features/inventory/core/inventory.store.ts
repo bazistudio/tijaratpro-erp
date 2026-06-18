@@ -35,7 +35,6 @@ interface InventoryState {
   // async thunks
   fetchProducts: (params?: Partial<PaginationParams>) => Promise<void>;
   forceSync: () => Promise<void>;
-  updateStock: (productId: string, newStock: number) => Promise<void>;
   updateProduct: (id: string, data: import('../dto/inventory.dto').UpdateProductDTO, image?: File) => Promise<void>;
   deleteProduct: (id: string) => Promise<void>;
   fetchCategories: () => Promise<void>;
@@ -90,36 +89,6 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
     // Clear cache completely and force refetch from backend
     set({ products: [], totalProducts: 0, status: 'loading', error: null });
     await get().fetchProducts();
-  },
-
-  updateStock: async (productId, newStock) => {
-    try {
-      const currentProducts = get().products;
-      const product = currentProducts.find(p => p.id === productId);
-      if (!product) return;
-      
-      const oldStock = product.stock;
-      if (oldStock === newStock) return;
-      
-      const type = newStock > oldStock ? InventoryAdjustmentType.INCREASE : InventoryAdjustmentType.DECREASE;
-      const diff = Math.abs(newStock - oldStock);
-      
-      // Optimistic UI Update
-      const updatedStatus = inventoryService.calculateStockStatus(newStock, product.minStockThreshold);
-      set({
-        products: currentProducts.map(p => 
-          p.id === productId ? { ...p, stock: newStock, status: updatedStatus } : p
-        )
-      });
-      
-      // Execute Real Backend Request
-      await stockService.adjustStock(productId, diff, type, 'Manual dashboard adjustment');
-      
-    } catch (error: any) {
-      // Revert optimism by re-fetching (or manually reversing)
-      get().fetchProducts();
-      set({ error: error.message || 'Failed to sync stock update' });
-    }
   },
 
   updateProduct: async (id, data, image) => {

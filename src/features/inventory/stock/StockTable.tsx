@@ -2,9 +2,10 @@
 
 import React, { useState } from 'react';
 import { ArrowUpDown, ArrowUp, ArrowDown, History } from 'lucide-react';
-import { InventoryProduct, SortField, SortDirection } from '@/features/inventory/types';
+import { InventoryProduct, SortField, SortDirection, InventoryAdjustmentType } from '@/features/inventory/types';
 import { StockStatus } from './stock.types';
-import { selectSortConfig, selectSetSort, selectUpdateStock } from '@/features/inventory/core/inventory.selectors';
+import { selectSortConfig, selectSetSort, selectFetchProducts } from '@/features/inventory/core/inventory.selectors';
+import { inventoryApi } from '../api/inventory.api';
 
 interface StockTableProps {
   products: InventoryProduct[];
@@ -21,7 +22,7 @@ function SortIcon({ field, activeField, direction }: { field: SortField; activeF
 export const StockTable = ({ products, isLoading }: StockTableProps) => {
   const sort = selectSortConfig();
   const setSort = selectSetSort();
-  const updateStock = selectUpdateStock();
+  const fetchProducts = selectFetchProducts();
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState<string>('');
@@ -41,7 +42,22 @@ export const StockTable = ({ products, isLoading }: StockTableProps) => {
   const commitEdit = async (productId: string) => {
     const newStock = parseInt(editValue, 10);
     if (!isNaN(newStock) && newStock >= 0) {
-      await updateStock(productId, newStock);
+      const product = products.find(p => p.id === productId);
+      if (product) {
+        const oldStock = product.stock;
+        if (oldStock !== newStock) {
+          const type = newStock > oldStock 
+            ? InventoryAdjustmentType.INCREASE 
+            : InventoryAdjustmentType.DECREASE;
+          const diff = Math.abs(newStock - oldStock);
+          try {
+            await inventoryApi.adjustStock(productId, diff, type, 'Manual dashboard adjustment');
+            await fetchProducts(); // Reload from backend of truth
+          } catch (error: any) {
+            import('react-hot-toast').then(m => m.default.error(error.message || 'Failed to adjust stock'));
+          }
+        }
+      }
     }
     setEditingId(null);
   };

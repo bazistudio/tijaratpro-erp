@@ -1,6 +1,6 @@
 import React from 'react';
 import { Phone, MessageCircle, Printer, CreditCard, Receipt } from 'lucide-react';
-import { DBCustomer } from '@/lib/db';
+import { DBCustomer } from '@/types/db.types';
 import { DocumentService } from '@/features/pos/services/document/document.service';
 import { normalizePakPhone } from '@/utils/phoneUtils';
 

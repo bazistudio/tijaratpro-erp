@@ -4,8 +4,9 @@ import React, { useState } from 'react';
 import { PdfUploader } from '../components/PdfUploader';
 import { ImportPreviewTable } from '../components/ImportPreviewTable';
 import { ImportActions } from '../components/ImportActions';
-import { pdfImportService } from '../services/pdfImport.service';
-import { ImportState, PriceData, PurchaseOptions } from '../types/import.types';
+import { importApi } from '@/services/import.api';
+import { parseInvoiceData, normalizeImportPayload, validateParsedData } from '../utils/importHelpers';
+import { ImportState, PriceData, PurchaseOptions, ParsedInvoice } from '../types/import.types';
 import { FileText, Keyboard, History, AlertCircle, CheckCircle, Loader2, CreditCard, Banknote } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -26,8 +27,25 @@ export const PdfImportPage = () => {
   const handleFileSelect = async (file: File) => {
     setState(prev => ({ ...prev, file, loading: true, error: null }));
     try {
-      const rawText = await pdfImportService.extractPdfText(file);
-      const parsedData = pdfImportService.parseInvoiceData(rawText);
+      const resData = await importApi.uploadPDF(file);
+      const rawText = resData.rawLines.join('\n');
+      const parsedMeta = parseInvoiceData(rawText);
+      
+      const items = resData.products.map((p: any) => ({
+        name: p.name,
+        qty: p.quantity || p.qty || 1,
+        price: p.price || 0
+      }));
+
+      const computedTotal = items.reduce((sum: number, item: any) => sum + (item.price * item.qty), 0);
+
+      const parsedData: ParsedInvoice = {
+        customerName: parsedMeta.customerName || 'Unknown Customer',
+        phone: parsedMeta.phone || '00000000000',
+        totalAmount: computedTotal > 0 ? computedTotal : parsedMeta.totalAmount,
+        items,
+        date: parsedMeta.date || new Date().toLocaleDateString()
+      };
       
       const initialOverrides: Record<string, PriceData> = {};
       parsedData.items.forEach(item => {
@@ -49,14 +67,19 @@ export const PdfImportPage = () => {
     
     setState(prev => ({ ...prev, loading: true }));
     try {
-      const payload = pdfImportService.normalizeImportPayload(state.parsedData);
+      const payload = normalizeImportPayload(state.parsedData);
       const options: PurchaseOptions = {
         type: purchaseType,
         supplierId: supplierId || undefined,
         priceOverrides
       };
 
-      await pdfImportService.commitImport(payload, options);
+      await importApi.commitImport({
+        customer: payload.customer,
+        items: payload.items,
+        totalAmount: payload.totalAmount,
+        options
+      });
       
       toast.success('Successfully imported invoice into inventory and ledger!');
       handleReset();
@@ -89,7 +112,7 @@ export const PdfImportPage = () => {
     }));
   };
 
-  const handleDataChange = (field: keyof typeof state.parsedData, value: any) => {
+  const handleDataChange = (field: keyof ParsedInvoice, value: any) => {
     setState(prev => {
       if (!prev.parsedData) return prev;
       return {
@@ -181,7 +204,7 @@ export const PdfImportPage = () => {
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">
               <ImportPreviewTable 
                 data={state.parsedData} 
-                errors={pdfImportService.validateParsedData(state.parsedData)}
+                errors={validateParsedData(state.parsedData)}
                 priceOverrides={priceOverrides}
                 onPriceChange={handlePriceChange}
                 onDataChange={handleDataChange}
@@ -240,7 +263,7 @@ export const PdfImportPage = () => {
                 onConfirm={handleConfirm}
                 onReset={handleReset}
                 isSaving={state.loading}
-                disabled={pdfImportService.validateParsedData(state.parsedData).length > 0}
+                disabled={validateParsedData(state.parsedData).length > 0}
               />
             </div>
           )}

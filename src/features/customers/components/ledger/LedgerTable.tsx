@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Search } from 'lucide-react';
-import { DBLedgerEntry } from '@/lib/db';
+import { DBLedgerEntry } from '@/types/db.types';
 import { format } from 'date-fns';
 
 interface LedgerTableProps {

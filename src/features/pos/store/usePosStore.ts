@@ -1,13 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { ShopProfile } from './posMockData';
 import toast from 'react-hot-toast';
-import { DBInventory, db } from '@/lib/db';
-import { ledgerService } from '../../ledger/services/ledger.service';
-import { auditService } from '../../audit/services/audit.service';
-import { useInventoryStore } from '../../inventory/store/useInventoryStore';
-import { FinancialService } from '../services/financial.service';
-import { FinancialMathEngine } from '../services/financialMath.engine';
+import { DBInventory } from '@/types/db.types';
+import { salesApi } from '@/services/sales.api';
 import { InvoiceDocument } from '../services/document/document.service';
 
 export interface CartItem {
@@ -19,10 +14,6 @@ export interface CartItem {
   costPrice: number;
   maxStock: number;
   quantity: number;
-  discountType: 'percentage' | 'fixed';
-  discountValue: number;
-  discount: number; // The computed discount amount
-  subtotal: number;
 }
 
 export type PaymentMethod = 'cash' | 'card' | 'bank' | 'easypaisa' | 'jazzcash' | 'credit';
@@ -108,8 +99,7 @@ interface PosStore {
   removeFromCart: (productId: string, isReturn?: boolean) => void;
   clearCart: () => void;
   
-  // Discount Engine
-  setItemDiscount: (productId: string, discountType: 'percentage' | 'fixed', discountValue: number, isReturn?: boolean) => void;
+  // Global Discount Action
   setInvoiceDiscount: (discountType: 'percentage' | 'fixed', discountValue: number) => void;
 
   // Transaction Lifecycle
@@ -251,9 +241,7 @@ export const usePosStore = create<PosStore>()(
               toast.success(`Increased ${existingItem.productName} quantity`);
               const updatedList = targetList.map(item => {
                 if (item.productId === product.id) {
-                  const baseTotal = newQty * item.unitPrice;
-                  const discountAmount = item.discountType === 'percentage' ? baseTotal * (item.discountValue / 100) : item.discountValue;
-                  return { ...item, quantity: newQty, discount: discountAmount, subtotal: baseTotal - discountAmount };
+                  return { ...item, quantity: newQty };
                 }
                 return item;
               });
@@ -274,12 +262,8 @@ export const usePosStore = create<PosStore>()(
               productName: product.name,
               unitPrice: product.salePrice,
               costPrice: product.costPrice,
-              maxStock: product.stock, // Original stock limit, for returns we usually don't care about max stock limits strictly during entry
-              quantity: 1,
-              discountType: 'fixed',
-              discountValue: 0,
-              discount: 0,
-              subtotal: product.salePrice
+              maxStock: product.stock,
+              quantity: 1
             };
             
             return isReturn 
@@ -305,9 +289,7 @@ export const usePosStore = create<PosStore>()(
                   toast.error(`Only ${item.maxStock} items in stock`);
                   return item;
                 }
-                const baseTotal = quantity * item.unitPrice;
-                const discountAmount = item.discountType === 'percentage' ? baseTotal * (item.discountValue / 100) : item.discountValue;
-                return { ...item, quantity, discount: discountAmount, subtotal: baseTotal - discountAmount };
+                return { ...item, quantity };
               }
               return item;
             });
@@ -347,27 +329,6 @@ export const usePosStore = create<PosStore>()(
         });
       },
 
-      setItemDiscount: (productId, discountType, discountValue, isReturn = false) => {
-        const { saleTabs, activeTabId } = get();
-        set({
-          saleTabs: saleTabs.map(tab => {
-            if (tab.id !== activeTabId) return tab;
-
-            const targetList = isReturn ? tab.returnedItems : tab.cart;
-            const updatedList = targetList.map(item => {
-              if (item.productId === productId) {
-                const baseTotal = item.quantity * item.unitPrice;
-                const discountAmount = discountType === 'percentage' ? baseTotal * (discountValue / 100) : discountValue;
-                return { ...item, discountType, discountValue, discount: discountAmount, subtotal: baseTotal - discountAmount };
-              }
-              return item;
-            });
-
-            return isReturn ? { ...tab, returnedItems: updatedList } : { ...tab, cart: updatedList };
-          })
-        });
-      },
-
       setInvoiceDiscount: (discountType, discountValue) => {
         const { saleTabs, activeTabId } = get();
         set({
@@ -383,43 +344,34 @@ export const usePosStore = create<PosStore>()(
         if (!session) return;
 
         try {
-          const result = await FinancialService.processTransaction({
-            session,
-            paymentBreakdown,
-            customer
-          });
+          const payload = {
+            items: session.cart.map(item => ({
+              productId: item.productId,
+              quantity: item.quantity,
+              price: item.unitPrice
+            })),
+            customerId: customer?.id === 'walk-in' ? undefined : customer?.id,
+            paymentMethod: paymentBreakdown[0]?.method?.toLowerCase() || 'cash',
+            taxRate: 0,
+            discount: session.invoiceDiscountValue || 0,
+          };
 
-          // Ledger System (Double-Entry)
-          await ledgerService.processTransaction(result.transaction as any);
+          const result = await salesApi.createOrder(payload);
 
-          // Inventory flow (Update stock dynamically)
-          const { decreaseStock, increaseStock } = useInventoryStore.getState();
-          for (const item of result.transaction.items) {
-            await decreaseStock(item.productId, item.quantity);
+          if (!result.success) {
+            throw new Error(result.message || 'Transaction failed');
           }
-          for (const retItem of result.transaction.returnedItems) {
-            await increaseStock(retItem.productId, retItem.quantity);
-          }
-
-          // Audit Logging
-          await auditService.logAction(
-            'transaction', 
-            'SALE', 
-            session, 
-            result.transaction, 
-            'system'
-          );
 
           // Update local UI state
           set(state => ({
-            transactions: [...state.transactions, result.transaction as any]
+            transactions: [...state.transactions, result.order as any]
           }));
           get().clearCart();
           
           return result;
-        } catch (error) {
+        } catch (error: any) {
           console.error("Transaction failed", error);
-          toast.error("Payment failed. Nothing was saved.");
+          toast.error(error.message || "Payment failed. Nothing was saved.");
           throw error;
         }
       },
@@ -436,32 +388,3 @@ export const usePosStore = create<PosStore>()(
     }
   )
 );
-
-// Derived state helpers (computed values)
-export const useCartTotals = () => {
-  const activeSession = usePosStore(state => state.getActiveSession());
-  const cart = activeSession?.cart || [];
-  const returnedItems = activeSession?.returnedItems || [];
-  
-  const totalItems = cart.length; 
-  const totalQuantity = cart.reduce((acc, item) => acc + item.quantity, 0);
-  
-  const returnItemsCount = returnedItems.length;
-  const returnQuantity = returnedItems.reduce((acc, item) => acc + item.quantity, 0);
-
-  // Pure Math Engine Integration (Zero-drift UI alignment)
-  const math = FinancialMathEngine.calculateTotals(activeSession as any);
-
-  return { 
-    totalItems, 
-    totalQuantity, 
-    returnItemsCount,
-    returnQuantity,
-    subtotal: math.subtotal,
-    newItemsTotal: math.newItemsTotal, 
-    returnTotal: math.returnTotal,
-    discountTotal: math.discountTotal, 
-    invoiceDiscountAmount: math.invoiceDiscountAmount,
-    grandTotal: math.finalAmount 
-  };
-};

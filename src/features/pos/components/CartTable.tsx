@@ -2,17 +2,14 @@
 
 import React, { useState } from 'react';
 import { Minus, Plus, Trash2, ArrowDownToLine } from 'lucide-react';
-import { usePosStore, useCartTotals } from '../store/usePosStore';
+import { usePosStore } from '../store/usePosStore';
 import { CartItem } from '../store/usePosStore';
 
 export const CartTable = () => {
   const activeSession = usePosStore(state => state.getActiveSession());
   const updateQuantity = usePosStore(state => state.updateQuantity);
   const removeFromCart = usePosStore(state => state.removeFromCart);
-  const setItemDiscount = usePosStore(state => state.setItemDiscount);
   
-  const { totalItems, totalQuantity, returnItemsCount, returnQuantity } = useCartTotals();
-
   // Local state for quantity input to allow empty string during typing
   const [localQuantities, setLocalQuantities] = useState<Record<string, string>>({});
 
@@ -20,6 +17,12 @@ export const CartTable = () => {
   const cart = activeSession?.cart ?? [];
   const returnedItems = activeSession?.returnedItems ?? [];
   const mode = activeSession?.mode;
+
+  // Local render-time calculations (display previews only, not mutating business state)
+  const totalItems = cart.length;
+  const totalQuantity = cart.reduce((acc, item) => acc + item.quantity, 0);
+  const returnItemsCount = returnedItems.length;
+  const returnQuantity = returnedItems.reduce((acc, item) => acc + item.quantity, 0);
 
   const handleQtyChange = (productId: string, value: string, maxStock: number, isReturn: boolean) => {
     setLocalQuantities(prev => ({ ...prev, [`${isReturn ? 'ret' : 'new'}-${productId}`]: value }));
@@ -48,9 +51,12 @@ export const CartTable = () => {
     const key = `${isReturn ? 'ret' : 'new'}-${item.productId}`;
     const inputValue = localQuantities[key] !== undefined ? localQuantities[key] : item.quantity;
     
+    // Isolated display preview calculations
+    const itemTotal = item.unitPrice * item.quantity;
+
     return (
       <div key={key} className={`grid grid-cols-12 gap-2 px-3 py-3 border-b items-center hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors group ${isReturn ? 'border-orange-100 dark:border-orange-900/30 bg-orange-50/30 dark:bg-orange-900/10' : 'border-gray-100 dark:border-gray-800'}`}>
-        <div className="col-span-4 overflow-hidden">
+        <div className="col-span-6 overflow-hidden">
           <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate flex items-center gap-2" title={item.productName}>
             {isReturn && <ArrowDownToLine className="h-3 w-3 text-orange-500 shrink-0" />}
             <span className={isReturn ? 'text-orange-900 dark:text-orange-100' : ''}>{item.productName}</span>
@@ -64,7 +70,7 @@ export const CartTable = () => {
             )}
           </p>
         </div>
-        <div className="col-span-2 flex items-center justify-center gap-1">
+        <div className="col-span-3 flex items-center justify-center gap-1">
           <button 
             onClick={() => updateQuantity(item.productId, item.quantity - 1, isReturn)}
             disabled={item.quantity <= 1}
@@ -89,33 +95,9 @@ export const CartTable = () => {
             <Plus className="h-3 w-3" />
           </button>
         </div>
-        
-        {/* Discount Controls */}
-        <div className="col-span-3 flex flex-col items-center justify-center gap-1">
-          {!isReturn ? (
-            <div className="flex border border-gray-200 dark:border-gray-700 rounded overflow-hidden">
-              <input 
-                type="number"
-                value={item.discountValue || ''}
-                placeholder="0"
-                onChange={(e) => setItemDiscount(item.productId, item.discountType, parseFloat(e.target.value) || 0, isReturn)}
-                className="w-12 text-xs font-semibold text-center py-1 bg-white dark:bg-gray-900 focus:outline-none focus:bg-gray-50 dark:focus:bg-gray-800 no-spinners"
-              />
-              <button 
-                onClick={() => setItemDiscount(item.productId, item.discountType === 'percentage' ? 'fixed' : 'percentage', item.discountValue, isReturn)}
-                className="px-1.5 py-1 text-[10px] font-bold bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
-              >
-                {item.discountType === 'percentage' ? '%' : 'Rs'}
-              </button>
-            </div>
-          ) : (
-            <span className="text-xs text-gray-400">-</span>
-          )}
-          {item.discount > 0 && <span className="text-[10px] text-red-500 font-bold tabular-nums">-Rs {item.discount.toLocaleString()}</span>}
-        </div>
 
         <div className={`col-span-2 text-right text-sm font-bold tabular-nums ${isReturn ? 'text-orange-600 dark:text-orange-400' : 'text-gray-900 dark:text-gray-100'}`}>
-          {isReturn ? '-' : ''}{(item.subtotal).toLocaleString()}
+          {isReturn ? '-' : ''}Rs {itemTotal.toLocaleString()}
         </div>
         <div className="col-span-1 text-right">
           <button 
@@ -132,9 +114,8 @@ export const CartTable = () => {
   return (
     <div className="flex-1 border border-gray-200 dark:border-gray-700 rounded-lg flex flex-col overflow-hidden bg-white dark:bg-gray-900 shadow-sm">
       <div className="grid grid-cols-12 gap-2 px-3 py-2 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50 text-xs font-semibold text-gray-500 uppercase tracking-wider shrink-0">
-        <div className="col-span-4">Product</div>
-        <div className="col-span-2 text-center">Qty</div>
-        <div className="col-span-3 text-center">Discount</div>
+        <div className="col-span-6">Product</div>
+        <div className="col-span-3 text-center">Qty</div>
         <div className="col-span-2 text-right">Total</div>
         <div className="col-span-1"></div>
       </div>
@@ -175,7 +156,7 @@ export const CartTable = () => {
       {/* Cart Footer */}
       {(cart.length > 0 || returnedItems.length > 0) && (
         <div className="grid grid-cols-12 gap-2 px-3 py-2 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50 text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider shrink-0">
-          <div className="col-span-5 text-left flex gap-3">
+          <div className="col-span-6 text-left flex gap-3">
             <span>Lines: <span className="font-bold tabular-nums text-gray-900 dark:text-gray-100">{totalItems}</span></span>
             {returnItemsCount > 0 && (
               <span className="text-orange-600">Ret: <span className="font-bold tabular-nums">{returnItemsCount}</span></span>
@@ -187,7 +168,7 @@ export const CartTable = () => {
               <span className="text-orange-600">Ret: <span className="font-bold tabular-nums">{returnQuantity}</span></span>
             )}
           </div>
-          <div className="col-span-4"></div>
+          <div className="col-span-3"></div>
         </div>
       )}
 

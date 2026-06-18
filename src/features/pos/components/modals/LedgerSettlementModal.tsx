@@ -1,12 +1,12 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { CreditCustomer } from '../../store/posMockData';
+import { DBCustomer } from '@/types/db.types';
 import { X, CheckCircle2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 interface Props {
-  customer: CreditCustomer;
+  customer: DBCustomer;
   invoiceTotal: number;
   onClose: () => void;
   onSuccess: () => void;

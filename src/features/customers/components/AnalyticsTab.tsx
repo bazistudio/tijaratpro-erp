@@ -1,10 +1,18 @@
 import React, { useMemo } from 'react';
 import { Users, CreditCard, TrendingUp, UserPlus, FileText } from 'lucide-react';
-import { useLiveQuery } from 'dexie-react-hooks';
-import { db } from '@/lib/db';
+import { useQuery } from '@tanstack/react-query';
+import { customerApi } from '@/services/customer.api';
 
 export const AnalyticsTab = () => {
-  const customers = useLiveQuery(() => db.customers.toArray()) || [];
+  const { data: customerResponse } = useQuery({
+    queryKey: ['customers'],
+    queryFn: () => customerApi.getCustomers(),
+    staleTime: 30000,
+    retry: 1,
+    refetchOnWindowFocus: false,
+  });
+
+  const customers = customerResponse?.data || [];
   
   const totalCustomers = customers.length;
   

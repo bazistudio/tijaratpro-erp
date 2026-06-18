@@ -4,6 +4,7 @@ import "./globals.css";
 import "@/lib/api/interceptors"; // registers Axios interceptors (device-id + 401 refresh)
 import AuthHydrator from "@/components/auth/AuthHydrator";
 import { Toaster } from "react-hot-toast";
+import ReactQueryProvider from "@/components/providers/ReactQueryProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,10 +32,12 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <Toaster position="bottom-right" />
-        {/* Rehydrates Zustand store from localStorage on every page load */}
-        <AuthHydrator />
-        {children}
+        <ReactQueryProvider>
+          <Toaster position="bottom-right" />
+          {/* Rehydrates Zustand store from localStorage on every page load */}
+          <AuthHydrator />
+          {children}
+        </ReactQueryProvider>
       </body>
     </html>
   );

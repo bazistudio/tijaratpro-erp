@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { useLiveQuery } from 'dexie-react-hooks';
-import { db } from '@/lib/db';
+import { useQuery } from '@tanstack/react-query';
+import { customerApi } from '@/services/customer.api';
+import { ledgerApi } from '@/services/ledger.api';
 import { CustomerListPanel } from './ledger/CustomerListPanel';
 import { CustomerDetailPanel } from './ledger/CustomerDetailPanel';
 import { MonthSelector } from './ledger/MonthSelector';
@@ -15,39 +16,43 @@ export const CreditLedgerTab = () => {
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
   // 1. Fetch Customers
-  const customers = useLiveQuery(() => db.customers.toArray()) || [];
+  const { data: customerResponse } = useQuery({
+    queryKey: ['customers'],
+    queryFn: () => customerApi.getCustomers(),
+    staleTime: 30000,
+    retry: 1,
+    refetchOnWindowFocus: false,
+  });
+  
+  const customers = customerResponse?.data || [];
   
   // Set default selection if none selected and customers are loaded
   useEffect(() => {
     if (!selectedCustomerId && customers.length > 0) {
-      setSelectedCustomerId(customers[0].id);
+      setSelectedCustomerId(customers[0].id || customers[0]._id || null);
     }
   }, [customers, selectedCustomerId]);
 
   const selectedCustomer = useMemo(() => 
-    customers.find(c => c.id === selectedCustomerId) || null
+    customers.find(c => (c.id === selectedCustomerId || c._id === selectedCustomerId)) || null
   , [customers, selectedCustomerId]);
 
   // 2. Fetch Ledger Entries for selected customer
-  const ledgerEntries = useLiveQuery(
-    () => selectedCustomerId 
-      ? db.ledgerEntries.where({ customerId: selectedCustomerId }).toArray() 
-      : Promise.resolve([]),
-    [selectedCustomerId]
-  ) || [];
+  const { data: ledgerResponse } = useQuery({
+    queryKey: ['ledger', selectedCustomerId],
+    queryFn: () => ledgerApi.getCustomerLedger(selectedCustomerId!),
+    enabled: !!selectedCustomerId,
+    staleTime: 30000,
+    retry: 1,
+    refetchOnWindowFocus: false,
+  });
 
-  // 3. Fetch Transaction count for Quick Stats
-  const totalInvoices = useLiveQuery(
-    async () => {
-      if (!selectedCustomerId) return 0;
-      // TODO(V2): db.transactions does not index by customerId out of the box in this schema
-      // Add `customerId` to DBTransaction index in V2 and use `.where('customerId')`.
-      // For V1, a full scan is acceptable.
-      const txs = await db.transactions.toArray();
-      return txs.filter(t => t.customer?.id === selectedCustomerId).length;
-    },
-    [selectedCustomerId]
-  ) || 0;
+  const ledgerEntries = ledgerResponse?.data?.history || [];
+
+  // 3. Compute Transaction count for Quick Stats (count 'sale' or 'invoice' items from history)
+  const totalInvoices = useMemo(() => {
+    return ledgerEntries.filter(e => e.type === 'invoice' || e.type === 'sale').length;
+  }, [ledgerEntries]);
 
   // 4. Compute Last Payment and Last Invoice dates
   const lastPayment = useMemo(() => {

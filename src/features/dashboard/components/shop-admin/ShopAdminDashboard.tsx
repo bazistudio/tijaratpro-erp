@@ -1,48 +1,63 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { DollarSign, TrendingUp, CreditCard, Receipt, Plus, FileUp, RefreshCw } from 'lucide-react';
 import { KPIGrid } from '@/components/kpi/KPIGrid';
 import { KPIData } from '@/types/dashboard/kpi.types';
 import { StockWidget } from '@/features/inventory/stock/StockWidget';
 import { selectForceSync, selectStatus } from '@/features/inventory/core/inventory.selectors';
-
-import { useState } from 'react';
-import { useDashboardAnalytics } from '@/features/analytics/selectors/dashboard.selectors';
+import { useQuery } from '@tanstack/react-query';
+import { dashboardApi } from '@/services/dashboard.api';
 
 export const ShopAdminDashboard = () => {
   const [filter, setFilter] = useState<'today' | 'week' | 'month'>('today');
-  const analytics = useDashboardAnalytics(filter);
+  
+  const { data: dashboardResponse, isLoading } = useQuery({
+    queryKey: ['dashboard-metrics'],
+    queryFn: () => dashboardApi.getMetrics(),
+    staleTime: 30000,
+    retry: 1,
+    refetchOnWindowFocus: false,
+  });
+
+  const metrics = dashboardResponse?.data;
   const forceSync = selectForceSync();
   const inventoryStatus = selectStatus();
   const isSyncing = inventoryStatus === 'loading';
 
+  const getFilterValue = (field: 'revenue' | 'profit', currentFilter: 'today' | 'week' | 'month') => {
+    if (!metrics) return 0;
+    // Backend returns today, thisMonth, total
+    const key = currentFilter === 'today' ? 'today' : 'thisMonth';
+    return metrics.summary[field][key] || 0;
+  };
+
   const kpiData: KPIData[] = [
     {
       title: 'Net Revenue',
-      value: `₨ ${analytics.totalRevenue.toLocaleString()}`,
+      value: isLoading ? 'Loading...' : `₨ ${(getFilterValue('revenue', filter)).toLocaleString()}`,
       trend: 0,
       icon: <DollarSign className="h-5 w-5" />,
       format: 'currency',
     },
     {
       title: 'Net Profit',
-      value: `₨ ${analytics.netProfit.toLocaleString()}`,
+      value: isLoading ? 'Loading...' : `₨ ${(getFilterValue('profit', filter)).toLocaleString()}`,
       trend: 0,
       icon: <TrendingUp className="h-5 w-5" />,
       format: 'currency',
     },
     {
       title: 'Pending Payments',
-      value: `₨ ${analytics.pendingPayments.toLocaleString()}`,
+      value: isLoading ? 'Loading...' : `₨ ${(metrics?.summary.customers.pendingPayments || 0).toLocaleString()}`,
       trend: 0,
       icon: <CreditCard className="h-5 w-5" />,
       format: 'currency',
     },
     {
       title: 'Total Refunds',
-      value: `₨ ${analytics.totalRefunds.toLocaleString()}`,
+      value: isLoading ? 'Loading...' : `₨ ${(metrics?.summary.customers.totalRefunds || 0).toLocaleString()}`,
       trend: 0,
       icon: <Receipt className="h-5 w-5" />,
       format: 'currency',

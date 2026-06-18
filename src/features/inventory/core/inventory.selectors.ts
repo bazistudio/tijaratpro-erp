@@ -18,7 +18,6 @@ export const selectIsCategoriesLoading = () => useInventoryStore(state => state.
 export const selectSetSearch = () => useInventoryStore(state => state.setSearch);
 export const selectSetFilter = () => useInventoryStore(state => state.setFilter);
 export const selectSetSort = () => useInventoryStore(state => state.setSort);
-export const selectUpdateStock = () => useInventoryStore(state => state.updateStock);
 export const selectFetchProducts = () => useInventoryStore(state => state.fetchProducts);
 export const selectForceSync = () => useInventoryStore(state => state.forceSync);
 export const selectFetchCategories = () => useInventoryStore(state => state.fetchCategories);

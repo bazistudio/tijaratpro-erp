@@ -3,21 +3,20 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, ArrowDownToLine, ArrowUpFromLine } from 'lucide-react';
 import { usePosStore } from '../store/usePosStore';
-import { useInventoryStore } from '../../inventory/store/useInventoryStore';
-import { DBInventory } from '@/lib/db';
+import { useInventoryStore } from '@/features/inventory/core/inventory.store';
 
 export const ProductSearch = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedTerm, setDebouncedTerm] = useState('');
-  const [results, setResults] = useState<DBInventory[]>([]);
+  const [results, setResults] = useState<any[]>([]);
   
   const activeSession = usePosStore(state => state.getActiveSession());
   const addToCart = usePosStore(state => state.addToCart);
-  const { products, initializeStore } = useInventoryStore();
+  const { products, fetchProducts } = useInventoryStore();
 
   useEffect(() => {
-    initializeStore();
-  }, [initializeStore]);
+    fetchProducts();
+  }, [fetchProducts]);
   
   const isReplaceMode = activeSession?.mode === 'replace';
   const [targetBucket, setTargetBucket] = useState<'new' | 'return'>('new');
@@ -48,7 +47,7 @@ export const ProductSearch = () => {
     const filtered = products.filter(p => 
       p.name.toLowerCase().includes(lowerTerm) || 
       p.sku.toLowerCase().includes(lowerTerm) || 
-      p.barcode.includes(lowerTerm)
+      (p.barcode || '').includes(lowerTerm)
     ).slice(0, 20); // Cap at 20 results for performance
     
     setResults(filtered);
@@ -84,8 +83,19 @@ export const ProductSearch = () => {
     }
   };
 
-  const handleAdd = (product: DBInventory) => {
-    addToCart(product, targetBucket === 'return');
+  const handleAdd = (product: any) => {
+    const dbProduct = {
+      id: product.id,
+      sku: product.sku,
+      barcode: product.barcode || '',
+      name: product.name,
+      costPrice: product.purchasePrice ?? product.costPrice ?? 0,
+      salePrice: product.price ?? product.salePrice ?? 0,
+      stock: product.stock,
+      reservedStock: 0,
+      lastUpdated: Date.now()
+    };
+    addToCart(dbProduct, targetBucket === 'return');
     setSearchTerm('');
     // Auto focus back to input for rapid scanning
     setTimeout(() => {
@@ -165,7 +175,7 @@ export const ProductSearch = () => {
                   {product.stock}
                 </div>
                 <div className="col-span-2 text-sm font-bold text-right text-gray-900 dark:text-gray-100 tabular-nums">
-                  Rs {product.salePrice.toLocaleString()}
+                  Rs {(product.price ?? product.salePrice ?? 0).toLocaleString()}
                 </div>
                 <div className="col-span-1 text-right">
                   <button 

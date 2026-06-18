@@ -2,17 +2,16 @@
 
 import React, { useEffect, useState } from 'react';
 import { Trash2, Banknote, Printer, UserCircle2, Repeat } from 'lucide-react';
-import { useCartTotals, usePosStore, PaymentMethod, Transaction } from '../store/usePosStore';
+import { usePosStore, PaymentMethod, Transaction } from '../store/usePosStore';
 import { mockShopProfile } from '../store/posMockData';
 import { DocumentService } from '../services/document/document.service';
 import toast from 'react-hot-toast';
 import { CreditCustomerModal } from './modals/CreditCustomerModal';
 import { LedgerSettlementModal } from './modals/LedgerSettlementModal';
 import { PaymentModal } from './modals/PaymentModal';
-import { CreditCustomer } from '../store/posMockData';
+import { DBCustomer } from '@/types/db.types';
 
 export const CartSummary = () => {
-  const { subtotal, discountTotal, invoiceDiscountAmount, grandTotal, newItemsTotal, returnTotal } = useCartTotals();
   const clearCart = usePosStore(state => state.clearCart);
   const activeSession = usePosStore(state => state.getActiveSession());
   const setSessionMode = usePosStore(state => state.setSessionMode);
@@ -22,7 +21,7 @@ export const CartSummary = () => {
   const [isCustomerModalOpen, setCustomerModalOpen] = useState(false);
   const [isLedgerModalOpen, setLedgerModalOpen] = useState(false);
   const [isPaymentModalOpen, setPaymentModalOpen] = useState(false);
-  const [selectedCustomer, setSelectedCustomer] = useState<CreditCustomer | null>(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<DBCustomer | null>(null);
 
   // Global Keyboard Shortcuts
   useEffect(() => {
@@ -59,9 +58,23 @@ export const CartSummary = () => {
   }, [activeSession?.cart?.length, activeSession?.returnedItems?.length]);
 
   if (!activeSession) return null;
+
   const cart = activeSession.cart ?? [];
   const returnedItems = activeSession.returnedItems ?? [];
   const isCartEmpty = cart.length === 0 && returnedItems.length === 0;
+
+  // Local render-time calculations (display previews only, not mutating business state)
+  const subtotal = cart.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
+  const returnTotal = returnedItems.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
+  
+  const preDiscountTotal = subtotal - returnTotal;
+  let invoiceDiscountAmount = 0;
+  if (activeSession.invoiceDiscountType === 'percentage') {
+    invoiceDiscountAmount = Math.max(0, preDiscountTotal) * ((activeSession.invoiceDiscountValue || 0) / 100);
+  } else {
+    invoiceDiscountAmount = activeSession.invoiceDiscountValue || 0;
+  }
+  const grandTotal = preDiscountTotal - invoiceDiscountAmount;
 
   const handleClearCart = () => {
     if (isCartEmpty) return;
@@ -147,11 +160,6 @@ export const CartSummary = () => {
         <div className="flex justify-between items-center mb-2">
           <span className="text-sm text-gray-500 dark:text-gray-400">New Items Subtotal</span>
           <span className="text-sm font-semibold text-gray-900 dark:text-gray-100 tabular-nums">Rs {subtotal.toLocaleString()}</span>
-        </div>
-
-        <div className="flex justify-between items-center mb-3">
-          <span className="text-sm text-gray-500 dark:text-gray-400">Item Discounts</span>
-          <span className="text-sm font-semibold text-red-500 tabular-nums">- Rs {discountTotal.toLocaleString()}</span>
         </div>
 
         <div className="flex justify-between items-center mb-3 pb-3 border-b border-gray-200 dark:border-gray-800">

@@ -1,6 +1,6 @@
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
-import { db, DBTransaction } from '@/lib/db';
+import { DBTransaction } from '@/types/db.types';
 
 export interface ShopProfile {
   name: string;
@@ -75,13 +75,8 @@ export class DocumentService {
   }
 
   static async logPrint(invoiceId: string, action: 'PRINT' | 'PDF' | 'REPRINT') {
-    return db.invoicePrintLogs.add({
-      id: crypto.randomUUID(),
-      invoiceId,
-      transactionId: invoiceId.replace('INV-', ''),
-      action,
-      timestamp: Date.now()
-    });
+    console.log(`[PRINT LOG] Invoice ${invoiceId} logged action: ${action}`);
+    return Promise.resolve();
   }
 
   static async generatePDF(invoice: InvoiceDocument) {

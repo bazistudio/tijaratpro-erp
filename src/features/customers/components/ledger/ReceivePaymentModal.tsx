@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { X, CreditCard, Banknote, Smartphone } from 'lucide-react';
-import { DBCustomer } from '@/lib/db';
-import { FinancialService } from '@/features/pos/services/financial.service';
+import { DBCustomer } from '@/types/db.types';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { paymentApi } from '@/services/payment.api';
 
 interface ReceivePaymentModalProps {
   isOpen: boolean;
@@ -13,29 +14,37 @@ export const ReceivePaymentModal = ({ isOpen, onClose, customer }: ReceivePaymen
   const [amount, setAmount] = useState('');
   const [method, setMethod] = useState('Cash');
 
-  const [isSaving, setIsSaving] = useState(false);
+  const queryClient = useQueryClient();
+
+  const paymentMutation = useMutation({
+    mutationFn: paymentApi.recordPayment,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
+      if (customer) {
+        queryClient.invalidateQueries({ queryKey: ['ledger', customer.id] });
+      }
+      setAmount('');
+      onClose();
+    },
+    onError: (err: any) => {
+      console.error('Failed to save payment', err);
+      alert(err.response?.data?.message || 'Failed to save payment');
+    }
+  });
 
   if (!isOpen || !customer) return null;
 
   const handleSave = async () => {
     if (!amount || isNaN(Number(amount))) return;
     
-    setIsSaving(true);
-    try {
-      await FinancialService.receiveCustomerPayment(
-        customer.id, 
-        Number(amount),
-        method
-      );
-      setAmount('');
-      onClose();
-    } catch (err) {
-      console.error('Failed to save payment', err);
-      alert('Failed to save payment');
-    } finally {
-      setIsSaving(false);
-    }
+    paymentMutation.mutate({
+      customerId: customer.id,
+      amount: Number(amount),
+      method: method.toLowerCase() === 'bank transfer' ? 'bank' : method.toLowerCase(),
+    });
   };
+
+  const isSaving = paymentMutation.isPending;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">

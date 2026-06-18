@@ -1,3 +1,9 @@
+/**
+ * @deprecated This service is deprecated. All invoice mathematical calculations
+ * and structure generation have been migrated to the backend ERP layer.
+ * Use the backend response payload to render invoice layouts.
+ */
+
 import { Transaction, CartItem } from '../store/usePosStore';
 import { ShopProfile } from '../store/posMockData';
 
@@ -30,7 +36,7 @@ export interface Invoice {
 
 export const generateInvoice = (transaction: Transaction, shop: ShopProfile): Invoice => {
   const newItemsTotal = transaction.subtotal - transaction.discountTotal;
-  const returnTotal = transaction.returnedItems.reduce((acc, item) => acc + item.subtotal, 0);
+  const returnTotal = transaction.returnedItems.reduce((acc, item: any) => acc + (item.subtotal || (item.unitPrice * item.quantity)), 0);
 
   const date = new Date(transaction.createdAt);
   const dateString = date.toISOString().split('T')[0].replace(/-/g, '');

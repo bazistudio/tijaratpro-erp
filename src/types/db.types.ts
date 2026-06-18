@@ -1,5 +1,3 @@
-import Dexie, { Table } from 'dexie';
-
 export interface DBUser {
   id: string;
   name: string;
@@ -41,7 +39,6 @@ export interface DBAuditLog {
   timestamp: number;
 }
 
-// Re-using Transaction from pos store, but expanding for DB
 export interface DBTransaction {
   transactionId: string;
   transactionType: 'sale' | 'replace_exchange' | 'return_only';
@@ -64,7 +61,6 @@ export interface DBTransaction {
   
   createdAt: number;
   
-  // Locking mechanics
   lockedAt?: number;
   hash?: string;
   version?: number;
@@ -86,9 +82,11 @@ export interface DBReconciliation {
 
 export interface DBCustomer {
   id: string;
+  _id?: string; // Mongoose ID
   accountCode: string;
   name: string;
   mobile: string;
+  phone?: string; // Match phone/mobile key difference
   currentBalance: number;
   creditLimit: number;
   createdAt?: number;
@@ -98,7 +96,7 @@ export interface DBSupplier {
   id: string;
   name: string;
   mobile?: string;
-  currentBalance: number; // PAYABLE (we owe them)
+  currentBalance: number;
   createdAt: number;
 }
 
@@ -109,51 +107,3 @@ export interface DBInvoicePrintLog {
   action: 'PRINT' | 'PDF' | 'REPRINT';
   timestamp: number;
 }
-
-export class TijaratDatabase extends Dexie {
-  users!: Table<DBUser, string>;
-  inventory!: Table<DBInventory, string>;
-  transactions!: Table<DBTransaction, string>;
-  ledgerEntries!: Table<DBLedgerEntry, string>;
-  auditLogs!: Table<DBAuditLog, string>;
-  reconciliations!: Table<DBReconciliation, string>;
-  customers!: Table<DBCustomer, string>;
-  suppliers!: Table<DBSupplier, string>;
-  invoicePrintLogs!: Table<DBInvoicePrintLog, string>;
-
-  constructor() {
-    super('TijaratERP');
-    
-    // Schema version 1
-    this.version(1).stores({
-      users: 'id, role',
-      inventory: 'id, sku, name',
-      transactions: 'transactionId, createdAt, status, transactionType',
-      ledgerEntries: 'id, transactionId, timestamp, type',
-      auditLogs: 'id, timestamp, action, entityType'
-    });
-
-    // Schema version 2 - Add reconciliations and customers
-    this.version(2).stores({
-      ledgerEntries: 'id, transactionId, type, timestamp',
-      auditLogs: 'id, entityType, action, timestamp, user',
-      reconciliations: 'id, transactionId, timestamp',
-      customers: 'id, accountCode, name, mobile',
-      invoicePrintLogs: 'id, invoiceId, transactionId, action, timestamp'
-    });
-
-    // Schema version 3 - Add customerId to ledgerEntries
-    this.version(3).stores({
-      ledgerEntries: 'id, transactionId, type, timestamp, customerId',
-    }).upgrade(tx => {
-      // No data migration needed, just index added
-    });
-
-    // Schema version 4 - Add suppliers
-    this.version(4).stores({
-      suppliers: 'id, name, mobile'
-    });
-  }
-}
-
-export const db = new TijaratDatabase();
