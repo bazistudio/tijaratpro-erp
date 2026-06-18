@@ -11,6 +11,7 @@ export interface AuthUser {
   email: string;
 
   role: UserRole;
+  status: "pending" | "active" | "suspended";
 
   // future multi-tenant support
   organizationId?: string;

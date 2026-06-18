@@ -5,10 +5,10 @@ export function middleware(request: NextRequest) {
   const token = request.cookies.get("tp_token")?.value;
 
   const isAuthPage = request.nextUrl.pathname.startsWith("/auth");
-  const isDashboard = request.nextUrl.pathname.startsWith("/dashboard");
+  const isProtectedPage = request.nextUrl.pathname.startsWith("/dashboard") || request.nextUrl.pathname.startsWith("/sale") || request.nextUrl.pathname === "/sale";
 
-  // 🚫 No token → block dashboard
-  if (isDashboard && !token) {
+  // 🚫 No token → block protected pages
+  if (isProtectedPage && !token) {
     return NextResponse.redirect(new URL("/auth/login", request.url));
   }
 
@@ -21,5 +21,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/auth/:path*"],
+  matcher: ["/dashboard/:path*", "/auth/:path*", "/sale/:path*", "/dashboard", "/sale"],
 };

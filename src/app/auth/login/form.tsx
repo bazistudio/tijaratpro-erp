@@ -33,7 +33,11 @@ export default function LoginForm() {
       // hydrate zustand store
       setAuth(user, session);
 
-      router.push("/dashboard");
+      if (user.role === "SUPER_ADMIN") {
+        router.push("/dashboard/super-admin");
+      } else {
+        router.push("/dashboard");
+      }
     } catch (err: any) {
       setError(err.message || "Login failed. Please try again.");
     } finally {
