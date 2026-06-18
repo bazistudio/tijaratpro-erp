@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { Trash2, Banknote, Printer, UserCircle2, Repeat } from 'lucide-react';
 import { useCartTotals, usePosStore, PaymentMethod, Transaction } from '../store/usePosStore';
 import { mockShopProfile } from '../store/posMockData';
-import { generateInvoice } from '../services/invoice.service';
+import { DocumentService } from '../services/document/document.service';
 import toast from 'react-hot-toast';
 import { CreditCustomerModal } from './modals/CreditCustomerModal';
 import { LedgerSettlementModal } from './modals/LedgerSettlementModal';
@@ -12,10 +12,11 @@ import { PaymentModal } from './modals/PaymentModal';
 import { CreditCustomer } from '../store/posMockData';
 
 export const CartSummary = () => {
-  const { subtotal, discountTotal, grandTotal, newItemsTotal, returnTotal } = useCartTotals();
+  const { subtotal, discountTotal, invoiceDiscountAmount, grandTotal, newItemsTotal, returnTotal } = useCartTotals();
   const clearCart = usePosStore(state => state.clearCart);
   const activeSession = usePosStore(state => state.getActiveSession());
   const setSessionMode = usePosStore(state => state.setSessionMode);
+  const setInvoiceDiscount = usePosStore(state => state.setInvoiceDiscount);
   const completeTransaction = usePosStore(state => state.completeTransaction);
 
   const [isCustomerModalOpen, setCustomerModalOpen] = useState(false);
@@ -76,7 +77,7 @@ export const CartSummary = () => {
       return;
     }
     // Bypass modal for pure cash save
-    processTransaction('cash', grandTotal > 0 ? grandTotal : 0);
+    processTransaction([{ method: 'cash', amount: grandTotal > 0 ? grandTotal : 0 }]);
   };
 
   const handlePayAndPrint = () => {
@@ -95,43 +96,35 @@ export const CartSummary = () => {
     setCustomerModalOpen(true);
   };
 
-  const processTransaction = async (method: PaymentMethod, cashReceived: number = 0, customerObj: {id: string, name: string} | null = null) => {
+  const processTransaction = async (paymentBreakdown: {method: string, amount: number}[] = [], customerObj: {id: string, name: string} | null = null) => {
     if (!activeSession) return;
     
     const isRefund = grandTotal < 0;
     
-    const txn: Transaction = {
-      transactionId: activeSession.transactionId,
-      transactionType: activeSession.transactionType,
-      status: 'completed',
-      items: JSON.parse(JSON.stringify(activeSession.cart)),
-      returnedItems: JSON.parse(JSON.stringify(activeSession.returnedItems)),
-      subtotal: subtotal,
-      discountTotal: discountTotal,
-      grandTotal: grandTotal,
-      paymentMethod: method,
-      cashReceived: cashReceived,
-      changeReturned: isRefund ? 0 : Math.max(cashReceived - grandTotal, 0),
-      customer: customerObj,
-      createdAt: Date.now()
-    };
-
-    // Build the invoice
-    const invoice = generateInvoice(txn, mockShopProfile);
-    
-    // For now, log the invoice for verification
-    console.log("INVOICE GENERATED:", invoice);
-
-    // Save to store, which triggers rendering of InvoiceReceipt, then print
-    await completeTransaction(txn, invoice);
-    
-    toast.success(isRefund ? `Refund Processed. Paid: Rs ${Math.abs(grandTotal)}` : "Sale Saved & Receipt Printing...");
-    
-    setTimeout(() => {
-      window.print();
-    }, 100);
-    
-    setPaymentModalOpen(false);
+    try {
+      const result = await completeTransaction(paymentBreakdown, customerObj);
+      
+      if (result && result.transaction) {
+        // Build the invoice purely for print view rendering
+        const invoice = DocumentService.buildInvoice(result.transaction as any, mockShopProfile);
+        console.log("INVOICE GENERATED:", invoice);
+        
+        // Pass to store to trigger InvoiceReceipt render
+        usePosStore.getState().setLastInvoice(invoice);
+        
+        await DocumentService.logPrint(invoice.invoiceId, 'PRINT');
+        
+        toast.success(isRefund ? `Refund Processed. Paid: Rs ${Math.abs(grandTotal)}` : "Sale Saved & Receipt Printing...");
+        
+        setTimeout(() => {
+          window.print();
+        }, 100);
+        
+        setPaymentModalOpen(false);
+      }
+    } catch (error) {
+      // Error handled by store
+    }
   };
 
   const toggleReplaceMode = () => {
@@ -156,10 +149,36 @@ export const CartSummary = () => {
           <span className="text-sm font-semibold text-gray-900 dark:text-gray-100 tabular-nums">Rs {subtotal.toLocaleString()}</span>
         </div>
 
-        <div className="flex justify-between items-center mb-3 pb-3 border-b border-gray-200 dark:border-gray-800">
-          <span className="text-sm text-gray-500 dark:text-gray-400">Discount</span>
+        <div className="flex justify-between items-center mb-3">
+          <span className="text-sm text-gray-500 dark:text-gray-400">Item Discounts</span>
           <span className="text-sm font-semibold text-red-500 tabular-nums">- Rs {discountTotal.toLocaleString()}</span>
         </div>
+
+        <div className="flex justify-between items-center mb-3 pb-3 border-b border-gray-200 dark:border-gray-800">
+          <span className="text-sm text-gray-500 dark:text-gray-400">Invoice Discount</span>
+          <div className="flex items-center gap-1 border border-gray-200 dark:border-gray-700 rounded overflow-hidden">
+            <input 
+              type="number"
+              value={activeSession.invoiceDiscountValue || ''}
+              placeholder="0"
+              onChange={(e) => setInvoiceDiscount(activeSession.invoiceDiscountType, parseFloat(e.target.value) || 0)}
+              className="w-16 text-sm font-semibold text-center py-1 bg-white dark:bg-gray-900 focus:outline-none focus:bg-gray-50 dark:focus:bg-gray-800 no-spinners"
+            />
+            <button 
+              onClick={() => setInvoiceDiscount(activeSession.invoiceDiscountType === 'percentage' ? 'fixed' : 'percentage', activeSession.invoiceDiscountValue)}
+              className="px-2 py-1 text-xs font-bold bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
+            >
+              {activeSession.invoiceDiscountType === 'percentage' ? '%' : 'Rs'}
+            </button>
+          </div>
+        </div>
+
+        {invoiceDiscountAmount > 0 && (
+          <div className="flex justify-between items-center mb-3 text-sm font-semibold text-red-500 tabular-nums">
+            <span>Bill Discount Applied</span>
+            <span>- Rs {invoiceDiscountAmount.toLocaleString()}</span>
+          </div>
+        )}
 
         <div className="flex justify-between items-center">
           <span className="text-base font-bold text-gray-900 dark:text-gray-100">{grandTotal < 0 ? 'Refund Due' : 'Total Due'}</span>
@@ -225,7 +244,7 @@ export const CartSummary = () => {
         <PaymentModal 
           grandTotal={grandTotal}
           onClose={() => setPaymentModalOpen(false)}
-          onConfirm={(method, cash) => processTransaction(method, cash)}
+          onConfirm={(breakdown) => processTransaction(breakdown)}
           onCreditSelect={() => {
             setPaymentModalOpen(false);
             setCustomerModalOpen(true);
@@ -251,8 +270,8 @@ export const CartSummary = () => {
           onClose={() => setLedgerModalOpen(false)} 
           onSuccess={() => {
             setLedgerModalOpen(false);
-            // Simulate 0 cash received for a pure credit transaction
-            processTransaction('credit', 0, { id: selectedCustomer.id, name: selectedCustomer.name });
+            // Empty array means 0 paid, creating a pure DUE transaction assigned to the customer
+            processTransaction([], { id: selectedCustomer.id, name: selectedCustomer.name });
           }}
         />
       )}

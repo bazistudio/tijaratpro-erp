@@ -9,6 +9,7 @@ export const CartTable = () => {
   const activeSession = usePosStore(state => state.getActiveSession());
   const updateQuantity = usePosStore(state => state.updateQuantity);
   const removeFromCart = usePosStore(state => state.removeFromCart);
+  const setItemDiscount = usePosStore(state => state.setItemDiscount);
   
   const { totalItems, totalQuantity, returnItemsCount, returnQuantity } = useCartTotals();
 
@@ -49,7 +50,7 @@ export const CartTable = () => {
     
     return (
       <div key={key} className={`grid grid-cols-12 gap-2 px-3 py-3 border-b items-center hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors group ${isReturn ? 'border-orange-100 dark:border-orange-900/30 bg-orange-50/30 dark:bg-orange-900/10' : 'border-gray-100 dark:border-gray-800'}`}>
-        <div className="col-span-5 overflow-hidden">
+        <div className="col-span-4 overflow-hidden">
           <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate flex items-center gap-2" title={item.productName}>
             {isReturn && <ArrowDownToLine className="h-3 w-3 text-orange-500 shrink-0" />}
             <span className={isReturn ? 'text-orange-900 dark:text-orange-100' : ''}>{item.productName}</span>
@@ -63,7 +64,7 @@ export const CartTable = () => {
             )}
           </p>
         </div>
-        <div className="col-span-3 flex items-center justify-center gap-1">
+        <div className="col-span-2 flex items-center justify-center gap-1">
           <button 
             onClick={() => updateQuantity(item.productId, item.quantity - 1, isReturn)}
             disabled={item.quantity <= 1}
@@ -88,7 +89,32 @@ export const CartTable = () => {
             <Plus className="h-3 w-3" />
           </button>
         </div>
-        <div className={`col-span-3 text-right text-sm font-bold tabular-nums ${isReturn ? 'text-orange-600 dark:text-orange-400' : 'text-gray-900 dark:text-gray-100'}`}>
+        
+        {/* Discount Controls */}
+        <div className="col-span-3 flex flex-col items-center justify-center gap-1">
+          {!isReturn ? (
+            <div className="flex border border-gray-200 dark:border-gray-700 rounded overflow-hidden">
+              <input 
+                type="number"
+                value={item.discountValue || ''}
+                placeholder="0"
+                onChange={(e) => setItemDiscount(item.productId, item.discountType, parseFloat(e.target.value) || 0, isReturn)}
+                className="w-12 text-xs font-semibold text-center py-1 bg-white dark:bg-gray-900 focus:outline-none focus:bg-gray-50 dark:focus:bg-gray-800 no-spinners"
+              />
+              <button 
+                onClick={() => setItemDiscount(item.productId, item.discountType === 'percentage' ? 'fixed' : 'percentage', item.discountValue, isReturn)}
+                className="px-1.5 py-1 text-[10px] font-bold bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
+              >
+                {item.discountType === 'percentage' ? '%' : 'Rs'}
+              </button>
+            </div>
+          ) : (
+            <span className="text-xs text-gray-400">-</span>
+          )}
+          {item.discount > 0 && <span className="text-[10px] text-red-500 font-bold tabular-nums">-Rs {item.discount.toLocaleString()}</span>}
+        </div>
+
+        <div className={`col-span-2 text-right text-sm font-bold tabular-nums ${isReturn ? 'text-orange-600 dark:text-orange-400' : 'text-gray-900 dark:text-gray-100'}`}>
           {isReturn ? '-' : ''}{(item.subtotal).toLocaleString()}
         </div>
         <div className="col-span-1 text-right">
@@ -106,9 +132,10 @@ export const CartTable = () => {
   return (
     <div className="flex-1 border border-gray-200 dark:border-gray-700 rounded-lg flex flex-col overflow-hidden bg-white dark:bg-gray-900 shadow-sm">
       <div className="grid grid-cols-12 gap-2 px-3 py-2 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50 text-xs font-semibold text-gray-500 uppercase tracking-wider shrink-0">
-        <div className="col-span-5">Product</div>
-        <div className="col-span-3 text-center">Qty</div>
-        <div className="col-span-3 text-right">Total</div>
+        <div className="col-span-4">Product</div>
+        <div className="col-span-2 text-center">Qty</div>
+        <div className="col-span-3 text-center">Discount</div>
+        <div className="col-span-2 text-right">Total</div>
         <div className="col-span-1"></div>
       </div>
       

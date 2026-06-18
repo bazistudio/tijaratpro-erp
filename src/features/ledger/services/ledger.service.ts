@@ -43,10 +43,13 @@ export const ledgerService = {
     const newItemsTotal = transaction.subtotal; // subtotal without returns
     
     if (newItemsTotal > 0) {
-      if (transaction.paymentMethod === 'credit') {
-        entries.push(createEntry(transaction.transactionId, 'CREDIT_SALE', ACCOUNT_MAP.CREDIT_SALE.debit, ACCOUNT_MAP.CREDIT_SALE.credit, newItemsTotal));
-      } else {
-        entries.push(createEntry(transaction.transactionId, 'CASH_SALE', ACCOUNT_MAP.CASH_SALE.debit, ACCOUNT_MAP.CASH_SALE.credit, newItemsTotal));
+      if (transaction.remainingDue > 0) {
+        entries.push(createEntry(transaction.transactionId, 'CREDIT_SALE', ACCOUNT_MAP.CREDIT_SALE.debit, ACCOUNT_MAP.CREDIT_SALE.credit, transaction.remainingDue));
+      }
+      
+      const cashPortion = transaction.totalPaid - (transaction.changeReturned || 0);
+      if (cashPortion > 0) {
+        entries.push(createEntry(transaction.transactionId, 'CASH_SALE', ACCOUNT_MAP.CASH_SALE.debit, ACCOUNT_MAP.CASH_SALE.credit, cashPortion));
       }
 
       // Process COGS for new items

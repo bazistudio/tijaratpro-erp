@@ -23,11 +23,16 @@ export const useInventoryStore = create<InventoryStore>((set, get) => ({
       const count = await db.inventory.count();
       if (count === 0) {
         // Seed Dexie from mock data
-        const seedData = mockProducts.map(p => ({
-          ...p,
-          lastUpdated: Date.now()
-        }));
-        await db.inventory.bulkAdd(seedData);
+        const seedData = mockProducts.map(p => {
+          const { price, ...rest } = p as any;
+          return {
+            ...rest,
+            salePrice: price || 0,
+            reservedStock: 0,
+            lastUpdated: Date.now()
+          };
+        });
+        await db.inventory.bulkPut(seedData);
       }
       const allProducts = await db.inventory.toArray();
       set({ products: allProducts, isLoading: false });

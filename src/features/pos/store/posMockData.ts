@@ -40,7 +40,7 @@ export const mockCustomers: CreditCustomer[] = [
 ];
 
 export interface ShopProfile {
-  shopName: string;
+  name: string;
   address: string;
   phone1: string;
   phone2?: string;
@@ -50,7 +50,7 @@ export interface ShopProfile {
 }
 
 export const mockShopProfile: ShopProfile = {
-  shopName: 'NEW AI AUTO TRADERS',
+  name: 'NEW AI AUTO TRADERS',
   address: 'Shop #67, Imperial Market, Liaquat Bagh, Rawalpindi',
   phone1: '0303-5231061',
   phone2: '0333-5205621',

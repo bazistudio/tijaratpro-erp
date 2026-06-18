@@ -1,157 +1,89 @@
-'use client';
-
-import React from 'react';
+import React, { useEffect } from 'react';
 import { usePosStore } from '../../store/usePosStore';
+import { InvoiceTemplate } from '../document/invoice.template';
+import { DocumentService } from '../../services/document/document.service';
+import { Download, Printer, X } from 'lucide-react';
 
 export const InvoiceReceipt = () => {
   const invoice = usePosStore(state => state.lastInvoice);
+  const setLastInvoice = usePosStore(state => state.setLastInvoice);
+
+  // When invoice appears, automatically print (it was already triggered by CartSummary, but if we want to ensure it)
+  // Actually, CartSummary handles the auto-print. We just render.
 
   if (!invoice) return null;
 
-  const { shop, summary, payment, meta, items, returnedItems } = invoice;
+  const handlePDF = async () => {
+    await DocumentService.generatePDF(invoice);
+    await DocumentService.logPrint(invoice.invoiceId, 'PDF');
+  };
 
-  // Smart Print Logic Formats
-  const isReplace = meta.transactionType === 'replace_exchange';
-  const isCredit = payment.method === 'credit';
-  const isRefund = summary.total < 0;
+  const handlePrint = async () => {
+    window.print();
+    await DocumentService.logPrint(invoice.invoiceId, 'REPRINT');
+  };
 
   return (
     <>
-      {/* 80mm Print Container */}
-      <div className="print-area font-mono text-sm leading-tight text-black bg-white p-2 w-[80mm] mx-auto hidden print:block">
-        
-        {/* Header */}
-        <div className="text-center mb-4">
-          <h1 className="font-bold text-lg uppercase">{shop.shopName}</h1>
-          <p className="text-xs mt-1">{shop.address}</p>
-          <p className="text-xs">Tel: {shop.phone1}{shop.phone2 ? ` | ${shop.phone2}` : ''}</p>
-        </div>
-
-        <div className="border-t border-dashed border-black my-2"></div>
-
-        {/* Meta */}
-        <div className="text-xs space-y-1 mb-2">
-          <p>Invoice: {invoice.invoiceNo}</p>
-          <p>Date: {new Date(invoice.date).toLocaleString('en-US', { dateStyle: 'short', timeStyle: 'short' })}</p>
-          {payment.method && <p>Method: {payment.method.toUpperCase()}</p>}
-        </div>
-
-        <div className="border-t border-dashed border-black my-2"></div>
-
-        {/* Items */}
-        <div className="mb-2">
-          <p className="font-bold text-xs mb-1">Items:</p>
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 print:hidden">
+        <div className="bg-gray-100 p-4 rounded-xl shadow-2xl max-h-[90vh] flex flex-col w-[350px]">
           
-          {/* Returned Items */}
-          {isReplace && returnedItems.length > 0 && (
-            <div className="mb-2">
-              <p className="text-[10px] font-bold uppercase italic">-- Returned --</p>
-              {returnedItems.map((item, idx) => (
-                <div key={`ret-${idx}`} className="text-xs flex justify-between mb-1">
-                  <div className="w-[50%] truncate uppercase">[-] {item.productName}</div>
-                  <div className="w-[15%] text-center">x{item.quantity}</div>
-                  <div className="w-[35%] text-right tabular-nums">-{item.subtotal}</div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Purchased Items */}
-          {items.length > 0 && (
-            <div>
-              {isReplace && <p className="text-[10px] font-bold uppercase italic">-- Purchased --</p>}
-              {items.map((item, idx) => (
-                <div key={`new-${idx}`} className="text-xs flex justify-between mb-1">
-                  <div className="w-[50%] truncate uppercase">{item.productName}</div>
-                  <div className="w-[15%] text-center">x{item.quantity}</div>
-                  <div className="w-[35%] text-right tabular-nums">{item.subtotal}</div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <div className="border-t border-dashed border-black my-2"></div>
-
-        {/* Financial Breakdown */}
-        <div className="text-xs space-y-1">
-          {isReplace ? (
-            <>
-              <div className="flex justify-between">
-                <span>New Items Subtotal:</span>
-                <span className="tabular-nums">{summary.newItemsTotal}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Returned Value:</span>
-                <span className="tabular-nums">-{summary.returnTotal}</span>
-              </div>
-            </>
-          ) : (
-            <div className="flex justify-between">
-              <span>Subtotal:</span>
-              <span className="tabular-nums">{summary.newItemsTotal}</span>
-            </div>
-          )}
-          
-          {summary.discount > 0 && (
-            <div className="flex justify-between">
-              <span>Discount:</span>
-              <span className="tabular-nums">-{summary.discount}</span>
-            </div>
-          )}
-          
-          <div className="flex justify-between font-bold mt-1 text-sm border-t border-black pt-1">
-            <span>{isRefund ? 'REFUND DUE:' : 'TOTAL:'}</span>
-            <span className="tabular-nums">{Math.abs(summary.total)}</span>
+          {/* Header Actions */}
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="font-bold text-lg text-gray-800">Receipt</h2>
+            <button onClick={() => setLastInvoice(null)} className="p-1 hover:bg-gray-200 rounded-full text-gray-600">
+              <X className="w-5 h-5" />
+            </button>
           </div>
 
-          {!isCredit && !isRefund && (
-            <>
-              <div className="flex justify-between mt-1">
-                <span>Cash Received:</span>
-                <span className="tabular-nums">{payment.cashReceived}</span>
-              </div>
-              <div className="flex justify-between font-bold">
-                <span>CHANGE:</span>
-                <span className="tabular-nums">{payment.change}</span>
-              </div>
-            </>
-          )}
-
-          {isCredit && (
-            <div className="flex justify-between font-bold mt-1">
-              <span>PAID TO LEDGER</span>
+          {/* Receipt Preview (Scrollable) */}
+          <div className="flex-1 overflow-y-auto bg-white rounded shadow-inner mb-4 flex justify-center py-4">
+            {/* The actual template is visible here, but scaled down or just fitting */}
+            <div className="scale-90 origin-top">
+              <InvoiceTemplate invoice={invoice} />
             </div>
-          )}
+          </div>
+
+          {/* Actions */}
+          <div className="grid grid-cols-2 gap-2">
+            <button 
+              onClick={handlePDF}
+              className="flex items-center justify-center gap-2 py-2 bg-white border border-gray-300 rounded shadow-sm hover:bg-gray-50 text-gray-700 font-semibold text-sm"
+            >
+              <Download className="w-4 h-4" />
+              PDF
+            </button>
+            <button 
+              onClick={handlePrint}
+              className="flex items-center justify-center gap-2 py-2 bg-[#006970] text-white rounded shadow-sm hover:bg-[#005a60] font-semibold text-sm"
+            >
+              <Printer className="w-4 h-4" />
+              Print
+            </button>
+          </div>
         </div>
-
-        <div className="border-t border-dashed border-black my-2"></div>
-
-        {/* Footer */}
-        <div className="text-center mt-4">
-          <p className="font-bold text-xs">{shop.invoiceNote || 'THANK YOU FOR SHOPPING'}</p>
-          <p className="text-[10px] mt-1">Powered by TijaratPro POS</p>
-        </div>
-
       </div>
 
-      {/* Embedded CSS for Print Override */}
+      {/* Hidden print container that ONLY shows during printing */}
+      <div className="hidden print:block absolute top-0 left-0">
+        <InvoiceTemplate invoice={invoice} />
+      </div>
+      
       <style dangerouslySetInnerHTML={{__html: `
         @media print {
           body * {
             visibility: hidden;
           }
 
-          .print-area,
-          .print-area * {
+          .print\\:block, .print\\:block * {
             visibility: visible;
           }
 
-          .print-area {
+          .print\\:block {
             position: absolute;
             left: 0;
             top: 0;
-            width: 80mm;
+            width: 100%;
             padding: 0;
             margin: 0;
           }

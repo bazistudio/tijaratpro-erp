@@ -165,7 +165,7 @@ export const ProductSearch = () => {
                   {product.stock}
                 </div>
                 <div className="col-span-2 text-sm font-bold text-right text-gray-900 dark:text-gray-100 tabular-nums">
-                  Rs {product.price.toLocaleString()}
+                  Rs {product.salePrice.toLocaleString()}
                 </div>
                 <div className="col-span-1 text-right">
                   <button 

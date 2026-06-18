@@ -2,12 +2,13 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { ShopProfile } from './posMockData';
 import toast from 'react-hot-toast';
-import { Invoice } from '../services/invoice.service';
 import { DBInventory, db } from '@/lib/db';
 import { ledgerService } from '../../ledger/services/ledger.service';
 import { auditService } from '../../audit/services/audit.service';
-import { generateSHA256 } from '@/lib/hash';
 import { useInventoryStore } from '../../inventory/store/useInventoryStore';
+import { FinancialService } from '../services/financial.service';
+import { FinancialMathEngine } from '../services/financialMath.engine';
+import { InvoiceDocument } from '../services/document/document.service';
 
 export interface CartItem {
   productId: string;
@@ -18,7 +19,9 @@ export interface CartItem {
   costPrice: number;
   maxStock: number;
   quantity: number;
-  discount: number;
+  discountType: 'percentage' | 'fixed';
+  discountValue: number;
+  discount: number; // The computed discount amount
   subtotal: number;
 }
 
@@ -34,10 +37,15 @@ export interface Transaction {
   
   subtotal: number;
   discountTotal: number;
+  invoiceDiscountType: 'percentage' | 'fixed';
+  invoiceDiscountValue: number;
+  invoiceDiscountAmount: number;
   grandTotal: number;
   
-  paymentMethod: PaymentMethod;
-  cashReceived: number;
+  paymentBreakdown: { method: string; amount: number }[];
+  paymentStatus: 'PAID' | 'PARTIAL' | 'DUE';
+  totalPaid: number;
+  remainingDue: number;
   changeReturned: number;
   
   customer: {
@@ -68,6 +76,9 @@ export interface SaleSession {
   cart: CartItem[];
   returnedItems: CartItem[];
   
+  invoiceDiscountType: 'percentage' | 'fixed';
+  invoiceDiscountValue: number;
+  
   isScanMode: boolean;
   transactionId: string;
   createdAt: number;
@@ -79,7 +90,7 @@ interface PosStore {
   saleTabs: SaleSession[];
   isWholesaleMode: boolean;
   transactions: Transaction[];
-  lastInvoice: Invoice | null;
+  lastInvoice: InvoiceDocument | null;
   
   // Tab Management Actions
   createSaleTab: () => void;
@@ -96,10 +107,14 @@ interface PosStore {
   updateQuantity: (productId: string, quantity: number, isReturn?: boolean) => void;
   removeFromCart: (productId: string, isReturn?: boolean) => void;
   clearCart: () => void;
+  
+  // Discount Engine
+  setItemDiscount: (productId: string, discountType: 'percentage' | 'fixed', discountValue: number, isReturn?: boolean) => void;
+  setInvoiceDiscount: (discountType: 'percentage' | 'fixed', discountValue: number) => void;
 
   // Transaction Lifecycle
-  completeTransaction: (transaction: Transaction, invoice: Invoice) => Promise<void>;
-  setLastInvoice: (invoice: Invoice | null) => void;
+  completeTransaction: (paymentBreakdown: { method: string; amount: number }[], customer: { id: string; name: string } | null) => Promise<any>;
+  setLastInvoice: (invoice: InvoiceDocument | null) => void;
 
   // Selectors
   getActiveSession: () => SaleSession | undefined;
@@ -113,6 +128,8 @@ const createDefaultSession = (id: string, name: string): SaleSession => ({
   transactionType: 'sale',
   cart: [],
   returnedItems: [],
+  invoiceDiscountType: 'fixed',
+  invoiceDiscountValue: 0,
   customer: {
     id: 'walk-in',
     name: 'Walk-In Customer'
@@ -232,11 +249,14 @@ export const usePosStore = create<PosStore>()(
               }
               
               toast.success(`Increased ${existingItem.productName} quantity`);
-              const updatedList = targetList.map(item => 
-                item.productId === product.id 
-                  ? { ...item, quantity: newQty, subtotal: newQty * item.unitPrice } 
-                  : item
-              );
+              const updatedList = targetList.map(item => {
+                if (item.productId === product.id) {
+                  const baseTotal = newQty * item.unitPrice;
+                  const discountAmount = item.discountType === 'percentage' ? baseTotal * (item.discountValue / 100) : item.discountValue;
+                  return { ...item, quantity: newQty, discount: discountAmount, subtotal: baseTotal - discountAmount };
+                }
+                return item;
+              });
               
               return isReturn ? { ...tab, returnedItems: updatedList } : { ...tab, cart: updatedList };
             }
@@ -256,8 +276,10 @@ export const usePosStore = create<PosStore>()(
               costPrice: product.costPrice,
               maxStock: product.stock, // Original stock limit, for returns we usually don't care about max stock limits strictly during entry
               quantity: 1,
+              discountType: 'fixed',
+              discountValue: 0,
               discount: 0,
-              subtotal: product.price
+              subtotal: product.salePrice
             };
             
             return isReturn 
@@ -283,7 +305,9 @@ export const usePosStore = create<PosStore>()(
                   toast.error(`Only ${item.maxStock} items in stock`);
                   return item;
                 }
-                return { ...item, quantity, subtotal: quantity * item.unitPrice };
+                const baseTotal = quantity * item.unitPrice;
+                const discountAmount = item.discountType === 'percentage' ? baseTotal * (item.discountValue / 100) : item.discountValue;
+                return { ...item, quantity, discount: discountAmount, subtotal: baseTotal - discountAmount };
               }
               return item;
             });
@@ -323,56 +347,81 @@ export const usePosStore = create<PosStore>()(
         });
       },
 
-      completeTransaction: async (transaction: Transaction, invoice: Invoice) => {
-        const { transactions } = get();
-        if (transactions.some(t => t.transactionId === transaction.transactionId)) {
-          console.warn(`Transaction ${transaction.transactionId} already exists. Skipping duplicate save.`);
-          return;
-        }
-
-        // 1. Transaction Locking (Tamper-proof hash)
-        const lockedAt = Date.now();
-        const hashPayload = { ...transaction, lockedAt };
-        const hash = await generateSHA256(hashPayload);
-        
-        const lockedTransaction: Transaction = {
-          ...transaction,
-          status: 'locked',
-          lockedAt,
-          version: 1,
-          hash
-        };
-
-        // 2. Persist to Dexie (DBTransaction maps exactly to our lockedTransaction structure)
-        await db.transactions.add(lockedTransaction as any);
-
-        // 3. Ledger System (Double-Entry)
-        await ledgerService.processTransaction(lockedTransaction as any);
-
-        // 4. Inventory flow (Update stock dynamically)
-        const { decreaseStock, increaseStock } = useInventoryStore.getState();
-        for (const item of lockedTransaction.items) {
-          await decreaseStock(item.productId, item.quantity);
-        }
-        for (const retItem of lockedTransaction.returnedItems) {
-          await increaseStock(retItem.productId, retItem.quantity);
-        }
-
-        // 5. Audit Logging
-        await auditService.logAction(
-          'transaction', 
-          'SALE', 
-          transaction, 
-          lockedTransaction, 
-          'system'
-        );
-
-        // 6. Update local UI state
+      setItemDiscount: (productId, discountType, discountValue, isReturn = false) => {
+        const { saleTabs, activeTabId } = get();
         set({
-          transactions: [...transactions, lockedTransaction],
-          lastInvoice: invoice
+          saleTabs: saleTabs.map(tab => {
+            if (tab.id !== activeTabId) return tab;
+
+            const targetList = isReturn ? tab.returnedItems : tab.cart;
+            const updatedList = targetList.map(item => {
+              if (item.productId === productId) {
+                const baseTotal = item.quantity * item.unitPrice;
+                const discountAmount = discountType === 'percentage' ? baseTotal * (discountValue / 100) : discountValue;
+                return { ...item, discountType, discountValue, discount: discountAmount, subtotal: baseTotal - discountAmount };
+              }
+              return item;
+            });
+
+            return isReturn ? { ...tab, returnedItems: updatedList } : { ...tab, cart: updatedList };
+          })
         });
-        get().clearCart();
+      },
+
+      setInvoiceDiscount: (discountType, discountValue) => {
+        const { saleTabs, activeTabId } = get();
+        set({
+          saleTabs: saleTabs.map(tab => {
+            if (tab.id !== activeTabId) return tab;
+            return { ...tab, invoiceDiscountType: discountType, invoiceDiscountValue: discountValue };
+          })
+        });
+      },
+
+      completeTransaction: async (paymentBreakdown, customer) => {
+        const session = get().getActiveSession();
+        if (!session) return;
+
+        try {
+          const result = await FinancialService.processTransaction({
+            session,
+            paymentBreakdown,
+            customer
+          });
+
+          // Ledger System (Double-Entry)
+          await ledgerService.processTransaction(result.transaction as any);
+
+          // Inventory flow (Update stock dynamically)
+          const { decreaseStock, increaseStock } = useInventoryStore.getState();
+          for (const item of result.transaction.items) {
+            await decreaseStock(item.productId, item.quantity);
+          }
+          for (const retItem of result.transaction.returnedItems) {
+            await increaseStock(retItem.productId, retItem.quantity);
+          }
+
+          // Audit Logging
+          await auditService.logAction(
+            'transaction', 
+            'SALE', 
+            session, 
+            result.transaction, 
+            'system'
+          );
+
+          // Update local UI state
+          set(state => ({
+            transactions: [...state.transactions, result.transaction as any]
+          }));
+          get().clearCart();
+          
+          return result;
+        } catch (error) {
+          console.error("Transaction failed", error);
+          toast.error("Payment failed. Nothing was saved.");
+          throw error;
+        }
       },
 
       setLastInvoice: (invoice) => set({ lastInvoice: invoice })
@@ -400,24 +449,19 @@ export const useCartTotals = () => {
   const returnItemsCount = returnedItems.length;
   const returnQuantity = returnedItems.reduce((acc, item) => acc + item.quantity, 0);
 
-  const subtotal = cart.reduce((acc, item) => acc + item.subtotal, 0);
-  const discountTotal = cart.reduce((acc, item) => acc + item.discount, 0);
-  const newItemsTotal = subtotal - discountTotal;
-
-  const returnTotal = returnedItems.reduce((acc, item) => acc + item.subtotal, 0);
-  
-  // Grand total represents the DIFFERENCE that the customer must pay (or be refunded)
-  const grandTotal = newItemsTotal - returnTotal;
+  // Pure Math Engine Integration (Zero-drift UI alignment)
+  const math = FinancialMathEngine.calculateTotals(activeSession as any);
 
   return { 
     totalItems, 
     totalQuantity, 
     returnItemsCount,
     returnQuantity,
-    subtotal,
-    newItemsTotal, 
-    returnTotal,
-    discountTotal, 
-    grandTotal 
+    subtotal: math.subtotal,
+    newItemsTotal: math.newItemsTotal, 
+    returnTotal: math.returnTotal,
+    discountTotal: math.discountTotal, 
+    invoiceDiscountAmount: math.invoiceDiscountAmount,
+    grandTotal: math.finalAmount 
   };
 };

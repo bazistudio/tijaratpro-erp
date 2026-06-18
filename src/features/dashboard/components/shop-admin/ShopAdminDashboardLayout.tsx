@@ -6,6 +6,7 @@ import { MobileSidebar } from '@/components/layout/MobileSidebar';
 import { Topbar } from '@/components/layout/Topbar';
 import { DashboardShell } from '@/components/layout/DashboardShell';
 import { useSyncEngine } from '@/features/realtime-sync/hooks/useSyncEngine';
+import { useDashboardShortcuts } from '@/hooks/useDashboardShortcuts';
 
 interface ShopAdminDashboardLayoutProps {
   children: React.ReactNode;
@@ -16,6 +17,9 @@ export const ShopAdminDashboardLayout = ({ children }: ShopAdminDashboardLayoutP
   
   // Initialize Real-Time Sync Engine for the entire dashboard
   useSyncEngine();
+  
+  // Initialize Global Dashboard Shortcuts
+  useDashboardShortcuts();
 
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50 dark:bg-gray-950">

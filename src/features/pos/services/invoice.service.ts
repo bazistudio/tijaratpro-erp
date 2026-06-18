@@ -36,6 +36,13 @@ export const generateInvoice = (transaction: Transaction, shop: ShopProfile): In
   const dateString = date.toISOString().split('T')[0].replace(/-/g, '');
   const randomCounter = Math.floor(1000 + Math.random() * 9000);
   
+  const isRefund = transaction.grandTotal < 0;
+    
+  // We get payment methods as a comma separated list
+  const methods = transaction.paymentBreakdown?.length > 0 
+    ? transaction.paymentBreakdown.map(p => p.method).join(', ') 
+    : 'CASH';
+
   return {
     invoiceNo: `INV-${dateString}-${randomCounter}`,
     transactionId: transaction.transactionId,
@@ -53,9 +60,9 @@ export const generateInvoice = (transaction: Transaction, shop: ShopProfile): In
     },
     
     payment: {
-      method: transaction.paymentMethod,
-      cashReceived: transaction.cashReceived,
-      change: transaction.changeReturned,
+      method: isRefund ? 'REFUND' : methods,
+      cashReceived: transaction.totalPaid || 0,
+      change: transaction.changeReturned || 0,
     },
     
     meta: {
