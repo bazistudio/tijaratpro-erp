@@ -139,6 +139,55 @@ export class FinancialService {
     );
   }
 
+  static async recordImportInvoice(
+    customerId: string,
+    amount: number,
+    invoiceDate: string,
+    notes?: string
+  ) {
+    return await db.transaction(
+      'rw',
+      db.customers,
+      db.ledgerEntries,
+      db.auditLogs,
+      async () => {
+        const customer = await db.customers.get(customerId);
+        if (!customer) throw new Error('Customer not found');
+
+        // Invoice increases the outstanding debt for the customer
+        const newBalance = customer.currentBalance + amount;
+        await db.customers.update(customerId, { currentBalance: newBalance });
+
+        // Ledger Entry: Debit Receivable, Credit Sales Revenue
+        const ledgerEntryId = crypto.randomUUID();
+        await db.ledgerEntries.add({
+          id: ledgerEntryId,
+          transactionId: `INV-${Date.now()}`,
+          type: 'invoice',
+          debitAccount: 'receivable',
+          creditAccount: 'sales_revenue',
+          amount: amount,
+          timestamp: Date.now(),
+          customerId: customerId,
+          description: `Imported Invoice - ${invoiceDate}${notes ? ` - ${notes}` : ''}`
+        });
+
+        // Audit Log
+        await db.auditLogs.add({
+          id: crypto.randomUUID(),
+          entityType: 'ledger',
+          action: 'IMPORT_INVOICE',
+          beforeState: { balance: customer.currentBalance },
+          afterState: { balance: newBalance, invoiceId: ledgerEntryId },
+          user: 'System',
+          timestamp: Date.now()
+        });
+
+        return { success: true, newBalance };
+      }
+    );
+  }
+
   // Utility to reconcile customer balance from ledger source of truth
   static async recalculateCustomerBalance(customerId: string) {
     return await db.transaction('rw', db.customers, db.ledgerEntries, async () => {

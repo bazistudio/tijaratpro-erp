@@ -1,9 +1,9 @@
-import { ImportPreviewWidget } from '@/features/inventory-import/preview/ImportPreviewWidget';
+import { PdfImportPage } from '@/features/import/pages/PdfImportPage';
 
 export default function ImportPage() {
   return (
-    <div className="w-full">
-      <ImportPreviewWidget />
+    <div className="w-full h-full p-6 bg-gray-50 dark:bg-gray-900/50">
+      <PdfImportPage />
     </div>
   );
 }

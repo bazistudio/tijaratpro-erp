@@ -22,18 +22,19 @@ export interface DBLedgerEntry {
   id: string;
   transactionId: string;
   type: string;
-  debitAccount: 'cash' | 'receivable' | 'inventory' | 'cogs' | 'sales_revenue';
-  creditAccount: 'cash' | 'receivable' | 'inventory' | 'sales_revenue' | 'cogs';
+  debitAccount: 'cash' | 'receivable' | 'inventory' | 'cogs' | 'sales_revenue' | 'expense' | 'payable';
+  creditAccount: 'cash' | 'receivable' | 'inventory' | 'sales_revenue' | 'cogs' | 'payable';
   amount: number;
   timestamp: number;
   customerId?: string;
+  supplierId?: string;
   description?: string;
 }
 
 export interface DBAuditLog {
   id: string;
   entityType: 'transaction' | 'inventory' | 'ledger' | 'user';
-  action: 'SALE' | 'REFUND' | 'VOID' | 'STOCK_ADJUST' | 'LOGIN' | 'REPLACE' | 'PAYMENT';
+  action: 'SALE' | 'REFUND' | 'VOID' | 'STOCK_ADJUST' | 'LOGIN' | 'REPLACE' | 'PAYMENT' | 'IMPORT_INVOICE' | 'IMPORT_PURCHASE';
   beforeState: any;
   afterState: any;
   user: string;
@@ -93,6 +94,14 @@ export interface DBCustomer {
   createdAt?: number;
 }
 
+export interface DBSupplier {
+  id: string;
+  name: string;
+  mobile?: string;
+  currentBalance: number; // PAYABLE (we owe them)
+  createdAt: number;
+}
+
 export interface DBInvoicePrintLog {
   id: string;
   invoiceId: string;
@@ -109,6 +118,7 @@ export class TijaratDatabase extends Dexie {
   auditLogs!: Table<DBAuditLog, string>;
   reconciliations!: Table<DBReconciliation, string>;
   customers!: Table<DBCustomer, string>;
+  suppliers!: Table<DBSupplier, string>;
   invoicePrintLogs!: Table<DBInvoicePrintLog, string>;
 
   constructor() {
@@ -137,6 +147,11 @@ export class TijaratDatabase extends Dexie {
       ledgerEntries: 'id, transactionId, type, timestamp, customerId',
     }).upgrade(tx => {
       // No data migration needed, just index added
+    });
+
+    // Schema version 4 - Add suppliers
+    this.version(4).stores({
+      suppliers: 'id, name, mobile'
     });
   }
 }
