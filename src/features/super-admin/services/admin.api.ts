@@ -25,7 +25,8 @@ export interface DashboardStats {
   totalTenants: number;
   activeTenants: number;
   pendingTenants: number;
-  pendingAdminApprovals: number;
+  pendingShopAdmins: number;
+  pendingOrgAdmins: number;
 }
 
 export const adminApi = {
@@ -34,8 +35,13 @@ export const adminApi = {
     return response.data.data;
   },
 
-  getPendingAdmins: async (): Promise<PendingAdmin[]> => {
-    const response = await axiosInstance.get<{ success: boolean; data: PendingAdmin[] }>('/api/admin/users/pending');
+  getPendingShopAdmins: async (): Promise<PendingAdmin[]> => {
+    const response = await axiosInstance.get<{ success: boolean; data: PendingAdmin[] }>('/api/admin/shop-admins/pending');
+    return response.data.data;
+  },
+
+  getPendingOrgAdmins: async (): Promise<PendingAdmin[]> => {
+    const response = await axiosInstance.get<{ success: boolean; data: PendingAdmin[] }>('/api/admin/org-admins/pending');
     return response.data.data;
   },
 

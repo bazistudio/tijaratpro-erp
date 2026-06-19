@@ -21,13 +21,13 @@ export const TopStats = () => {
   if (isError || !stats) {
     return (
       <div className="mb-8 p-4 bg-red-50 text-red-700 rounded-lg border border-red-200">
-        Failed to load dashboard statistics.
+        Failed to load dashboard statistics
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
       <StatsCard
         title="Total Tenants"
         value={stats.totalTenants}
@@ -44,8 +44,13 @@ export const TopStats = () => {
         icon={AlertCircle}
       />
       <StatsCard
-        title="Pending Admin Approvals"
-        value={stats.pendingAdminApprovals}
+        title="Pending Shop Admin Approvals"
+        value={stats.pendingShopAdmins}
+        icon={Users}
+      />
+      <StatsCard
+        title="Pending Organization Approvals"
+        value={stats.pendingOrgAdmins}
         icon={Users}
       />
     </div>

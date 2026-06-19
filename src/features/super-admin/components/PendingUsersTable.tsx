@@ -22,7 +22,7 @@ export const PendingUsersTable = () => {
   if (isError) {
     return (
       <div className="bg-white p-8 rounded-xl border border-gray-200 shadow-sm text-center text-red-600">
-        Failed to load pending admin approvals.
+        No pending shop admin approvals
       </div>
     );
   }
@@ -30,7 +30,7 @@ export const PendingUsersTable = () => {
   if (!users || users.length === 0) {
     return (
       <div className="bg-white p-8 rounded-xl border border-gray-200 shadow-sm text-center text-gray-500">
-        No pending admin approvals found.
+        No pending shop admin approvals
       </div>
     );
   }

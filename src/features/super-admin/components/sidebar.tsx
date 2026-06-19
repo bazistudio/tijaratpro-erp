@@ -12,9 +12,10 @@ import {
 import clsx from 'clsx';
 
 const navItems = [
-  { name: 'Dashboard Overview', href: '/dashboard/super-admin', icon: LayoutDashboard },
-  { name: 'Admin Approvals', href: '/dashboard/super-admin/users', icon: Users },
-  { name: 'Pending Tenants', href: '/dashboard/super-admin/tenants', icon: Building2 },
+  { name: 'Dashboard', href: '/dashboard/super-admin', icon: LayoutDashboard },
+  { name: 'Tenant Approvals', href: '/dashboard/super-admin/tenants', icon: Building2 },
+  { name: 'Shop Admin Approvals', href: '/dashboard/super-admin/users', icon: Users },
+  { name: 'Organization Approvals', href: '/dashboard/super-admin/orgs', icon: Users },
   { name: 'Active Tenants', href: '/dashboard/super-admin/active-tenants', icon: CheckCircle2 },
   { name: 'Settings', href: '/dashboard/super-admin/settings', icon: Settings },
 ];

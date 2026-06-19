@@ -2,14 +2,14 @@
 
 import React from 'react';
 import { format } from 'date-fns';
-import { usePendingTenants } from '../hooks/usePendingTenants';
-import { useApproveTenant, useSuspendTenant } from '../hooks/useAdminActions';
+import { usePendingOrgAdmins } from '../hooks/usePendingOrgAdmins';
+import { useApproveUser, useSuspendUser } from '../hooks/useAdminActions';
 import { ActionButtons } from './ActionButtons';
 
-export const PendingTenantsTable = () => {
-  const { data: tenants, isLoading, isError } = usePendingTenants();
-  const approveTenant = useApproveTenant();
-  const suspendTenant = useSuspendTenant();
+export const PendingOrgAdminsTable = () => {
+  const { data: users, isLoading, isError } = usePendingOrgAdmins();
+  const approveUser = useApproveUser();
+  const suspendUser = useSuspendUser();
 
   if (isLoading) {
     return (
@@ -22,15 +22,15 @@ export const PendingTenantsTable = () => {
   if (isError) {
     return (
       <div className="bg-white p-8 rounded-xl border border-gray-200 shadow-sm text-center text-red-600">
-        No pending tenant approvals
+        No pending organization approvals
       </div>
     );
   }
 
-  if (!tenants || tenants.length === 0) {
+  if (!users || users.length === 0) {
     return (
       <div className="bg-white p-8 rounded-xl border border-gray-200 shadow-sm text-center text-gray-500">
-        No pending tenant approvals
+        No pending organization approvals
       </div>
     );
   }
@@ -41,33 +41,35 @@ export const PendingTenantsTable = () => {
         <table className="w-full text-left text-sm">
           <thead className="bg-gray-50 text-gray-700 font-medium border-b border-gray-200">
             <tr>
-              <th className="px-6 py-4">Business Name</th>
-              <th className="px-6 py-4">Business Type</th>
+              <th className="px-6 py-4">Name</th>
+              <th className="px-6 py-4">Email</th>
+              <th className="px-6 py-4">Organization Name</th>
               <th className="px-6 py-4">Status</th>
               <th className="px-6 py-4">Created Date</th>
               <th className="px-6 py-4 text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {tenants.map((tenant) => (
-              <tr key={tenant._id} className="hover:bg-gray-50 transition-colors">
-                <td className="px-6 py-4 font-medium text-gray-900">{tenant.name}</td>
-                <td className="px-6 py-4 text-gray-600">{tenant.businessType}</td>
+            {users.map((user) => (
+              <tr key={user._id} className="hover:bg-gray-50 transition-colors">
+                <td className="px-6 py-4 font-medium text-gray-900">{user.name}</td>
+                <td className="px-6 py-4 text-gray-600">{user.email}</td>
+                <td className="px-6 py-4 text-gray-600">{user.tenantName || 'N/A'}</td>
                 <td className="px-6 py-4">
                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 capitalize">
-                    {tenant.status}
+                    {user.status}
                   </span>
                 </td>
                 <td className="px-6 py-4 text-gray-600">
-                  {format(new Date(tenant.createdAt), 'MMM d, yyyy')}
+                  {format(new Date(user.createdAt), 'MMM d, yyyy')}
                 </td>
                 <td className="px-6 py-4 flex justify-end">
                   <ActionButtons
-                    onApprove={() => approveTenant.mutate(tenant._id)}
-                    onSuspend={() => suspendTenant.mutate(tenant._id)}
-                    isApproving={approveTenant.isPending && approveTenant.variables === tenant._id}
-                    isSuspending={suspendTenant.isPending && suspendTenant.variables === tenant._id}
-                    disabled={approveTenant.isPending || suspendTenant.isPending}
+                    onApprove={() => approveUser.mutate(user._id)}
+                    onSuspend={() => suspendUser.mutate(user._id)}
+                    isApproving={approveUser.isPending && approveUser.variables === user._id}
+                    isSuspending={suspendUser.isPending && suspendUser.variables === user._id}
+                    disabled={approveUser.isPending || suspendUser.isPending}
                   />
                 </td>
               </tr>
