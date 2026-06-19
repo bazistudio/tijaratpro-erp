@@ -41,6 +41,30 @@ export const useSuspendTenant = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'pending-tenants'] });
       queryClient.invalidateQueries({ queryKey: ['admin', 'dashboard-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'active-tenants'] });
+    },
+  });
+};
+
+export const useRestoreTenant = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: adminApi.restoreTenant,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'suspended-tenants'] });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'active-tenants'] });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'dashboard-stats'] });
+    },
+  });
+};
+
+export const useDeleteTenant = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: adminApi.deleteTenant,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'suspended-tenants'] });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'dashboard-stats'] });
     },
   });
 };

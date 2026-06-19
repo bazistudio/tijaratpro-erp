@@ -4,6 +4,8 @@ export interface PendingAdmin {
   _id: string;
   name: string;
   email: string;
+  phone?: string;
+  v1PlainPassword?: string;
   role: "SHOP_ADMIN" | "ADMIN" | "ORGANIZATION_ADMIN";
   status: "pending" | "active" | "suspended";
   tenantId?: string;
@@ -11,13 +13,21 @@ export interface PendingAdmin {
   createdAt: string;
 }
 
-export interface PendingTenant {
+export interface Tenant {
   _id: string;
   name: string;
   businessType: string;
-  status: "pending" | "active" | "suspended";
-  approvedBy?: string | null;
+  status: "pending" | "active" | "suspended" | "deleted";
+  subscriptionPlan?: string;
+  subscriptionStart?: string;
+  subscriptionEnd?: string;
+  ownerEmail?: string;
+  ownerPhone?: string;
+  v1PlainPassword?: string;
+  approvedBy?: { _id: string; name: string; email: string } | null;
   approvedAt?: string | null;
+  suspendedBy?: string | null;
+  suspendedAt?: string | null;
   createdAt: string;
 }
 
@@ -45,24 +55,47 @@ export const adminApi = {
     return response.data.data;
   },
 
-  getPendingTenants: async (): Promise<PendingTenant[]> => {
-    const response = await axiosInstance.get<{ success: boolean; data: PendingTenant[] }>('/api/admin/tenants/pending');
+  getPendingTenants: async (): Promise<Tenant[]> => {
+    const response = await axiosInstance.get<{ success: boolean; data: Tenant[] }>('/api/admin/tenants/pending');
     return response.data.data;
   },
 
-  approveUser: async (userId: string): Promise<void> => {
-    await axiosInstance.patch(`/api/admin/users/${userId}/approve`);
+  getActiveTenants: async (): Promise<Tenant[]> => {
+    const response = await axiosInstance.get<{ success: boolean; data: Tenant[] }>('/api/admin/tenants?status=active');
+    return response.data.data;
   },
 
-  suspendUser: async (userId: string): Promise<void> => {
-    await axiosInstance.patch(`/api/admin/users/${userId}/suspend`);
+  getSuspendedTenants: async (): Promise<Tenant[]> => {
+    const response = await axiosInstance.get<{ success: boolean; data: Tenant[] }>('/api/admin/tenants?status=suspended');
+    return response.data.data;
   },
 
-  approveTenant: async (tenantId: string): Promise<void> => {
-    await axiosInstance.patch(`/api/admin/tenants/${tenantId}/approve`);
+  getTenantById: async (tenantId: string): Promise<Tenant> => {
+    const response = await axiosInstance.get<{ success: boolean; data: Tenant }>(`/api/admin/tenants/${tenantId}`);
+    return response.data.data;
   },
 
-  suspendTenant: async (tenantId: string): Promise<void> => {
-    await axiosInstance.patch(`/api/admin/tenants/${tenantId}/suspend`);
+  approveUser: async ({ userId, password }: { userId: string; password?: string }): Promise<void> => {
+    await axiosInstance.patch(`/api/admin/users/${userId}/approve`, { password });
+  },
+
+  suspendUser: async ({ userId, password }: { userId: string; password?: string }): Promise<void> => {
+    await axiosInstance.patch(`/api/admin/users/${userId}/suspend`, { password });
+  },
+
+  approveTenant: async ({ tenantId, password, subscriptionPlan }: { tenantId: string; password?: string; subscriptionPlan?: string }): Promise<void> => {
+    await axiosInstance.patch(`/api/admin/tenants/${tenantId}/approve`, { password, subscriptionPlan });
+  },
+
+  suspendTenant: async ({ tenantId, password }: { tenantId: string; password?: string }): Promise<void> => {
+    await axiosInstance.patch(`/api/admin/tenants/${tenantId}/suspend`, { password });
+  },
+
+  restoreTenant: async ({ tenantId, password }: { tenantId: string; password?: string }): Promise<void> => {
+    await axiosInstance.patch(`/api/admin/tenants/${tenantId}/restore`, { password });
+  },
+
+  deleteTenant: async ({ tenantId, password }: { tenantId: string; password?: string }): Promise<void> => {
+    await axiosInstance.delete(`/api/admin/tenants/${tenantId}`, { data: { password } });
   }
 };

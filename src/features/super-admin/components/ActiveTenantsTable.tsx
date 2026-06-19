@@ -2,44 +2,23 @@
 
 import React, { useState } from 'react';
 import { format } from 'date-fns';
-import { usePendingTenants } from '../hooks/usePendingTenants';
-import { useApproveTenant, useSuspendTenant } from '../hooks/useAdminActions';
-import { ActionButtons } from './ActionButtons';
-import { TenantApprovalModal } from './TenantApprovalModal';
+import { useActiveTenants } from '../hooks/useActiveTenants';
+import { useSuspendTenant } from '../hooks/useAdminActions';
 import { SecurityVerificationModal } from './SecurityVerificationModal';
 import { Tenant } from '../services/admin.api';
+import { Ban, Eye } from 'lucide-react';
+import Link from 'next/link';
 
-export const PendingTenantsTable = () => {
-  const { data: tenants, isLoading, isError } = usePendingTenants();
-  const approveTenant = useApproveTenant();
+export const ActiveTenantsTable = () => {
+  const { data: tenants, isLoading, isError } = useActiveTenants();
   const suspendTenant = useSuspendTenant();
 
-  const [approvalModalOpen, setApprovalModalOpen] = useState(false);
   const [suspendModalOpen, setSuspendModalOpen] = useState(false);
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
-
-  const handleApproveClick = (tenant: Tenant) => {
-    setSelectedTenant(tenant);
-    setApprovalModalOpen(true);
-  };
 
   const handleSuspendClick = (tenant: Tenant) => {
     setSelectedTenant(tenant);
     setSuspendModalOpen(true);
-  };
-
-  const onConfirmApprove = (plan: string, password: string) => {
-    if (selectedTenant) {
-      approveTenant.mutate(
-        { tenantId: selectedTenant._id, password, subscriptionPlan: plan },
-        {
-          onSuccess: () => {
-            setApprovalModalOpen(false);
-            setSelectedTenant(null);
-          }
-        }
-      );
-    }
   };
 
   const onConfirmSuspend = (password: string) => {
@@ -64,18 +43,10 @@ export const PendingTenantsTable = () => {
     );
   }
 
-  if (isError) {
-    return (
-      <div className="bg-white p-8 rounded-xl border border-gray-200 shadow-sm text-center text-red-600">
-        No pending tenant approvals
-      </div>
-    );
-  }
-
-  if (!tenants || tenants.length === 0) {
+  if (isError || !tenants || tenants.length === 0) {
     return (
       <div className="bg-white p-8 rounded-xl border border-gray-200 shadow-sm text-center text-gray-500">
-        No pending tenant approvals
+        No active tenants found.
       </div>
     );
   }
@@ -88,16 +59,20 @@ export const PendingTenantsTable = () => {
             <tr>
               <th className="px-6 py-4">Business Name</th>
               <th className="px-6 py-4">Contact Details</th>
-              <th className="px-6 py-4">Business Type</th>
+              <th className="px-6 py-4">Plan</th>
               <th className="px-6 py-4">Status</th>
-              <th className="px-6 py-4">Created Date</th>
+              <th className="px-6 py-4">Expires</th>
               <th className="px-6 py-4 text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
             {tenants.map((tenant) => (
               <tr key={tenant._id} className="hover:bg-gray-50 transition-colors">
-                <td className="px-6 py-4 font-medium text-gray-900">{tenant.name}</td>
+                <td className="px-6 py-4 font-medium text-gray-900">
+                  <Link href={`/dashboard/super-admin/tenants/${tenant._id}`} className="hover:text-blue-600 hover:underline">
+                    {tenant.name}
+                  </Link>
+                </td>
                 <td className="px-6 py-4">
                   <div className="flex flex-col text-sm">
                     <span className="text-gray-900">{tenant.ownerEmail || 'N/A'}</span>
@@ -107,40 +82,29 @@ export const PendingTenantsTable = () => {
                     )}
                   </div>
                 </td>
-                <td className="px-6 py-4 text-gray-600">{tenant.businessType}</td>
+                <td className="px-6 py-4 text-gray-600 capitalize">{tenant.subscriptionPlan || 'N/A'}</td>
                 <td className="px-6 py-4">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 capitalize">
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 capitalize">
                     {tenant.status}
                   </span>
                 </td>
                 <td className="px-6 py-4 text-gray-600">
-                  {format(new Date(tenant.createdAt), 'MMM d, yyyy')}
+                  {tenant.subscriptionEnd ? format(new Date(tenant.subscriptionEnd), 'MMM d, yyyy') : 'N/A'}
                 </td>
-                <td className="px-6 py-4 flex justify-end">
-                  <ActionButtons
-                    onApprove={() => handleApproveClick(tenant)}
-                    onSuspend={() => handleSuspendClick(tenant)}
-                    isApproving={approveTenant.isPending && approveTenant.variables === tenant._id}
-                    isSuspending={suspendTenant.isPending && suspendTenant.variables === tenant._id}
-                    disabled={approveTenant.isPending || suspendTenant.isPending}
-                  />
+                <td className="px-6 py-4 flex justify-end gap-2">
+                  <button
+                    onClick={() => handleSuspendClick(tenant)}
+                    className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                    title="Suspend Tenant"
+                  >
+                    <Ban className="w-4 h-4" />
+                  </button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-
-      <TenantApprovalModal
-        isOpen={approvalModalOpen}
-        onClose={() => {
-          setApprovalModalOpen(false);
-          setSelectedTenant(null);
-        }}
-        onConfirm={onConfirmApprove}
-        tenant={selectedTenant}
-        isProcessing={approveTenant.isPending}
-      />
 
       <SecurityVerificationModal
         isOpen={suspendModalOpen}
@@ -149,8 +113,8 @@ export const PendingTenantsTable = () => {
           setSelectedTenant(null);
         }}
         onConfirm={onConfirmSuspend}
-        title="Suspend Tenant Request"
-        message={`Are you sure you want to suspend the request for ${selectedTenant?.name}?`}
+        title="Suspend Active Tenant"
+        message={`Are you sure you want to suspend ${selectedTenant?.name}? This will instantly block all access.`}
         actionLabel="Suspend"
         isProcessing={suspendTenant.isPending}
       />
