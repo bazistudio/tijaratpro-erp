@@ -3,13 +3,13 @@
 import React, { useEffect, useState } from 'react';
 import { Trash2, Banknote, Printer, UserCircle2, Repeat } from 'lucide-react';
 import { usePosStore, PaymentMethod, Transaction } from '../store/usePosStore';
-import { mockShopProfile } from '../store/posMockData';
 import { DocumentService } from '../services/document/document.service';
 import toast from 'react-hot-toast';
 import { CreditCustomerModal } from './modals/CreditCustomerModal';
 import { LedgerSettlementModal } from './modals/LedgerSettlementModal';
 import { PaymentModal } from './modals/PaymentModal';
 import { DBCustomer } from '@/types/db.types';
+import { CustomerSelector } from './CustomerSelector';
 
 export const CartSummary = () => {
   const clearCart = usePosStore(state => state.clearCart);
@@ -112,14 +112,34 @@ export const CartSummary = () => {
   const processTransaction = async (paymentBreakdown: {method: string, amount: number}[] = [], customerObj: {id: string, name: string} | null = null) => {
     if (!activeSession) return;
     
+    // If we have a selected customer in the UI, use it if none was explicitly passed
+    const targetCustomer = customerObj || (selectedCustomer ? { id: selectedCustomer.id, name: selectedCustomer.name } : null);
+
+    // Warning override logic
+    if (selectedCustomer) {
+      const { currentBalance = 0, creditLimit = 0 } = selectedCustomer;
+      // if grandTotal > 0, we are adding to their balance if credit, but just doing a sale.
+      // Actually, warn if their balance is already over limit, or if this transaction makes it over limit.
+      const isOverLimit = currentBalance > creditLimit;
+      if (isOverLimit) {
+        const proceed = window.confirm(`WARNING: ${selectedCustomer.name} is over their credit limit (Balance: ${currentBalance}, Limit: ${creditLimit}). Proceed anyway?`);
+        if (!proceed) return;
+      }
+    }
+
     const isRefund = grandTotal < 0;
     
     try {
-      const result = await completeTransaction(paymentBreakdown, customerObj);
+      const result = await completeTransaction(paymentBreakdown, targetCustomer);
       
       if (result && result.transaction) {
         // Build the invoice purely for print view rendering
-        const invoice = DocumentService.buildInvoice(result.transaction as any, mockShopProfile);
+        const dummyShopProfile = {
+          name: 'Shop',
+          address: 'Address',
+          phone1: '123'
+        };
+        const invoice = DocumentService.buildInvoice(result.transaction as any, dummyShopProfile as any);
         console.log("INVOICE GENERATED:", invoice);
         
         // Pass to store to trigger InvoiceReceipt render
@@ -157,7 +177,12 @@ export const CartSummary = () => {
           </div>
         )}
 
-        <div className="flex justify-between items-center mb-2">
+        <CustomerSelector 
+          selectedCustomer={selectedCustomer} 
+          onSelectCustomer={setSelectedCustomer} 
+        />
+
+        <div className="flex justify-between items-center mb-2 mt-2">
           <span className="text-sm text-gray-500 dark:text-gray-400">New Items Subtotal</span>
           <span className="text-sm font-semibold text-gray-900 dark:text-gray-100 tabular-nums">Rs {subtotal.toLocaleString()}</span>
         </div>

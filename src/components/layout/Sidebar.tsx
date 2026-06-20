@@ -23,46 +23,35 @@ export const Sidebar = () => {
         </div>
         
         <div className="flex-1 flex flex-col overflow-y-auto no-scrollbar pt-5 pb-4">
-          <nav className="mt-2 flex-1 px-3 space-y-4">
-            {shopAdminNavigation.map((group, idx) => (
-              <div key={idx}>
-                {group.label && (
-                  <h3 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 dark:text-gray-400">
-                    {group.label}
-                  </h3>
-                )}
-                <div className="space-y-1">
-                  {group.items.map((item) => {
-                    validateRoute(item.href, item.name);
-                    const isActive =
-                      item.href === '/dashboard/shop-admin'
-                        ? pathname === item.href
-                        : pathname.startsWith(item.href);
-                    const Icon = item.icon;
-                    
-                    return (
-                      <Link
-                        key={item.name}
-                        href={item.href}
-                        className={`group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${
-                          isActive
-                            ? 'bg-[#006970]/10 text-[#006970] dark:bg-[#006970]/20 dark:text-[#00B4BB]'
-                            : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
-                        }`}
-                      >
-                        <Icon
-                          className={`flex-shrink-0 -ml-1 mr-3 h-5 w-5 transition-colors duration-200 ${
-                            isActive ? 'text-[#006970] dark:text-[#00B4BB]' : 'text-gray-400 group-hover:text-gray-500 dark:group-hover:text-gray-300'
-                          }`}
-                          aria-hidden="true"
-                        />
-                        {item.name}
-                      </Link>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
+          <nav className="mt-1 flex-1 px-2 space-y-0.5">
+            {shopAdminNavigation.flatMap(group => group.items).map((item) => {
+              validateRoute(item.href, item.name);
+              const isActive =
+                item.href === '/dashboard/shop-admin'
+                  ? pathname === item.href
+                  : pathname.startsWith(item.href);
+              const Icon = item.icon;
+              
+              return (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className={`group flex items-center px-2 py-1.5 mb-0.5 text-sm font-medium rounded-lg transition-all duration-200 ${
+                    isActive
+                      ? 'bg-[#006970]/10 text-[#006970] dark:bg-[#006970]/20 dark:text-[#00B4BB]'
+                      : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
+                  }`}
+                >
+                  <Icon
+                    className={`flex-shrink-0 -ml-1 mr-3 h-4 w-4 transition-colors duration-200 ${
+                      isActive ? 'text-[#006970] dark:text-[#00B4BB]' : 'text-gray-400 group-hover:text-gray-500 dark:group-hover:text-gray-300'
+                    }`}
+                    aria-hidden="true"
+                  />
+                  {item.name}
+                </Link>
+              );
+            })}
           </nav>
         </div>
         

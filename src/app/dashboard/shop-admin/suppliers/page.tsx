@@ -1,5 +1,9 @@
-import { ComingSoonPage } from '@/components/common/ComingSoonPage';
+import { SuppliersTab } from '@/features/suppliers/components/SuppliersTab';
 
 export default function SuppliersPage() {
-  return <ComingSoonPage title="Suppliers" />;
+  return (
+    <div className="h-full">
+      <SuppliersTab />
+    </div>
+  );
 }

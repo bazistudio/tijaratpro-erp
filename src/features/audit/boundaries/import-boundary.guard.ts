@@ -8,9 +8,21 @@
 //
 // Also provides a stress-test runner for import edge cases.
 
-import { importPipelineService } from '@/features/inventory-import/services/import.service';
 import { transactionLedger, generateTxnId } from '../services/transaction-integrity.service';
-import type { ValidatedImportedProduct } from '@/features/inventory-import/pipeline/import.types';
+
+// Mocked for compilation since inventory-import was deleted
+export interface ValidatedImportedProduct {
+  name: string;
+  sku: string;
+  category: string;
+  price: number;
+  quantity: number;
+  isValid: boolean;
+  errors: string[];
+}
+const importPipelineService = {
+  commitValidProducts: async (products: any) => products.length
+};
 
 export interface ImportStressTestResult {
   scenario: string;

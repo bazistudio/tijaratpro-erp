@@ -31,7 +31,7 @@ class DomainBoundaryEnforcer {
     severity: 'error' | 'warning';
   }> = [
     {
-      callerPattern: /inventory-import/,
+      callerPattern: /import/,
       calleePattern: /inventory\.store|useInventoryStore/,
       rule: 'Import pipeline MUST NOT directly access inventory store. Use productService or stockService.',
       severity: 'error',
@@ -142,7 +142,7 @@ class DomainBoundaryEnforcer {
   }
 
   private inferLayer(file: string): DomainLayer {
-    if (file.includes('inventory-import')) return 'import-pipeline';
+    if (file.includes('features/import')) return 'import-pipeline';
     if (file.includes('/sales/')) return 'sales';
     if (file.includes('/stock/')) return 'stock';
     if (file.includes('/product/')) return 'product';

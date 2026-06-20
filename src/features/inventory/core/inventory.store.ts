@@ -14,7 +14,7 @@ import { inventoryService } from '../services/inventory.service';
 import { DEFAULT_PAGE_SIZE } from '../constants/inventory.constants';
 import { CreateProductDTO } from '../dto/inventory.dto';
 import { productService } from '../product/product.service';
-import { stockService } from '../stock/stock.service';
+
 
 interface InventoryState {
   products: InventoryProduct[];

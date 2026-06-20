@@ -4,9 +4,19 @@
  * Use the backend response payload to render invoice layouts.
  */
 
+import { jsPDF } from 'jspdf';
+import 'jspdf-autotable';
 import { Transaction, CartItem } from '../store/usePosStore';
-import { ShopProfile } from '../store/posMockData';
 
+export interface ShopProfile {
+  name: string;
+  address: string;
+  phone1: string;
+  phone2?: string;
+  ntn?: string;
+  invoiceNote?: string;
+  logo?: string;
+}
 export interface Invoice {
   invoiceNo: string;
   transactionId: string;
