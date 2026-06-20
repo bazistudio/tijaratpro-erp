@@ -59,6 +59,23 @@ export function mutateEntity(entityType: string, operation: 'CREATE' | 'UPDATE' 
       payload: JSON.stringify(payload),
       timestamp
     });
+
+    // 4. Insert into audit_log
+    const auditStmt = db.prepare(`
+      INSERT INTO audit_log (id, tenant_id, shop_id, user_id, action, entity, entity_id, timestamp, metadata)
+      VALUES (@id, @tenant_id, @shop_id, @user_id, @action, @entity, @entity_id, @timestamp, @metadata)
+    `);
+    auditStmt.run({
+      id: uuidv7(),
+      tenant_id: payload.tenantId || payload.tenant_id || 'system',
+      shop_id: payload.shopId || payload.shop_id || 'system',
+      user_id: payload.userId || payload.user_id || 'system',
+      action: operation,
+      entity: entityType,
+      entity_id: payload.id || opId,
+      timestamp,
+      metadata: JSON.stringify(payload)
+    });
   });
 
   transaction();

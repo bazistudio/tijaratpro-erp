@@ -5,7 +5,8 @@ import Link from 'next/link';
 import { Menu, Bell, ShoppingCart } from 'lucide-react';
 import { UserMenu } from './UserMenu';
 import { SearchInput } from '../common/SearchInput';
-import { QuickActions } from '../common/QuickActions';
+import { PackagePlus, ReceiptText } from 'lucide-react';
+import { DesktopAppButton } from './DesktopAppButton';
 
 interface TopbarProps {
   setMobileMenuOpen: (isOpen: boolean) => void;
@@ -40,9 +41,26 @@ export const Topbar = ({ setMobileMenuOpen }: TopbarProps) => {
             <span className="hidden sm:inline">New Sale</span>
             <span className="sm:hidden">Sale</span>
           </Link>
+          {/* Add Stock Button */}
+          <Link
+            href="/dashboard/inventory"
+            className="hidden md:flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white dark:bg-gray-800 dark:text-gray-200 border border-gray-300 dark:border-gray-700 rounded-lg shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+          >
+            <PackagePlus className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+            <span className="hidden lg:inline">Add Stock</span>
+          </Link>
 
-          <QuickActions />
-          
+          {/* Add Expense Button */}
+          <Link
+            href="/dashboard/expenses"
+            className="hidden md:flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white dark:bg-gray-800 dark:text-gray-200 border border-gray-300 dark:border-gray-700 rounded-lg shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+          >
+            <ReceiptText className="h-4 w-4 text-rose-600 dark:text-rose-400" />
+            <span className="hidden lg:inline">Add Expense</span>
+          </Link>
+
+          {/* Download / Open App */}
+          <DesktopAppButton />
           <button
             type="button"
             className="relative rounded-full bg-white dark:bg-gray-900 p-2 text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-[#006970] focus:ring-offset-2 transition-colors border border-transparent dark:border-gray-700 hidden sm:block"

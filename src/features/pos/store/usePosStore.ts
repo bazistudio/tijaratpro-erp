@@ -356,7 +356,30 @@ export const usePosStore = create<PosStore>()(
             discount: session.invoiceDiscountValue || 0,
           };
 
-          const result = await salesApi.createOrder(payload);
+          let result;
+          const isDesktop = typeof window !== 'undefined' && (window as any).electron;
+
+          if (isDesktop) {
+            const saleId = `SALE-${Date.now()}`;
+            const sqlitePayload = {
+              id: saleId,
+              customerId: payload.customerId || 'walk-in',
+              total: session.grandTotal || 0,
+              status: 'completed',
+              items: JSON.stringify(payload.items),
+              paymentMethod: payload.paymentMethod,
+              discount: payload.discount,
+            };
+            
+            const mutateResult = await (window as any).electron.db.mutate('orders', 'CREATE', sqlitePayload);
+            if (mutateResult.success) {
+              result = { success: true, order: { ...sqlitePayload, _id: saleId } };
+            } else {
+              throw new Error("Failed to save to local offline queue");
+            }
+          } else {
+            result = await salesApi.createOrder(payload);
+          }
 
           if (!result.success) {
             throw new Error(result.message || 'Transaction failed');

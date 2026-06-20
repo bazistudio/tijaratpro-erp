@@ -17,13 +17,25 @@ var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: tru
 var preload_exports = {};
 module.exports = __toCommonJS(preload_exports);
 var import_electron = require("electron");
-var ALLOWED_CHANNELS = ["app:notification", "app:updateAvailable"];
+var ALLOWED_CHANNELS = [
+  "app:notification",
+  "app:updateAvailable",
+  "updater:status",
+  "updater:available",
+  "updater:error",
+  "updater:progress",
+  "updater:downloaded"
+];
 function isAllowedChannel(channel) {
   return ALLOWED_CHANNELS.includes(channel);
 }
 var electronAPI = {
   getAppInfo: () => import_electron.ipcRenderer.invoke("app:getInfo"),
+  getSystemInfo: () => import_electron.ipcRenderer.invoke("app:getSystemInfo"),
   quit: () => import_electron.ipcRenderer.invoke("app:quit"),
+  minimize: () => import_electron.ipcRenderer.invoke("app:minimize"),
+  maximize: () => import_electron.ipcRenderer.invoke("app:maximize"),
+  close: () => import_electron.ipcRenderer.invoke("app:close"),
   openExternal: (url) => import_electron.ipcRenderer.invoke("app:openExternal", url),
   on: (channel, listener) => {
     if (!isAllowedChannel(channel)) {
@@ -39,7 +51,20 @@ var electronAPI = {
   db: {
     mutate: (entityType, operation, payload) => import_electron.ipcRenderer.invoke("db:mutate", entityType, operation, payload),
     query: (entityType, id) => import_electron.ipcRenderer.invoke("db:query", entityType, id),
-    queryAll: (entityType) => import_electron.ipcRenderer.invoke("db:queryAll", entityType)
+    queryAll: (entityType) => import_electron.ipcRenderer.invoke("db:queryAll", entityType),
+    backup: () => import_electron.ipcRenderer.invoke("db:backup"),
+    restore: (backupFilePath) => import_electron.ipcRenderer.invoke("db:restore", backupFilePath),
+    getBackupStatus: () => import_electron.ipcRenderer.invoke("db:get-backup-status"),
+    setBackupPath: (path) => import_electron.ipcRenderer.invoke("db:set-backup-path", path)
+  },
+  auth: {
+    setToken: (key, token) => import_electron.ipcRenderer.invoke("auth:setToken", key, token),
+    getToken: (key) => import_electron.ipcRenderer.invoke("auth:getToken", key),
+    clearToken: (key) => import_electron.ipcRenderer.invoke("auth:clearToken", key)
+  },
+  updater: {
+    checkForUpdates: () => import_electron.ipcRenderer.invoke("updater:check"),
+    installUpdate: () => import_electron.ipcRenderer.invoke("updater:install")
   }
 };
 import_electron.contextBridge.exposeInMainWorld("electron", electronAPI);

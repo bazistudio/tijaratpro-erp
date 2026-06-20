@@ -28,12 +28,14 @@ export function initializeSchema(db: Database) {
   db.exec(`
     CREATE TABLE IF NOT EXISTS orders (
       id TEXT PRIMARY KEY,
-      userId TEXT NOT NULL,
+      customerId TEXT,
       total REAL NOT NULL,
       status TEXT NOT NULL,
+      items TEXT NOT NULL,
+      paymentMethod TEXT,
+      discount REAL,
       updatedAt INTEGER NOT NULL,
-      version INTEGER NOT NULL DEFAULT 1,
-      FOREIGN KEY (userId) REFERENCES users (id)
+      version INTEGER NOT NULL DEFAULT 1
     );
   `);
 
@@ -57,6 +59,20 @@ export function initializeSchema(db: Database) {
       payload TEXT NOT NULL,
       timestamp INTEGER NOT NULL,
       status TEXT NOT NULL -- 'pending', 'synced', 'failed'
+    );
+  `);
+  // 4. Audit Log (Security & Tracking)
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS audit_log (
+      id TEXT PRIMARY KEY,
+      tenant_id TEXT NOT NULL,
+      shop_id TEXT,
+      user_id TEXT NOT NULL,
+      action TEXT NOT NULL,
+      entity TEXT NOT NULL,
+      entity_id TEXT NOT NULL,
+      timestamp INTEGER NOT NULL,
+      metadata TEXT
     );
   `);
 }

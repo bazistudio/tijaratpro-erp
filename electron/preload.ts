@@ -14,6 +14,9 @@ export interface ElectronAPI {
   /** Returns basic information about the running app */
   getAppInfo: () => Promise<AppInfo>;
 
+  /** Returns detailed OS/App system info */
+  getSystemInfo: () => Promise<any>;
+
   /** Quits the desktop application */
   quit: () => Promise<void>;
 
@@ -27,16 +30,39 @@ export interface ElectronAPI {
   off: (channel: string, listener: (...args: unknown[]) => void) => void;
 
   db: {
-    mutate: (entityType: string, operation: 'CREATE'|'UPDATE'|'DELETE', payload: any) => Promise<{ success: boolean; opId: string }>;
+    mutate: (entityType: string, operation: 'CREATE'|'UPDATE'|'DELETE', payload: any) => Promise<{ success: boolean; opId?: string; error?: string }>;
     query: (entityType: string, id: string) => Promise<any>;
     queryAll: (entityType: string) => Promise<any[]>;
+    backup: () => Promise<{ success: boolean; message: string; backupFile?: string }>;
+    restore: (backupFilePath: string) => Promise<{ success: boolean; message: string }>;
+    getBackupStatus: () => Promise<any>;
+    setBackupPath: (path: string) => Promise<{ success: boolean }>;
+  };
+
+  auth: {
+    setToken: (key: string, token: string) => Promise<void>;
+    getToken: (key: string) => Promise<string | null>;
+    clearToken: (key: string) => Promise<void>;
+  };
+
+  updater: {
+    checkForUpdates: () => Promise<any>;
+    installUpdate: () => Promise<void>;
   };
 }
 
 // --------------------------------------------------------------------------
 // Allowed IPC channels (whitelist for security)
 // --------------------------------------------------------------------------
-const ALLOWED_CHANNELS = ["app:notification", "app:updateAvailable"] as const;
+const ALLOWED_CHANNELS = [
+  "app:notification",
+  "app:updateAvailable",
+  "updater:status",
+  "updater:available",
+  "updater:error",
+  "updater:progress",
+  "updater:downloaded"
+] as const;
 type AllowedChannel = (typeof ALLOWED_CHANNELS)[number];
 
 function isAllowedChannel(channel: string): channel is AllowedChannel {
@@ -48,8 +74,12 @@ function isAllowedChannel(channel: string): channel is AllowedChannel {
 // --------------------------------------------------------------------------
 const electronAPI: ElectronAPI = {
   getAppInfo: () => ipcRenderer.invoke("app:getInfo"),
+  getSystemInfo: () => ipcRenderer.invoke("app:getSystemInfo"),
 
   quit: () => ipcRenderer.invoke("app:quit"),
+  minimize: () => ipcRenderer.invoke("app:minimize"),
+  maximize: () => ipcRenderer.invoke("app:maximize"),
+  close: () => ipcRenderer.invoke("app:close"),
 
   openExternal: (url: string) => ipcRenderer.invoke("app:openExternal", url),
 
@@ -70,6 +100,21 @@ const electronAPI: ElectronAPI = {
     mutate: (entityType, operation, payload) => ipcRenderer.invoke('db:mutate', entityType, operation, payload),
     query: (entityType, id) => ipcRenderer.invoke('db:query', entityType, id),
     queryAll: (entityType) => ipcRenderer.invoke('db:queryAll', entityType),
+    backup: () => ipcRenderer.invoke('db:backup'),
+    restore: (backupFilePath: string) => ipcRenderer.invoke('db:restore', backupFilePath),
+    getBackupStatus: () => ipcRenderer.invoke('db:get-backup-status'),
+    setBackupPath: (path: string) => ipcRenderer.invoke('db:set-backup-path', path),
+  },
+
+  auth: {
+    setToken: (key: string, token: string) => ipcRenderer.invoke('auth:setToken', key, token),
+    getToken: (key: string) => ipcRenderer.invoke('auth:getToken', key),
+    clearToken: (key: string) => ipcRenderer.invoke('auth:clearToken', key),
+  },
+
+  updater: {
+    checkForUpdates: () => ipcRenderer.invoke('updater:check'),
+    installUpdate: () => ipcRenderer.invoke('updater:install')
   }
 };
 

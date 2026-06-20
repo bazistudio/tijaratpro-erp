@@ -5,6 +5,13 @@ var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __getProtoOf = Object.getPrototypeOf;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __esm = (fn, res) => function __init() {
+  return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])(fn = 0)), res;
+};
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
 var __copyProps = (to, from, except, desc) => {
   if (from && typeof from === "object" || typeof from === "function") {
     for (let key of __getOwnPropNames(from))
@@ -21,10 +28,53 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
   mod
 ));
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+
+// electron/updater.ts
+var updater_exports = {};
+__export(updater_exports, {
+  setupUpdater: () => setupUpdater
+});
+function setupUpdater(mainWindow2) {
+  import_electron_updater.autoUpdater.autoDownload = true;
+  import_electron_updater.autoUpdater.autoInstallOnAppQuit = true;
+  import_electron_updater.autoUpdater.on("checking-for-update", () => {
+    mainWindow2.webContents.send("updater:status", "Checking for updates...");
+  });
+  import_electron_updater.autoUpdater.on("update-available", (info) => {
+    mainWindow2.webContents.send("updater:available", info);
+  });
+  import_electron_updater.autoUpdater.on("update-not-available", () => {
+    mainWindow2.webContents.send("updater:status", "App is up to date.");
+  });
+  import_electron_updater.autoUpdater.on("error", (err) => {
+    mainWindow2.webContents.send("updater:error", err.message);
+  });
+  import_electron_updater.autoUpdater.on("download-progress", (progressObj) => {
+    mainWindow2.webContents.send("updater:progress", progressObj);
+  });
+  import_electron_updater.autoUpdater.on("update-downloaded", (info) => {
+    mainWindow2.webContents.send("updater:downloaded", info);
+  });
+  import_electron10.ipcMain.handle("updater:check", () => {
+    return import_electron_updater.autoUpdater.checkForUpdatesAndNotify();
+  });
+  import_electron10.ipcMain.handle("updater:install", () => {
+    import_electron_updater.autoUpdater.quitAndInstall();
+  });
+}
+var import_electron_updater, import_electron10;
+var init_updater = __esm({
+  "electron/updater.ts"() {
+    "use strict";
+    import_electron_updater = require("electron-updater");
+    import_electron10 = require("electron");
+  }
+});
 
 // electron/main.ts
-var import_electron6 = require("electron");
-var import_path4 = __toESM(require("path"));
+var import_electron11 = require("electron");
+var import_path6 = __toESM(require("path"));
 
 // electron/window.ts
 var import_electron = require("electron");
@@ -52,6 +102,8 @@ function createWindow() {
     // matches your dark theme bg
     show: false,
     // avoid flicker; show after ready
+    frame: false,
+    // fully frameless on Windows/Linux
     titleBarStyle: "hidden",
     // clean, frameless-style look
     trafficLightPosition: { x: 16, y: 16 },
@@ -100,24 +152,30 @@ function createWindow() {
 
 // electron/security.ts
 var import_electron2 = require("electron");
-var CSP = [
+var isDev = !import_electron2.app.isPackaged;
+var CSP = isDev ? [
   "default-src 'self'",
-  // Next.js needs inline scripts in dev; tighten in production
   "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-  // Allow styles from self + inline (required by many UI libraries)
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-  // Fonts from Google Fonts CDN
   "font-src 'self' https://fonts.gstatic.com",
-  // Images: self + data URIs + your API origin
   "img-src 'self' data: blob: https:",
-  // XHR / Fetch: allow calls to your backend API
   "connect-src 'self' http://localhost:* https://localhost:* ws://localhost:* wss://localhost:* https:",
-  // Media (audio / video)
   "media-src 'self'",
-  // Block all plugins (Flash, etc.)
   "object-src 'none'",
-  // Disallow iframes from foreign origins
   "frame-src 'self'"
+].join("; ") : [
+  "default-src 'self'",
+  "script-src 'self'",
+  // Removed unsafe-inline and unsafe-eval
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "font-src 'self' https://fonts.gstatic.com",
+  "img-src 'self' data: blob: https:",
+  "connect-src 'self' https:",
+  // Removed localhost
+  "media-src 'self'",
+  "object-src 'none'",
+  "frame-src 'none'"
+  // No iframes in prod
 ].join("; ");
 var ALLOWED_PERMISSIONS = /* @__PURE__ */ new Set([
   "clipboard-read",
@@ -192,12 +250,14 @@ function initializeSchema(db2) {
   db2.exec(`
     CREATE TABLE IF NOT EXISTS orders (
       id TEXT PRIMARY KEY,
-      userId TEXT NOT NULL,
+      customerId TEXT,
       total REAL NOT NULL,
       status TEXT NOT NULL,
+      items TEXT NOT NULL,
+      paymentMethod TEXT,
+      discount REAL,
       updatedAt INTEGER NOT NULL,
-      version INTEGER NOT NULL DEFAULT 1,
-      FOREIGN KEY (userId) REFERENCES users (id)
+      version INTEGER NOT NULL DEFAULT 1
     );
   `);
   db2.exec(`
@@ -217,6 +277,19 @@ function initializeSchema(db2) {
       payload TEXT NOT NULL,
       timestamp INTEGER NOT NULL,
       status TEXT NOT NULL -- 'pending', 'synced', 'failed'
+    );
+  `);
+  db2.exec(`
+    CREATE TABLE IF NOT EXISTS audit_log (
+      id TEXT PRIMARY KEY,
+      tenant_id TEXT NOT NULL,
+      shop_id TEXT,
+      user_id TEXT NOT NULL,
+      action TEXT NOT NULL,
+      entity TEXT NOT NULL,
+      entity_id TEXT NOT NULL,
+      timestamp INTEGER NOT NULL,
+      metadata TEXT
     );
   `);
 }
@@ -246,7 +319,7 @@ function initDb() {
 }
 
 // electron/ipc/handlers.ts
-var import_electron5 = require("electron");
+var import_electron8 = require("electron");
 
 // electron/cache/memoryCache.ts
 var MemoryCache = class {
@@ -474,6 +547,21 @@ function mutateEntity(entityType, operation, payload) {
       payload: JSON.stringify(payload),
       timestamp
     });
+    const auditStmt = db.prepare(`
+      INSERT INTO audit_log (id, tenant_id, shop_id, user_id, action, entity, entity_id, timestamp, metadata)
+      VALUES (@id, @tenant_id, @shop_id, @user_id, @action, @entity, @entity_id, @timestamp, @metadata)
+    `);
+    auditStmt.run({
+      id: (0, import_uuid.v7)(),
+      tenant_id: payload.tenantId || payload.tenant_id || "system",
+      shop_id: payload.shopId || payload.shop_id || "system",
+      user_id: payload.userId || payload.user_id || "system",
+      action: operation,
+      entity: entityType,
+      entity_id: payload.id || opId,
+      timestamp,
+      metadata: JSON.stringify(payload)
+    });
   });
   transaction();
   if (operation === "DELETE") {
@@ -499,67 +587,321 @@ function queryAll(entityType) {
   return stmt.all();
 }
 
+// electron/auth/storage.ts
+var import_electron5 = require("electron");
+var import_electron_store = __toESM(require("electron-store"));
+var store = new import_electron_store.default({
+  name: "auth-tokens"
+});
+function setToken(key, token) {
+  if (import_electron5.safeStorage.isEncryptionAvailable()) {
+    const encrypted = import_electron5.safeStorage.encryptString(token);
+    store.set(key, encrypted.toString("base64"));
+  } else {
+    store.set(key, Buffer.from(token, "utf-8").toString("base64"));
+  }
+}
+function getToken(key) {
+  const data = store.get(key);
+  if (!data) return null;
+  try {
+    if (import_electron5.safeStorage.isEncryptionAvailable()) {
+      return import_electron5.safeStorage.decryptString(Buffer.from(data, "base64"));
+    } else {
+      return Buffer.from(data, "base64").toString("utf-8");
+    }
+  } catch (err) {
+    console.error("[safeStorage] Failed to decrypt token", err);
+    return null;
+  }
+}
+function clearToken(key) {
+  store.delete(key);
+}
+
+// electron/services/backupEngine.ts
+var import_fs2 = __toESM(require("fs"));
+var import_path4 = __toESM(require("path"));
+var import_zlib = __toESM(require("zlib"));
+var import_promises = require("stream/promises");
+
+// electron/services/config.ts
+var import_electron_store2 = __toESM(require("electron-store"));
+var defaultConfig = {
+  backupPath: "",
+  lastBackupDate: "",
+  autoBackupEnabled: true
+};
+var configStore = new import_electron_store2.default({
+  name: "tijarat-config",
+  defaults: defaultConfig
+});
+
+// electron/services/backupEngine.ts
+var import_electron6 = require("electron");
+async function createBackup() {
+  try {
+    const backupPath = configStore.get("backupPath");
+    if (!backupPath) {
+      return { success: false, message: "Backup path not configured" };
+    }
+    if (!import_fs2.default.existsSync(backupPath)) {
+      import_fs2.default.mkdirSync(backupPath, { recursive: true });
+    }
+    const dateStr = (/* @__PURE__ */ new Date()).toISOString().replace(/[:.]/g, "-");
+    const backupFileName = `tijarat_backup_${dateStr}.db.gz`;
+    const destinationFile = import_path4.default.join(backupPath, backupFileName);
+    const tempDbPath = import_path4.default.join(import_electron6.app.getPath("temp"), `temp_backup_${dateStr}.db`);
+    await db.backup(tempDbPath);
+    const source = import_fs2.default.createReadStream(tempDbPath);
+    const destination = import_fs2.default.createWriteStream(destinationFile);
+    const gzip = import_zlib.default.createGzip();
+    await (0, import_promises.pipeline)(source, gzip, destination);
+    import_fs2.default.unlinkSync(tempDbPath);
+    const todayStr = (/* @__PURE__ */ new Date()).toISOString().split("T")[0];
+    configStore.set("lastBackupDate", todayStr);
+    cleanupOldBackups(backupPath);
+    return { success: true, message: "Backup completed successfully", backupFile: destinationFile };
+  } catch (error) {
+    console.error("Backup failed:", error);
+    return { success: false, message: error.message || "Backup failed" };
+  }
+}
+function cleanupOldBackups(backupPath) {
+  try {
+    const files = import_fs2.default.readdirSync(backupPath).filter((f) => f.startsWith("tijarat_backup_") && f.endsWith(".db.gz")).map((f) => ({ name: f, time: import_fs2.default.statSync(import_path4.default.join(backupPath, f)).mtime.getTime() })).sort((a, b) => b.time - a.time);
+    if (files.length > 30) {
+      const toDelete = files.slice(30);
+      for (const file of toDelete) {
+        import_fs2.default.unlinkSync(import_path4.default.join(backupPath, file.name));
+      }
+    }
+  } catch (err) {
+    console.error("Failed to cleanup old backups:", err);
+  }
+}
+function getBackupStatus() {
+  return {
+    backupPath: configStore.get("backupPath"),
+    lastBackupDate: configStore.get("lastBackupDate"),
+    autoBackupEnabled: configStore.get("autoBackupEnabled")
+  };
+}
+
+// electron/services/restoreEngine.ts
+var import_fs3 = __toESM(require("fs"));
+var import_path5 = __toESM(require("path"));
+var import_zlib2 = __toESM(require("zlib"));
+var import_promises2 = require("stream/promises");
+var import_electron7 = require("electron");
+async function restoreDatabase(backupFilePath) {
+  try {
+    if (!import_fs3.default.existsSync(backupFilePath)) {
+      return { success: false, message: "Backup file does not exist" };
+    }
+    const userDataPath = import_electron7.app.getPath("userData");
+    const currentDbPath = import_path5.default.join(userDataPath, "tijarat_local.db");
+    const preRestorePath = import_path5.default.join(userDataPath, "tijarat_local.db.pre-restore");
+    const extractedTempPath = import_path5.default.join(import_electron7.app.getPath("temp"), `restore_temp_${Date.now()}.db`);
+    const source = import_fs3.default.createReadStream(backupFilePath);
+    const destination = import_fs3.default.createWriteStream(extractedTempPath);
+    const gunzip = import_zlib2.default.createGunzip();
+    await (0, import_promises2.pipeline)(source, gunzip, destination);
+    const stat = import_fs3.default.statSync(extractedTempPath);
+    if (stat.size === 0) {
+      import_fs3.default.unlinkSync(extractedTempPath);
+      throw new Error("Extracted database is empty or corrupted.");
+    }
+    try {
+      db.close();
+    } catch (e) {
+      console.warn("Error closing DB during restore:", e);
+    }
+    if (import_fs3.default.existsSync(currentDbPath)) {
+      if (import_fs3.default.existsSync(preRestorePath)) {
+        import_fs3.default.unlinkSync(preRestorePath);
+      }
+      import_fs3.default.renameSync(currentDbPath, preRestorePath);
+    }
+    try {
+      import_fs3.default.copyFileSync(extractedTempPath, currentDbPath);
+      import_fs3.default.unlinkSync(extractedTempPath);
+      setTimeout(() => {
+        import_electron7.app.relaunch();
+        import_electron7.app.exit(0);
+      }, 1e3);
+      return { success: true, message: "Restore successful. Restarting application..." };
+    } catch (restoreError) {
+      console.error("Failed to copy restored DB, attempting rollback...", restoreError);
+      if (import_fs3.default.existsSync(preRestorePath)) {
+        import_fs3.default.renameSync(preRestorePath, currentDbPath);
+      }
+      return { success: false, message: "Restore failed, rolled back to previous state. " + restoreError.message };
+    }
+  } catch (error) {
+    console.error("Restore sequence failed:", error);
+    return { success: false, message: error.message || "Restore sequence failed" };
+  }
+}
+
 // electron/ipc/handlers.ts
 function setupIpcHandlers() {
-  import_electron5.ipcMain.handle("db:mutate", (_event, entityType, operation, payload) => {
+  import_electron8.ipcMain.handle("db:mutate", (_event, entityType, operation, payload) => {
     return mutateEntity(entityType, operation, payload);
   });
-  import_electron5.ipcMain.handle("db:query", (_event, entityType, id) => {
+  import_electron8.ipcMain.handle("db:query", (_event, entityType, id) => {
     return queryEntity(entityType, id);
   });
-  import_electron5.ipcMain.handle("db:queryAll", (_event, entityType) => {
+  import_electron8.ipcMain.handle("db:queryAll", (_event, entityType) => {
     return queryAll(entityType);
+  });
+  import_electron8.ipcMain.handle("auth:setToken", (_event, key, token) => {
+    setToken(key, token);
+  });
+  import_electron8.ipcMain.handle("auth:getToken", (_event, key) => {
+    return getToken(key);
+  });
+  import_electron8.ipcMain.handle("auth:clearToken", (_event, key) => {
+    clearToken(key);
+  });
+  import_electron8.ipcMain.handle("db:backup", async () => {
+    return createBackup();
+  });
+  import_electron8.ipcMain.handle("db:restore", async (_event, backupFilePath) => {
+    return restoreDatabase(backupFilePath);
+  });
+  import_electron8.ipcMain.handle("db:get-backup-status", () => {
+    return getBackupStatus();
+  });
+  import_electron8.ipcMain.handle("db:set-backup-path", (_event, backupPath) => {
+    configStore.set("backupPath", backupPath);
+    return { success: true };
+  });
+  import_electron8.ipcMain.handle("app:minimize", () => {
+    const win = import_electron8.BrowserWindow.getFocusedWindow();
+    if (win) win.minimize();
+  });
+  import_electron8.ipcMain.handle("app:maximize", () => {
+    const win = import_electron8.BrowserWindow.getFocusedWindow();
+    if (win) {
+      if (win.isMaximized()) {
+        win.unmaximize();
+      } else {
+        win.maximize();
+      }
+    }
+  });
+  import_electron8.ipcMain.handle("app:close", () => {
+    const win = import_electron8.BrowserWindow.getFocusedWindow();
+    if (win) win.close();
+  });
+  import_electron8.ipcMain.handle("app:getSystemInfo", () => {
+    return {
+      appVersion: import_electron8.app.getVersion(),
+      electronVersion: process.versions.electron,
+      nodeVersion: process.versions.node,
+      platform: process.platform,
+      arch: process.arch,
+      memoryUsage: process.getSystemMemoryInfo ? process.getSystemMemoryInfo() : process.memoryUsage()
+    };
   });
 }
 
+// electron/services/backupScheduler.ts
+var import_electron9 = require("electron");
+function initBackupScheduler() {
+  checkAndRunBackup();
+  setInterval(() => {
+    checkAndRunBackup();
+  }, 60 * 60 * 1e3);
+}
+async function checkAndRunBackup() {
+  const autoBackupEnabled = configStore.get("autoBackupEnabled");
+  const backupPath = configStore.get("backupPath");
+  if (!autoBackupEnabled || !backupPath) {
+    return;
+  }
+  const todayStr = (/* @__PURE__ */ new Date()).toISOString().split("T")[0];
+  const lastBackupDate = configStore.get("lastBackupDate");
+  if (lastBackupDate === todayStr) {
+    return;
+  }
+  const stmt = db.prepare(`SELECT MAX(timestamp) as lastActivity FROM operation_log`);
+  const result = stmt.get();
+  if (!result.lastActivity) {
+    return;
+  }
+  if (import_electron9.net.isOnline()) {
+    console.log("[BackupScheduler] Conditions met, triggering auto-backup...");
+    await createBackup();
+  }
+}
+
 // electron/main.ts
-var isDev = !import_electron6.app.isPackaged;
+var isDev2 = !import_electron11.app.isPackaged;
 var NEXT_DEV_URL = "http://localhost:3000";
 var mainWindow = null;
-import_electron6.app.whenReady().then(async () => {
+if (process.defaultApp) {
+  if (process.argv.length >= 2) {
+    import_electron11.app.setAsDefaultProtocolClient("tijaratpro", process.execPath, [import_path6.default.resolve(process.argv[1])]);
+  }
+} else {
+  import_electron11.app.setAsDefaultProtocolClient("tijaratpro");
+}
+import_electron11.app.on("open-url", (event, url) => {
+  event.preventDefault();
+  if (mainWindow) {
+    if (mainWindow.isMinimized()) mainWindow.restore();
+    mainWindow.focus();
+  }
+});
+import_electron11.app.whenReady().then(async () => {
   setupSecurity();
   initDb();
   setupIpcHandlers();
   syncEngine.start();
+  initBackupScheduler();
   mainWindow = createWindow();
-  if (isDev) {
+  if (isDev2) {
     await mainWindow.loadURL(NEXT_DEV_URL);
     mainWindow.webContents.openDevTools({ mode: "detach" });
   } else {
-    const indexPath = import_path4.default.join(__dirname, "../out/index.html");
+    const indexPath = import_path6.default.join(__dirname, "../out/index.html");
     await mainWindow.loadFile(indexPath);
+    const { setupUpdater: setupUpdater2 } = (init_updater(), __toCommonJS(updater_exports));
+    setupUpdater2(mainWindow);
   }
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     if (!url.startsWith("file://") && !url.startsWith(NEXT_DEV_URL)) {
-      import_electron6.shell.openExternal(url);
+      import_electron11.shell.openExternal(url);
       return { action: "deny" };
     }
     return { action: "allow" };
   });
-  import_electron6.app.on("activate", () => {
-    if (import_electron6.BrowserWindow.getAllWindows().length === 0) {
+  import_electron11.app.on("activate", () => {
+    if (import_electron11.BrowserWindow.getAllWindows().length === 0) {
       mainWindow = createWindow();
     }
   });
 });
-import_electron6.app.on("window-all-closed", () => {
+import_electron11.app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
-    import_electron6.app.quit();
+    import_electron11.app.quit();
   }
 });
-import_electron6.ipcMain.handle("app:getInfo", () => ({
-  version: import_electron6.app.getVersion(),
-  name: import_electron6.app.getName(),
-  isDev,
+import_electron11.ipcMain.handle("app:getInfo", () => ({
+  version: import_electron11.app.getVersion(),
+  name: import_electron11.app.getName(),
+  isDev: isDev2,
   platform: process.platform
 }));
-import_electron6.ipcMain.handle("app:quit", () => {
-  import_electron6.app.quit();
+import_electron11.ipcMain.handle("app:quit", () => {
+  import_electron11.app.quit();
 });
-import_electron6.ipcMain.handle("app:openExternal", (_event, url) => {
+import_electron11.ipcMain.handle("app:openExternal", (_event, url) => {
   const safeUrl = new URL(url);
   if (safeUrl.protocol === "https:" || safeUrl.protocol === "http:") {
-    import_electron6.shell.openExternal(url);
+    import_electron11.shell.openExternal(url);
   }
 });
 //# sourceMappingURL=main.js.map

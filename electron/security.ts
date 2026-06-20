@@ -3,25 +3,30 @@ import { app, session, shell } from "electron";
 // --------------------------------------------------------------------------
 // Content Security Policy
 // --------------------------------------------------------------------------
-const CSP = [
-  "default-src 'self'",
-  // Next.js needs inline scripts in dev; tighten in production
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-  // Allow styles from self + inline (required by many UI libraries)
-  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-  // Fonts from Google Fonts CDN
-  "font-src 'self' https://fonts.gstatic.com",
-  // Images: self + data URIs + your API origin
-  "img-src 'self' data: blob: https:",
-  // XHR / Fetch: allow calls to your backend API
-  "connect-src 'self' http://localhost:* https://localhost:* ws://localhost:* wss://localhost:* https:",
-  // Media (audio / video)
-  "media-src 'self'",
-  // Block all plugins (Flash, etc.)
-  "object-src 'none'",
-  // Disallow iframes from foreign origins
-  "frame-src 'self'",
-].join("; ");
+const isDev = !app.isPackaged;
+const CSP = isDev
+  ? [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+      "font-src 'self' https://fonts.gstatic.com",
+      "img-src 'self' data: blob: https:",
+      "connect-src 'self' http://localhost:* https://localhost:* ws://localhost:* wss://localhost:* https:",
+      "media-src 'self'",
+      "object-src 'none'",
+      "frame-src 'self'",
+    ].join("; ")
+  : [
+      "default-src 'self'",
+      "script-src 'self'", // Removed unsafe-inline and unsafe-eval
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+      "font-src 'self' https://fonts.gstatic.com",
+      "img-src 'self' data: blob: https:",
+      "connect-src 'self' https:", // Removed localhost
+      "media-src 'self'",
+      "object-src 'none'",
+      "frame-src 'none'", // No iframes in prod
+    ].join("; ");
 
 // --------------------------------------------------------------------------
 // Permission request handler

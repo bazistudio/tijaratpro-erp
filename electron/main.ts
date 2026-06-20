@@ -5,6 +5,7 @@ import { setupSecurity } from "./security";
 import { initDb } from "./db/index";
 import { setupIpcHandlers } from "./ipc/handlers";
 import { syncEngine } from "./services/syncEngine";
+import { initBackupScheduler } from "./services/backupScheduler";
 
 // --------------------------------------------------------------------------
 // Environment helpers
@@ -17,6 +18,24 @@ const NEXT_DEV_URL = "http://localhost:3000";
 // --------------------------------------------------------------------------
 let mainWindow: BrowserWindow | null = null;
 
+// Register custom protocol for deep linking (tijaratpro://)
+if (process.defaultApp) {
+  if (process.argv.length >= 2) {
+    app.setAsDefaultProtocolClient('tijaratpro', process.execPath, [path.resolve(process.argv[1])]);
+  }
+} else {
+  app.setAsDefaultProtocolClient('tijaratpro');
+}
+
+// Handle protocol open for macOS
+app.on('open-url', (event, url) => {
+  event.preventDefault();
+  if (mainWindow) {
+    if (mainWindow.isMinimized()) mainWindow.restore();
+    mainWindow.focus();
+  }
+});
+
 app.whenReady().then(async () => {
   // 1. Harden security before any window opens
   setupSecurity();
@@ -25,6 +44,7 @@ app.whenReady().then(async () => {
   initDb();
   setupIpcHandlers();
   syncEngine.start(); // MUST be called after initDb()
+  initBackupScheduler(); // Start auto-backup checks
 
   // 2. Create the main window
   mainWindow = createWindow();
@@ -38,6 +58,10 @@ app.whenReady().then(async () => {
     // In production: load the Next.js static export from `out/`
     const indexPath = path.join(__dirname, "../out/index.html");
     await mainWindow.loadFile(indexPath);
+    
+    // Setup auto-updater in production only
+    const { setupUpdater } = require('./updater');
+    setupUpdater(mainWindow);
   }
 
   // 4. Open external links in the system browser, not in Electron
