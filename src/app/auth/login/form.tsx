@@ -48,7 +48,7 @@ export default function LoginForm() {
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-4 w-full max-w-sm">
       <div className="flex flex-col gap-1">
-        <label htmlFor="identifier" className="text-sm font-medium">
+        <label htmlFor="identifier" className="text-sm font-medium text-gray-900">
           Email or Username
         </label>
         <input
@@ -61,12 +61,12 @@ export default function LoginForm() {
             setFormData((prev) => ({ ...prev, identifier: e.target.value }))
           }
           required
-          className="border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2"
+          className="border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 text-gray-900 bg-white"
         />
       </div>
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="password" className="text-sm font-medium">
+        <label htmlFor="password" className="text-sm font-medium text-gray-900">
           Password
         </label>
         <div className="relative">
@@ -80,7 +80,7 @@ export default function LoginForm() {
               setFormData((prev) => ({ ...prev, password: e.target.value }))
             }
             required
-            className="border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 w-full pr-16"
+            className="border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 w-full pr-16 text-gray-900 bg-white"
           />
           <button
             type="button"

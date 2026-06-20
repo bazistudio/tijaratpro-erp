@@ -102,7 +102,7 @@ export default function SignupPage() {
               required
               value={formData.businessName}
               onChange={handleChange}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-shadow text-sm"
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-shadow text-sm text-gray-900 bg-white"
               placeholder="Al Aziz Mobile Parts"
             />
           </div>
@@ -118,7 +118,7 @@ export default function SignupPage() {
               required
               value={formData.ownerName}
               onChange={handleChange}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-shadow text-sm"
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-shadow text-sm text-gray-900 bg-white"
               placeholder="Bilal Ahmed"
             />
           </div>
@@ -134,7 +134,7 @@ export default function SignupPage() {
               required
               value={formData.email}
               onChange={handleChange}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-shadow text-sm"
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-shadow text-sm text-gray-900 bg-white"
               placeholder="you@example.com"
             />
           </div>
@@ -150,7 +150,7 @@ export default function SignupPage() {
               required
               value={formData.mobile}
               onChange={handleChange}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-shadow text-sm"
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-shadow text-sm text-gray-900 bg-white"
               placeholder="+92 312 3456789"
             />
           </div>
@@ -167,7 +167,7 @@ export default function SignupPage() {
                 required
                 value={formData.password}
                 onChange={handleChange}
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent text-sm pr-10"
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent text-sm pr-10 text-gray-900 bg-white"
                 placeholder="••••••••"
               />
               <button
@@ -189,7 +189,7 @@ export default function SignupPage() {
               name="businessStructure"
               value={formData.businessStructure}
               onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFormData({ ...formData, businessStructure: e.target.value })}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-shadow text-sm bg-white"
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-shadow text-sm bg-white text-gray-900"
             >
               <option value="shop">Single Shop</option>
               <option value="organization">Multi-Branch Organization</option>

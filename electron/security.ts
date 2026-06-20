@@ -1,0 +1,91 @@
+import { app, session, shell } from "electron";
+
+// --------------------------------------------------------------------------
+// Content Security Policy
+// --------------------------------------------------------------------------
+const CSP = [
+  "default-src 'self'",
+  // Next.js needs inline scripts in dev; tighten in production
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+  // Allow styles from self + inline (required by many UI libraries)
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  // Fonts from Google Fonts CDN
+  "font-src 'self' https://fonts.gstatic.com",
+  // Images: self + data URIs + your API origin
+  "img-src 'self' data: blob: https:",
+  // XHR / Fetch: allow calls to your backend API
+  "connect-src 'self' http://localhost:* https://localhost:* ws://localhost:* wss://localhost:* https:",
+  // Media (audio / video)
+  "media-src 'self'",
+  // Block all plugins (Flash, etc.)
+  "object-src 'none'",
+  // Disallow iframes from foreign origins
+  "frame-src 'self'",
+].join("; ");
+
+// --------------------------------------------------------------------------
+// Permission request handler
+// Deny every permission that the admin panel doesn't need
+// --------------------------------------------------------------------------
+const ALLOWED_PERMISSIONS = new Set([
+  "clipboard-read",
+  "clipboard-write",
+  "notifications",
+]);
+
+// --------------------------------------------------------------------------
+// Main export: call this before creating any BrowserWindow
+// --------------------------------------------------------------------------
+export function setupSecurity(): void {
+  // 1. Refuse navigation away from our own origin
+  app.on("web-contents-created", (_event, contents) => {
+    contents.on("will-navigate", (event, navigationUrl) => {
+      const allowed =
+        navigationUrl.startsWith("http://localhost:3000") ||
+        navigationUrl.startsWith("file://");
+
+      if (!allowed) {
+        console.warn(`[security] Blocked navigation to: ${navigationUrl}`);
+        event.preventDefault();
+        // Open in system browser instead
+        shell.openExternal(navigationUrl);
+      }
+    });
+
+    // 2. Block new windows / popups from the renderer
+    contents.setWindowOpenHandler(({ url }) => {
+      console.warn(`[security] Blocked window.open for: ${url}`);
+      shell.openExternal(url);
+      return { action: "deny" };
+    });
+  });
+
+  // 3. Attach CSP & permission handler to the default session
+  app.whenReady().then(() => {
+    const ses = session.defaultSession;
+
+    // Inject CSP header for every response
+    ses.webRequest.onHeadersReceived((details, callback) => {
+      callback({
+        responseHeaders: {
+          ...details.responseHeaders,
+          "Content-Security-Policy": [CSP],
+        },
+      });
+    });
+
+    // Permission handler: deny anything not in the allowlist
+    ses.setPermissionRequestHandler((_webContents, permission, callback) => {
+      const granted = ALLOWED_PERMISSIONS.has(permission);
+      if (!granted) {
+        console.warn(`[security] Permission denied: ${permission}`);
+      }
+      callback(granted);
+    });
+
+    // Permission check handler (for persistent permissions)
+    ses.setPermissionCheckHandler((_webContents, permission) => {
+      return ALLOWED_PERMISSIONS.has(permission);
+    });
+  });
+}
