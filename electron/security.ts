@@ -71,6 +71,10 @@ export function setupSecurity(): void {
 
     // Inject CSP header for every response
     ses.webRequest.onHeadersReceived((details, callback) => {
+      if (isDev) {
+        callback({ responseHeaders: details.responseHeaders });
+        return;
+      }
       callback({
         responseHeaders: {
           ...details.responseHeaders,

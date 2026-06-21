@@ -39,6 +39,15 @@ export function initializeSchema(db: Database) {
     );
   `);
 
+  // Simple migration for existing DBs that were created before customerId was added
+  try {
+    db.exec(`ALTER TABLE orders ADD COLUMN customerId TEXT;`);
+  } catch (err: any) {
+    if (!err.message.includes('duplicate column name')) {
+      console.warn('[DB] Migration warn: Could not add customerId to orders:', err);
+    }
+  }
+
   // 2. Sync Queue (Pending mutations)
   db.exec(`
     CREATE TABLE IF NOT EXISTS sync_queue (

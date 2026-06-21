@@ -52,7 +52,23 @@ app.whenReady().then(async () => {
   // 3. Load the web content
   if (isDev) {
     // In development: connect to the running `next dev` server
-    await mainWindow.loadURL(NEXT_DEV_URL);
+    // We retry connecting to the Next.js server because it might not be ready instantly.
+    let loaded = false;
+    for (let i = 0; i < 30; i++) {
+      try {
+        await mainWindow.loadURL(NEXT_DEV_URL);
+        loaded = true;
+        break;
+      } catch (err) {
+        console.log(`[electron] Waiting for Next.js dev server to start (${i + 1}/30)...`);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+    }
+    
+    if (!loaded) {
+      console.error("[electron] Failed to connect to Next.js dev server.");
+    }
+    
     mainWindow.webContents.openDevTools({ mode: "detach" });
   } else {
     // In production: load the Next.js static export from `out/`

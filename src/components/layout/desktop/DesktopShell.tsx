@@ -11,10 +11,12 @@ export const DesktopShell = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
   const [activeModal, setActiveModal] = useState<'SHORTCUTS' | 'SYSINFO' | 'ABOUT' | 'COMING_SOON' | 'DOCS' | 'SUPPORT' | null>(null);
 
-  // We only run this wrapper logic if we're in Electron.
-  // We can render normally on web.
-  // Note: Since this is 'use client', it's safe to check isElectron().
   const runningInElectron = isElectron();
+  const [mounted, setMounted] = useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleAction = (action: string) => {
     switch (action) {
@@ -82,7 +84,7 @@ export const DesktopShell = ({ children }: { children: React.ReactNode }) => {
 
   useGlobalShortcuts(handleAction);
 
-  if (!runningInElectron) {
+  if (!mounted || !runningInElectron) {
     return <>{children}</>;
   }
 
