@@ -39,12 +39,21 @@ export function initializeSchema(db: Database) {
     );
   `);
 
-  // Simple migration for existing DBs that were created before customerId was added
-  try {
-    db.exec(`ALTER TABLE orders ADD COLUMN customerId TEXT;`);
-  } catch (err: any) {
-    if (!err.message.includes('duplicate column name')) {
-      console.warn('[DB] Migration warn: Could not add customerId to orders:', err);
+  // Simple migrations for existing DBs that were created before these columns were added
+  const newColumns = [
+    'customerId TEXT',
+    'items TEXT',
+    'paymentMethod TEXT',
+    'discount REAL'
+  ];
+
+  for (const col of newColumns) {
+    try {
+      db.exec(`ALTER TABLE orders ADD COLUMN ${col};`);
+    } catch (err: any) {
+      if (!err.message.includes('duplicate column name')) {
+        console.warn(`[DB] Migration warn: Could not add ${col} to orders:`, err);
+      }
     }
   }
 

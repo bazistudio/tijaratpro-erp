@@ -84,22 +84,20 @@ export const DesktopShell = ({ children }: { children: React.ReactNode }) => {
 
   useGlobalShortcuts(handleAction);
 
-  if (!mounted || !runningInElectron) {
-    return <>{children}</>;
-  }
+  const isDesktop = mounted && runningInElectron;
 
   return (
-    <div className="flex flex-col h-screen w-screen overflow-hidden bg-[#0a0a0a]">
+    <div className={isDesktop ? "flex flex-col h-screen w-screen overflow-hidden bg-[#0a0a0a]" : "flex flex-col min-h-screen"}>
       {/* Custom Frameless Titlebar */}
-      <TitleBar onMenuAction={handleAction} />
+      {isDesktop && <TitleBar onMenuAction={handleAction} />}
 
       {/* Main Content Area */}
-      <div className="flex-1 overflow-auto relative">
+      <div className={isDesktop ? "flex-1 overflow-auto relative" : "flex-1 relative"}>
         {children}
       </div>
 
       {/* Shared Desktop Modals */}
-      <DesktopModals activeModal={activeModal} onClose={() => setActiveModal(null)} />
+      {isDesktop && <DesktopModals activeModal={activeModal} onClose={() => setActiveModal(null)} />}
     </div>
   );
 };
