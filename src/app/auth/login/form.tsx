@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/lib/auth/core/auth.store";
 import { loginUser } from "@/lib/auth/core/auth.client";
+import { getLastLoginEmail, setLastLoginEmail } from "@/lib/auth/core/auth.session";
 import type { LoginFormData } from "@/lib/auth/auth.schema";
 
 export default function LoginForm() {
@@ -19,6 +20,14 @@ export default function LoginForm() {
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
 
+  useEffect(() => {
+    getLastLoginEmail().then((email) => {
+      if (email) {
+        setFormData((prev) => ({ ...prev, identifier: email }));
+      }
+    });
+  }, []);
+
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -32,6 +41,9 @@ export default function LoginForm() {
 
       // hydrate zustand store
       setAuth(user, session);
+      
+      // Save for next login
+      setLastLoginEmail(formData.identifier);
 
       if (user.role === "SUPER_ADMIN") {
         router.push("/dashboard/super-admin");

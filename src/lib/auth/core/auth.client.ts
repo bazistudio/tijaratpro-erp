@@ -39,6 +39,7 @@ export async function loginUser(identifier: string, password: string) {
 
   // build session object
   const session: AuthSession = {
+    token: data.token,
     expiresAt,
     deviceId,
     user: data.user,
@@ -57,10 +58,21 @@ export async function loginUser(identifier: string, password: string) {
 // ─── Logout ───────────────────────────────────────────────────────────────────
 
 /**
- * LOGOUT FUNCTION
+ * LOGOUT FUNCTION (Single Source of Truth)
  */
-export function logoutUser() {
+export async function authLogout() {
+  try {
+    await axiosInstance.post("/api/auth/logout");
+  } catch { /* ignore API errors on logout */ }
+  
   clearSession().catch(console.error);
+  
+  const { useAuthStore } = await import("./auth.store");
+  useAuthStore.getState().logout(); // sync update
+  
+  if (typeof window !== "undefined") {
+    window.location.href = "/auth/login";
+  }
 }
 
 /**

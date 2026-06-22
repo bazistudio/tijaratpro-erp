@@ -819,12 +819,18 @@ function validatePayload(entityType, operation, payload) {
 // electron/ipc/handlers.ts
 function setupIpcHandlers() {
   import_electron8.ipcMain.handle("db:mutate", (_event, entityType, operation, payload) => {
+    let validatedPayload;
     try {
-      const validatedPayload = validatePayload(entityType, operation, payload);
-      return mutateEntity(entityType, operation, validatedPayload);
+      validatedPayload = validatePayload(entityType, operation, payload);
     } catch (err) {
       console.error("[IPC Security] Payload validation failed for db:mutate", err.errors || err);
       throw new Error(`[IPC Security] Invalid payload for ${entityType} ${operation}`);
+    }
+    try {
+      return mutateEntity(entityType, operation, validatedPayload);
+    } catch (err) {
+      console.error(`[DB Error] Mutation failed for ${entityType} ${operation}:`, err);
+      throw new Error(`Database mutation failed: ${err.message}`);
     }
   });
   import_electron8.ipcMain.handle("db:query", (_event, entityType, id) => {

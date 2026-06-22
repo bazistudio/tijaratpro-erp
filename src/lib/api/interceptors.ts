@@ -3,16 +3,25 @@ import { clearSession } from "@/lib/auth/core/auth.session";
 import toast from "react-hot-toast";
 
 // ─── REQUEST INTERCEPTOR ──────────────────────────────────────────────────────
-// Attach device ID header for POS session tracking
+// Attach device ID header for POS session tracking and Bearer token for Electron persistence
 axiosInstance.interceptors.request.use(
-  (config) => {
-    console.log("[DEBUG] AXIOS REQUEST interceptor:", config.baseURL, config.url);
-    // tp_token cookie sent automatically via withCredentials: true
-    // Attach device ID for POS terminal tracking (key matches auth.session.ts)
+  async (config) => {
+    // console.log("[DEBUG] AXIOS REQUEST interceptor:", config.baseURL, config.url);
+    
     if (typeof window !== "undefined") {
-      const deviceId = localStorage.getItem("tijarat_device_id");
+      // Fast memory-only token read (avoids safeStorage IO bottlenecks)
+      const { useAuthStore } = await import("@/lib/auth/core/auth.store");
+      const session = useAuthStore.getState().session;
+      
+      // Fallback for device ID (not always in session if unauthenticated)
+      const deviceId = session?.deviceId || localStorage.getItem("tijarat_device_id");
+      
       if (deviceId) {
         config.headers["x-device-id"] = deviceId;
+      }
+      
+      if (session?.token) {
+        config.headers["Authorization"] = `Bearer ${session.token}`;
       }
     }
     return config;

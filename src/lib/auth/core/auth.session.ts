@@ -3,6 +3,7 @@ import { isElectron } from "@/lib/electron/is-electron";
 
 const SESSION_KEY = "tijarat_session";
 const DEVICE_KEY = "tijarat_device_id";
+const LAST_EMAIL_KEY = "tijarat_last_email";
 
 /**
  * Save session securely in browser/Electron storage
@@ -109,4 +110,39 @@ export async function updateSessionExpiry(expiresAt: number) {
   };
 
   await setSession(updated);
+}
+
+/**
+ * Save the last successfully logged in email
+ */
+export async function setLastLoginEmail(email: string) {
+  if (typeof window === "undefined") return;
+
+  if (isElectron()) {
+    try {
+      await window.electron.auth.setToken(LAST_EMAIL_KEY, email);
+    } catch (err) {
+      console.error("[Auth] safeStorage set email failed", err);
+    }
+  } else {
+    localStorage.setItem(LAST_EMAIL_KEY, email);
+  }
+}
+
+/**
+ * Retrieve the last successfully logged in email
+ */
+export async function getLastLoginEmail(): Promise<string> {
+  if (typeof window === "undefined") return "";
+
+  if (isElectron()) {
+    try {
+      return (await window.electron.auth.getToken(LAST_EMAIL_KEY)) || "";
+    } catch (err) {
+      console.error("[Auth] safeStorage get email failed", err);
+      return "";
+    }
+  } else {
+    return localStorage.getItem(LAST_EMAIL_KEY) || "";
+  }
 }

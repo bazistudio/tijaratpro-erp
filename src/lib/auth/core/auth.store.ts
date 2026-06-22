@@ -11,6 +11,8 @@ interface AuthState {
   session: AuthSession | null;
   isAuthenticated: boolean;
   isHydrated: boolean; // true once AuthHydrator has finished its first check
+  isBootstrapping: boolean; // true while bootstrap is fetching from network
+
 
   // actions
   setAuth: (user: AuthUser, session: AuthSession) => void;
@@ -25,6 +27,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   session: null,
   isAuthenticated: false,
   isHydrated: false,
+  isBootstrapping: true,
 
   // -------------------------
   // LOGIN / SET AUTH
@@ -39,10 +42,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       session,
       isAuthenticated: true,
       isHydrated: true, // hydration complete — user is logged in
+      isBootstrapping: false,
     });
   },
 
-  setHydrated: () => set({ isHydrated: true }),
+  setHydrated: () => set({ isHydrated: true, isBootstrapping: false }),
 
   // -------------------------
   // LOGOUT (sync — for interceptor hard-logout)
@@ -52,21 +56,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     clearSession().catch(console.error);
     
     // 2. Update state immediately
-    set({ user: null, session: null, isAuthenticated: false, isHydrated: true });
+    set({ user: null, session: null, isAuthenticated: false, isHydrated: true, isBootstrapping: false });
     // isHydrated: true — hydration is done, we confirmed there's no valid session
   },
 
   // -------------------------
-  // LOGOUT ASYNC — for UI logout button (calls backend to clear cookie)
+  // LOGOUT ASYNC — for UI logout button
   // -------------------------
   logoutAsync: async () => {
-    try {
-      await axiosInstance.post("/api/auth/logout");
-    } catch { /* ignore — clear client state regardless */ }
-    
-    clearSession().catch(console.error);
-    set({ user: null, session: null, isAuthenticated: false });
-    window.location.href = "/auth/login";
+    const { authLogout } = await import("@/lib/auth/core/auth.client");
+    await authLogout();
   },
 
   // -------------------------

@@ -8,12 +8,19 @@ import { validatePayload } from './validation';
 
 export function setupIpcHandlers() {
   ipcMain.handle('db:mutate', (_event, entityType: string, operation: 'CREATE'|'UPDATE'|'DELETE', payload: any) => {
+    let validatedPayload;
     try {
-      const validatedPayload = validatePayload(entityType, operation, payload);
-      return mutateEntity(entityType, operation, validatedPayload);
+      validatedPayload = validatePayload(entityType, operation, payload);
     } catch (err: any) {
       console.error('[IPC Security] Payload validation failed for db:mutate', err.errors || err);
       throw new Error(`[IPC Security] Invalid payload for ${entityType} ${operation}`);
+    }
+
+    try {
+      return mutateEntity(entityType, operation, validatedPayload);
+    } catch (err: any) {
+      console.error(`[DB Error] Mutation failed for ${entityType} ${operation}:`, err);
+      throw new Error(`Database mutation failed: ${err.message}`);
     }
   });
 
