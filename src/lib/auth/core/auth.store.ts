@@ -30,8 +30,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   // LOGIN / SET AUTH
   // -------------------------
   setAuth: (user, session) => {
-    setSession(session); // persist session
+    // 1. Persist session in background (fire-and-forget) so UI doesn't block
+    setSession(session).catch(console.error);
 
+    // 2. Update state immediately
     set({
       user,
       session,
@@ -46,7 +48,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   // LOGOUT (sync — for interceptor hard-logout)
   // -------------------------
   logout: () => {
-    clearSession();
+    // 1. Clear session in background
+    clearSession().catch(console.error);
+    
+    // 2. Update state immediately
     set({ user: null, session: null, isAuthenticated: false, isHydrated: true });
     // isHydrated: true — hydration is done, we confirmed there's no valid session
   },
@@ -58,7 +63,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       await axiosInstance.post("/api/auth/logout");
     } catch { /* ignore — clear client state regardless */ }
-    clearSession();
+    
+    clearSession().catch(console.error);
     set({ user: null, session: null, isAuthenticated: false });
     window.location.href = "/auth/login";
   },

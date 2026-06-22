@@ -22,7 +22,7 @@ export default function AuthHydrator() {
 
   useEffect(() => {
     const hydrate = async () => {
-      const session = getSession();
+      const session = await getSession();
 
       if (session && isSessionValid(session)) {
         try {

@@ -1,25 +1,44 @@
-// /lib/auth/core/auth.session.ts
-
 import { AuthSession } from "@/types/auth/session";
+import { isElectron } from "@/lib/electron/is-electron";
 
 const SESSION_KEY = "tijarat_session";
+const DEVICE_KEY = "tijarat_device_id";
 
 /**
  * Save session securely in browser/Electron storage
  */
-export function setSession(session: AuthSession) {
+export async function setSession(session: AuthSession) {
   if (typeof window === "undefined") return;
 
-  localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+  if (isElectron()) {
+    try {
+      await window.electron.auth.setToken(SESSION_KEY, JSON.stringify(session));
+    } catch (err) {
+      console.error("[Auth] safeStorage set failed", err);
+    }
+  } else {
+    localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+  }
 }
 
 /**
  * Get current session
  */
-export function getSession(): AuthSession | null {
+export async function getSession(): Promise<AuthSession | null> {
   if (typeof window === "undefined") return null;
 
-  const data = localStorage.getItem(SESSION_KEY);
+  let data: string | null = null;
+
+  if (isElectron()) {
+    try {
+      data = await window.electron.auth.getToken(SESSION_KEY);
+    } catch (err) {
+      console.error("[Auth] safeStorage get failed", err);
+    }
+  } else {
+    data = localStorage.getItem(SESSION_KEY);
+  }
+
   if (!data) return null;
 
   try {
@@ -32,10 +51,14 @@ export function getSession(): AuthSession | null {
 /**
  * Clear session (logout)
  */
-export function clearSession() {
+export async function clearSession() {
   if (typeof window === "undefined") return;
 
-  localStorage.removeItem(SESSION_KEY);
+  if (isElectron()) {
+    await window.electron.auth.clearToken(SESSION_KEY);
+  } else {
+    localStorage.removeItem(SESSION_KEY);
+  }
 }
 
 /**
@@ -47,19 +70,26 @@ export function isSessionValid(session: AuthSession | null): boolean {
   return session.expiresAt > Date.now();
 }
 
-// Removed getAccessToken and getRefreshToken to prevent mixed sources of truth
-
 /**
  * Get device ID (Electron + browser safe)
  */
-export function getDeviceId(): string {
+export async function getDeviceId(): Promise<string> {
   if (typeof window === "undefined") return "server";
 
-  let deviceId = localStorage.getItem("tijarat_device_id");
+  let deviceId: string | null = null;
 
-  if (!deviceId) {
-    deviceId = crypto.randomUUID();
-    localStorage.setItem("tijarat_device_id", deviceId);
+  if (isElectron()) {
+    deviceId = await window.electron.auth.getToken(DEVICE_KEY);
+    if (!deviceId) {
+      deviceId = crypto.randomUUID();
+      await window.electron.auth.setToken(DEVICE_KEY, deviceId);
+    }
+  } else {
+    deviceId = localStorage.getItem(DEVICE_KEY);
+    if (!deviceId) {
+      deviceId = crypto.randomUUID();
+      localStorage.setItem(DEVICE_KEY, deviceId);
+    }
   }
 
   return deviceId;
@@ -68,8 +98,8 @@ export function getDeviceId(): string {
 /**
  * Update session expiry (used after refresh)
  */
-export function updateSessionExpiry(expiresAt: number) {
-  const session = getSession();
+export async function updateSessionExpiry(expiresAt: number) {
+  const session = await getSession();
 
   if (!session) return;
 
@@ -78,5 +108,5 @@ export function updateSessionExpiry(expiresAt: number) {
     expiresAt,
   };
 
-  setSession(updated);
+  await setSession(updated);
 }

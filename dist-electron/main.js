@@ -56,24 +56,24 @@ function setupUpdater(mainWindow2) {
   import_electron_updater.autoUpdater.on("update-downloaded", (info) => {
     mainWindow2.webContents.send("updater:downloaded", info);
   });
-  import_electron10.ipcMain.handle("updater:check", () => {
+  import_electron9.ipcMain.handle("updater:check", () => {
     return import_electron_updater.autoUpdater.checkForUpdatesAndNotify();
   });
-  import_electron10.ipcMain.handle("updater:install", () => {
+  import_electron9.ipcMain.handle("updater:install", () => {
     import_electron_updater.autoUpdater.quitAndInstall();
   });
 }
-var import_electron_updater, import_electron10;
+var import_electron_updater, import_electron9;
 var init_updater = __esm({
   "electron/updater.ts"() {
     "use strict";
     import_electron_updater = require("electron-updater");
-    import_electron10 = require("electron");
+    import_electron9 = require("electron");
   }
 });
 
 // electron/main.ts
-var import_electron11 = require("electron");
+var import_electron10 = require("electron");
 var import_path6 = __toESM(require("path"));
 
 // electron/window.ts
@@ -763,10 +763,69 @@ async function restoreDatabase(backupFilePath) {
   }
 }
 
+// electron/ipc/validation.ts
+var import_zod = require("zod");
+var UserSchema = import_zod.z.object({
+  id: import_zod.z.string().min(1),
+  name: import_zod.z.string().min(1).optional(),
+  email: import_zod.z.string().email().optional(),
+  updatedAt: import_zod.z.number().optional(),
+  version: import_zod.z.number().optional()
+}).strict();
+var ProductSchema = import_zod.z.object({
+  id: import_zod.z.string().min(1),
+  name: import_zod.z.string().min(1).optional(),
+  price: import_zod.z.number().optional(),
+  stock: import_zod.z.number().optional(),
+  updatedAt: import_zod.z.number().optional(),
+  version: import_zod.z.number().optional()
+}).strict();
+var OrderSchema = import_zod.z.object({
+  id: import_zod.z.string().min(1),
+  customerId: import_zod.z.string().optional().nullable(),
+  total: import_zod.z.number().optional(),
+  status: import_zod.z.string().optional(),
+  items: import_zod.z.string().optional(),
+  // usually JSON stringified
+  paymentMethod: import_zod.z.string().optional().nullable(),
+  discount: import_zod.z.number().optional().nullable(),
+  updatedAt: import_zod.z.number().optional(),
+  version: import_zod.z.number().optional()
+}).strict();
+function validatePayload(entityType, operation, payload) {
+  if (operation === "DELETE") {
+    const deleteSchema = import_zod.z.object({ id: import_zod.z.string().min(1) }).strict();
+    return deleteSchema.parse(payload);
+  }
+  switch (entityType) {
+    case "users":
+      return UserSchema.parse(payload);
+    case "products":
+      return ProductSchema.parse(payload);
+    case "orders": {
+      const result = OrderSchema.safeParse(payload);
+      if (!result.success) {
+        console.error("[IPC Validation Error] orders:", JSON.stringify(result.error.format(), null, 2));
+        console.error("VALIDATING ORDER PAYLOAD:", JSON.stringify(payload, null, 2));
+        throw new Error(`[IPC Security] Invalid payload for orders ${operation}`);
+      }
+      return result.data;
+    }
+    default:
+      throw new Error(`[IPC Validation] Unknown entity type: ${entityType}`);
+  }
+}
+
 // electron/ipc/handlers.ts
 function setupIpcHandlers() {
   import_electron8.ipcMain.handle("db:mutate", (_event, entityType, operation, payload) => {
-    return mutateEntity(entityType, operation, payload);
+    try {
+      const validatedPayload = validatePayload(entityType, operation, payload);
+      return mutateEntity(entityType, operation, validatedPayload);
+    } catch (err) {
+      console.error("[IPC Security] Payload validation failed for db:mutate", err.errors || err);
+      throw new Error(`[IPC Security] Invalid payload for ${entityType} ${operation}`);
+    }
   });
   import_electron8.ipcMain.handle("db:query", (_event, entityType, id) => {
     return queryEntity(entityType, id);
@@ -826,60 +885,29 @@ function setupIpcHandlers() {
   });
 }
 
-// electron/services/backupScheduler.ts
-var import_electron9 = require("electron");
-function initBackupScheduler() {
-  checkAndRunBackup();
-  setInterval(() => {
-    checkAndRunBackup();
-  }, 60 * 60 * 1e3);
-}
-async function checkAndRunBackup() {
-  const autoBackupEnabled = configStore.get("autoBackupEnabled");
-  const backupPath = configStore.get("backupPath");
-  if (!autoBackupEnabled || !backupPath) {
-    return;
-  }
-  const todayStr = (/* @__PURE__ */ new Date()).toISOString().split("T")[0];
-  const lastBackupDate = configStore.get("lastBackupDate");
-  if (lastBackupDate === todayStr) {
-    return;
-  }
-  const stmt = db.prepare(`SELECT MAX(timestamp) as lastActivity FROM operation_log`);
-  const result = stmt.get();
-  if (!result.lastActivity) {
-    return;
-  }
-  if (import_electron9.net.isOnline()) {
-    console.log("[BackupScheduler] Conditions met, triggering auto-backup...");
-    await createBackup();
-  }
-}
-
 // electron/main.ts
-var isDev2 = !import_electron11.app.isPackaged;
+var isDev2 = !import_electron10.app.isPackaged;
 var NEXT_DEV_URL = "http://localhost:3000";
 var mainWindow = null;
 if (process.defaultApp) {
   if (process.argv.length >= 2) {
-    import_electron11.app.setAsDefaultProtocolClient("tijaratpro", process.execPath, [import_path6.default.resolve(process.argv[1])]);
+    import_electron10.app.setAsDefaultProtocolClient("tijaratpro", process.execPath, [import_path6.default.resolve(process.argv[1])]);
   }
 } else {
-  import_electron11.app.setAsDefaultProtocolClient("tijaratpro");
+  import_electron10.app.setAsDefaultProtocolClient("tijaratpro");
 }
-import_electron11.app.on("open-url", (event, url) => {
+import_electron10.app.on("open-url", (event, url) => {
   event.preventDefault();
   if (mainWindow) {
     if (mainWindow.isMinimized()) mainWindow.restore();
     mainWindow.focus();
   }
 });
-import_electron11.app.whenReady().then(async () => {
+import_electron10.app.whenReady().then(async () => {
   setupSecurity();
   initDb();
   setupIpcHandlers();
   syncEngine.start();
-  initBackupScheduler();
   mainWindow = createWindow();
   if (isDev2) {
     let loaded = false;
@@ -902,38 +930,49 @@ import_electron11.app.whenReady().then(async () => {
     await mainWindow.loadFile(indexPath);
     const { setupUpdater: setupUpdater2 } = (init_updater(), __toCommonJS(updater_exports));
     setupUpdater2(mainWindow);
+    mainWindow.webContents.on("devtools-opened", () => {
+      mainWindow?.webContents.closeDevTools();
+    });
+    mainWindow.webContents.on("before-input-event", (event, input) => {
+      const isF12 = input.key === "F12";
+      const isInspect = input.control && input.shift && input.key.toLowerCase() === "i";
+      const isMacInspect = input.meta && input.alt && input.key.toLowerCase() === "i";
+      if (isF12 || isInspect || isMacInspect) {
+        event.preventDefault();
+      }
+    });
   }
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     if (!url.startsWith("file://") && !url.startsWith(NEXT_DEV_URL)) {
-      import_electron11.shell.openExternal(url);
+      import_electron10.shell.openExternal(url);
       return { action: "deny" };
     }
     return { action: "allow" };
   });
-  import_electron11.app.on("activate", () => {
-    if (import_electron11.BrowserWindow.getAllWindows().length === 0) {
+  import_electron10.app.on("activate", () => {
+    if (import_electron10.BrowserWindow.getAllWindows().length === 0) {
       mainWindow = createWindow();
     }
   });
 });
-import_electron11.app.on("window-all-closed", () => {
+import_electron10.app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
-    import_electron11.app.quit();
+    import_electron10.app.quit();
   }
 });
-import_electron11.ipcMain.handle("app:getInfo", () => ({
-  version: import_electron11.app.getVersion(),
-  name: import_electron11.app.getName(),
+import_electron10.ipcMain.handle("app:getInfo", () => ({
+  version: import_electron10.app.getVersion(),
+  name: import_electron10.app.getName(),
   isDev: isDev2,
   platform: process.platform
 }));
-import_electron11.ipcMain.handle("app:quit", () => {
-  import_electron11.app.quit();
+import_electron10.ipcMain.handle("app:quit", () => {
+  import_electron10.app.quit();
 });
-import_electron11.ipcMain.handle("app:openExternal", (_event, url) => {
+import_electron10.ipcMain.handle("app:openExternal", (_event, url) => {
   const safeUrl = new URL(url);
   if (safeUrl.protocol === "https:" || safeUrl.protocol === "http:") {
-    import_electron11.shell.openExternal(url);
+    import_electron10.shell.openExternal(url);
   }
 });
 //# sourceMappingURL=main.js.map

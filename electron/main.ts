@@ -44,7 +44,7 @@ app.whenReady().then(async () => {
   initDb();
   setupIpcHandlers();
   syncEngine.start(); // MUST be called after initDb()
-  initBackupScheduler(); // Start auto-backup checks
+  // initBackupScheduler(); // Start auto-backup checks (disabled until Phase 1B)
 
   // 2. Create the main window
   mainWindow = createWindow();
@@ -78,6 +78,21 @@ app.whenReady().then(async () => {
     // Setup auto-updater in production only
     const { setupUpdater } = require('./updater');
     setupUpdater(mainWindow);
+
+    // DevTools Production Lock
+    mainWindow.webContents.on("devtools-opened", () => {
+      mainWindow?.webContents.closeDevTools();
+    });
+
+    mainWindow.webContents.on("before-input-event", (event, input) => {
+      const isF12 = input.key === "F12";
+      const isInspect = input.control && input.shift && input.key.toLowerCase() === "i";
+      const isMacInspect = input.meta && input.alt && input.key.toLowerCase() === "i";
+      
+      if (isF12 || isInspect || isMacInspect) {
+        event.preventDefault();
+      }
+    });
   }
 
   // 4. Open external links in the system browser, not in Electron

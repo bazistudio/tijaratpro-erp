@@ -20,10 +20,11 @@ export interface LoginResponse {
  * MAIN LOGIN FUNCTION (CORE ENTRY POINT)
  */
 export async function loginUser(identifier: string, password: string) {
+  const deviceId = await getDeviceId();
   const res = await axiosInstance.post("/api/auth/login", {
     identifier,
     password,
-    deviceId: getDeviceId(),
+    deviceId,
   });
 
   const data: LoginResponse = res.data;
@@ -39,12 +40,12 @@ export async function loginUser(identifier: string, password: string) {
   // build session object
   const session: AuthSession = {
     expiresAt,
-    deviceId: getDeviceId(),
+    deviceId,
     user: data.user,
   };
 
-  // 1. store full session in localStorage
-  setSession(session);
+  // 1. store full session in storage (fire-and-forget so UI doesn't block on disk IO)
+  setSession(session).catch(console.error);
 
   return {
     user: data.user,
@@ -59,7 +60,7 @@ export async function loginUser(identifier: string, password: string) {
  * LOGOUT FUNCTION
  */
 export function logoutUser() {
-  clearSession();
+  clearSession().catch(console.error);
 }
 
 /**

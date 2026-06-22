@@ -4,10 +4,17 @@ import { setToken, getToken, clearToken } from '../auth/storage';
 import { createBackup, getBackupStatus } from '../services/backupEngine';
 import { restoreDatabase } from '../services/restoreEngine';
 import { configStore } from '../services/config';
+import { validatePayload } from './validation';
 
 export function setupIpcHandlers() {
   ipcMain.handle('db:mutate', (_event, entityType: string, operation: 'CREATE'|'UPDATE'|'DELETE', payload: any) => {
-    return mutateEntity(entityType, operation, payload);
+    try {
+      const validatedPayload = validatePayload(entityType, operation, payload);
+      return mutateEntity(entityType, operation, validatedPayload);
+    } catch (err: any) {
+      console.error('[IPC Security] Payload validation failed for db:mutate', err.errors || err);
+      throw new Error(`[IPC Security] Invalid payload for ${entityType} ${operation}`);
+    }
   });
 
   ipcMain.handle('db:query', (_event, entityType: string, id: string) => {
@@ -46,7 +53,7 @@ export function setupIpcHandlers() {
   });
 
   ipcMain.handle('db:set-backup-path', (_event, backupPath: string) => {
-    configStore.set('backupPath', backupPath);
+    (configStore as any).set('backupPath', backupPath);
     return { success: true };
   });
 
