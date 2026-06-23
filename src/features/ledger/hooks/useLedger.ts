@@ -1,47 +1,66 @@
 import { useState, useMemo } from 'react';
-import { LedgerTransaction, LedgerTab } from '../types/ledger.types';
-import { mockTransactions, mockLedgerSummary, mockLedgerQuickStats } from '../data/mockLedgerData';
+import { useQuery } from '@tanstack/react-query';
+import { ledgerApi } from '@/services/ledger.api';
+
+export type PartyType = 'CUSTOMER' | 'SUPPLIER';
+
+export interface SelectedParty {
+  id: string;
+  type: PartyType;
+  name: string;
+  balance: number;
+  creditLimit?: number;
+}
+
+export type LedgerBookTab = 'all' | 'invoices' | 'payments' | 'adjustments';
 
 export function useLedger() {
-  const [activeTab, setActiveTab] = useState<LedgerTab>('all');
+  const [selectedParty, setSelectedParty] = useState<SelectedParty | null>(null);
+  const [activeTab, setActiveTab] = useState<LedgerBookTab>('all');
   const [searchQuery, setSearchQuery] = useState('');
-  
-  // Use mock data for phase 1
-  const transactions = mockTransactions;
-  const summary = mockLedgerSummary;
-  const quickStats = mockLedgerQuickStats;
 
-  const filteredTransactions = useMemo(() => {
-    let filtered = transactions;
+  // Fetch Ledger data for selected party
+  const { data: ledgerResponse, isLoading: isLedgerLoading, refetch: refetchLedger } = useQuery({
+    queryKey: ['ledger', selectedParty?.type, selectedParty?.id],
+    queryFn: () => ledgerApi.getPartyLedger(selectedParty!.id, selectedParty!.type),
+    enabled: !!selectedParty,
+  });
 
-    // Filter by tab
-    if (activeTab === 'receivables') {
-      filtered = filtered.filter(t => t.sourceType === 'sale' || t.sourceType === 'customer_payment');
-    } else if (activeTab === 'payables') {
-      filtered = filtered.filter(t => t.sourceType === 'purchase' || t.sourceType === 'supplier_payment');
-    } else if (activeTab === 'cash' || activeTab === 'bank') {
-      // Stub for cash/bank filtering later
+  const timeline = ledgerResponse?.data?.timeline || [];
+  const openInvoices = ledgerResponse?.data?.openInvoices || [];
+  const allocations = ledgerResponse?.data?.allocations || [];
+
+  const filteredTimeline = useMemo(() => {
+    let filtered = timeline;
+
+    if (activeTab === 'invoices') {
+      filtered = filtered.filter(t => t.type === 'invoice' || t.type === 'supplier_invoice' || t.type === 'sale');
+    } else if (activeTab === 'payments') {
+      filtered = filtered.filter(t => t.type === 'payment');
     }
 
-    // Filter by search
     if (searchQuery) {
       const lowerQuery = searchQuery.toLowerCase();
       filtered = filtered.filter(t => 
-        t.id.toLowerCase().includes(lowerQuery) || 
-        t.partyName?.toLowerCase().includes(lowerQuery)
+        t.transactionId.toLowerCase().includes(lowerQuery) || 
+        t.description?.toLowerCase().includes(lowerQuery)
       );
     }
 
     return filtered;
-  }, [transactions, activeTab, searchQuery]);
+  }, [timeline, activeTab, searchQuery]);
 
   return {
+    selectedParty,
+    setSelectedParty,
     activeTab,
     setActiveTab,
     searchQuery,
     setSearchQuery,
-    transactions: filteredTransactions,
-    summary,
-    quickStats,
+    timeline: filteredTimeline,
+    openInvoices,
+    allocations,
+    isLedgerLoading,
+    refetchLedger
   };
 }

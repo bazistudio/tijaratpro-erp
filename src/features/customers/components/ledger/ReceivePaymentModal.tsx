@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { X, CreditCard, Banknote, Smartphone } from 'lucide-react';
 import { DBCustomer } from '@/types/db.types';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { paymentApi } from '@/services/payment.api';
+import { ledgerApi } from '@/services/ledger.api';
 
 interface ReceivePaymentModalProps {
   isOpen: boolean;
@@ -17,7 +17,7 @@ export const ReceivePaymentModal = ({ isOpen, onClose, customer }: ReceivePaymen
   const queryClient = useQueryClient();
 
   const paymentMutation = useMutation({
-    mutationFn: paymentApi.recordPayment,
+    mutationFn: ledgerApi.recordPayment,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customers'] });
       if (customer) {
@@ -38,9 +38,10 @@ export const ReceivePaymentModal = ({ isOpen, onClose, customer }: ReceivePaymen
     if (!amount || isNaN(Number(amount))) return;
     
     paymentMutation.mutate({
-      customerId: customer.id,
+      partyId: customer.id,
+      partyType: 'CUSTOMER',
       amount: Number(amount),
-      method: method.toLowerCase() === 'bank transfer' ? 'bank' : method.toLowerCase(),
+      method: method.toLowerCase() === 'bank transfer' ? 'bank' : method.toLowerCase() as any,
     });
   };
 

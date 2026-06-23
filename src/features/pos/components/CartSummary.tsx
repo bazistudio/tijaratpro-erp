@@ -20,6 +20,7 @@ export const CartSummary = () => {
   const setSessionMode = usePosStore(state => state.setSessionMode);
   const setInvoiceDiscount = usePosStore(state => state.setInvoiceDiscount);
   const completeTransaction = usePosStore(state => state.completeTransaction);
+  const removeFromCart = usePosStore(state => state.removeFromCart);
 
   const [isCustomerModalOpen, setCustomerModalOpen] = useState(false);
   const [isLedgerModalOpen, setLedgerModalOpen] = useState(false);
@@ -211,36 +212,30 @@ export const CartSummary = () => {
           />
         </div>
 
-        {/* Mini Receipt Table (Scrollable) */}
-        {!isCartEmpty && (
-          <div className="flex-1 h-full flex flex-col overflow-hidden border border-gray-200 dark:border-gray-800 rounded-xl mb-4 bg-gray-50/50 dark:bg-gray-900/50">
-            <table className="w-full text-left text-[11px]">
-              <thead className="bg-white dark:bg-gray-900 sticky top-0 z-10 border-b border-gray-200 dark:border-gray-800 shadow-sm">
-                <tr>
-                  <th className="px-3 py-3 font-black text-gray-500 dark:text-gray-400 uppercase tracking-wider">Item</th>
-                  <th className="px-3 py-3 font-black text-gray-500 dark:text-gray-400 uppercase tracking-wider text-center">Qty</th>
-                  <th className="px-3 py-3 font-black text-gray-500 dark:text-gray-400 uppercase tracking-wider text-right">Total</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-gray-800/60">
-                {returnedItems.map((item, idx) => (
-                  <tr key={`ret-${idx}`} className="text-orange-600 dark:text-orange-400">
-                    <td className="px-3 py-3 font-bold truncate max-w-[120px]" title={item.productName}>[Ret] {item.productName}</td>
-                    <td className="px-3 py-3 font-bold text-center tabular-nums">{item.quantity}</td>
-                    <td className="px-3 py-3 font-black text-right tabular-nums">-{item.unitPrice * item.quantity}</td>
-                  </tr>
-                ))}
-                {cart.map((item, idx) => (
-                  <tr key={`new-${idx}`} className="text-gray-700 dark:text-gray-300">
-                    <td className="px-3 py-3 font-bold truncate max-w-[120px]" title={item.productName}>{item.productName}</td>
-                    <td className="px-3 py-3 font-bold text-center tabular-nums">{item.quantity}</td>
-                    <td className="px-3 py-3 font-black text-right tabular-nums text-[#006970] dark:text-[#00B4BB]">{item.unitPrice * item.quantity}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        {/* Customer Ledger Details */}
+        {selectedCustomer && (
+          <div className="flex flex-col gap-2 p-3 bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800/30 rounded-xl mb-4">
+            <div className="flex justify-between items-center text-xs">
+              <span className="font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Previous Balance</span>
+              <span className={`font-black tabular-nums ${selectedCustomer.currentBalance > 0 ? 'text-red-500' : 'text-emerald-600 dark:text-emerald-400'}`}>
+                Rs {selectedCustomer.currentBalance.toLocaleString()}
+              </span>
+            </div>
+            <div className="flex justify-between items-center text-xs">
+              <span className="font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Credit Limit</span>
+              <span className="font-black text-gray-700 dark:text-gray-300 tabular-nums">
+                Rs {selectedCustomer.creditLimit.toLocaleString()}
+              </span>
+            </div>
+            {selectedCustomer.currentBalance > selectedCustomer.creditLimit && (
+              <div className="mt-1 text-[10px] font-black text-red-500 uppercase tracking-widest bg-red-100 dark:bg-red-900/30 px-2 py-1 rounded text-center">
+                Credit Limit Exceeded
+              </div>
+            )}
           </div>
         )}
+
+        <div className="flex-1"></div>
 
         <div className="flex justify-between items-center mb-3 mt-auto pt-2 border-t border-gray-200 dark:border-gray-800 border-dashed">
           <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">New Items Subtotal</span>

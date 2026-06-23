@@ -16,10 +16,12 @@ export const CustomerSelector: React.FC<CustomerSelectorProps> = ({ onSelectCust
   const [isDropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  const [selectedIndex, setSelectedIndex] = useState(0);
+
   const { data: searchResponse, isLoading } = useQuery({
     queryKey: ['customers', 'search', searchTerm],
     queryFn: () => customerApi.searchCustomers(searchTerm),
-    enabled: searchTerm.length > 1,
+    enabled: searchTerm.length > 0,
     staleTime: 60000,
   });
 
@@ -39,6 +41,26 @@ export const CustomerSelector: React.FC<CustomerSelectorProps> = ({ onSelectCust
     onSelectCustomer(customer);
     setSearchTerm('');
     setDropdownOpen(false);
+    setSelectedIndex(0);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (!isDropdownOpen || searchResults.length === 0) return;
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setSelectedIndex(prev => (prev < searchResults.length - 1 ? prev + 1 : prev));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setSelectedIndex(prev => (prev > 0 ? prev - 1 : 0));
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (searchResults[selectedIndex]) {
+        handleSelect(searchResults[selectedIndex]);
+      }
+    } else if (e.key === 'Escape') {
+      setDropdownOpen(false);
+    }
   };
 
   const handleClear = () => {
@@ -120,25 +142,33 @@ export const CustomerSelector: React.FC<CustomerSelectorProps> = ({ onSelectCust
           onChange={(e) => {
             setSearchTerm(e.target.value);
             setDropdownOpen(true);
+            setSelectedIndex(0);
           }}
           onFocus={() => setDropdownOpen(true)}
+          onKeyDown={handleKeyDown}
         />
       </div>
 
-      {isDropdownOpen && searchTerm.length > 1 && (
+      {isDropdownOpen && searchTerm.length > 0 && (
         <div className="absolute z-50 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg max-h-60 overflow-auto">
           {isLoading ? (
             <div className="p-3 text-sm text-gray-500 text-center">Searching...</div>
           ) : searchResults.length > 0 ? (
             <ul className="py-1">
-              {searchResults.map((customer) => (
+              {searchResults.map((customer, index) => (
                 <li 
                   key={customer.id}
-                  className="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer flex justify-between items-center"
+                  className={`px-3 py-2 cursor-pointer flex justify-between items-center transition-colors ${
+                    index === selectedIndex 
+                      ? 'bg-blue-50 dark:bg-gray-700 border-l-4 border-blue-500' 
+                      : 'hover:bg-gray-100 dark:hover:bg-gray-700 border-l-4 border-transparent'
+                  }`}
                   onClick={() => handleSelect(customer)}
                 >
                   <div className="flex flex-col">
-                    <span className="text-sm font-medium text-gray-900 dark:text-white">{customer.name}</span>
+                    <span className={`text-sm font-medium ${index === selectedIndex ? 'text-blue-700 dark:text-white' : 'text-gray-900 dark:text-white'}`}>
+                      {customer.name}
+                    </span>
                     <span className="text-xs text-gray-500">{customer.phone}</span>
                   </div>
                   <div className="text-xs font-semibold text-[#006970]">

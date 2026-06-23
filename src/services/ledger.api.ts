@@ -1,15 +1,64 @@
 import axiosInstance from '@/lib/api/axios';
-import { DBLedgerEntry } from '@/types/db.types';
+
+export interface LedgerTimelineEntry {
+  id: string;
+  transactionId: string;
+  type: 'payment' | 'invoice' | 'supplier_invoice' | 'sale';
+  amount: number;
+  runningBalance: number;
+  timestamp: number;
+  description: string;
+  debitAccount: string;
+  creditAccount: string;
+}
+
+export interface PaymentAllocationData {
+  _id: string;
+  paymentEntryId: string;
+  invoiceId: string;
+  amountAllocated: number;
+  createdAt: string;
+}
+
+export interface OpenInvoiceData {
+  _id: string;
+  orderNumber: string;
+  totalAmount: number;
+  paidAmount: number;
+  remainingAmount: number;
+  paymentStatus: 'pending' | 'partially_paid';
+  createdAt: string;
+}
+
+export interface PartyLedgerResponse {
+  success: boolean;
+  message: string;
+  data: {
+    timeline: LedgerTimelineEntry[];
+    allocations: PaymentAllocationData[];
+    openInvoices: OpenInvoiceData[];
+  };
+}
+
+export interface RecordPaymentPayload {
+  partyId: string;
+  partyType: 'CUSTOMER' | 'SUPPLIER';
+  amount: number;
+  method: 'cash' | 'card' | 'transfer' | 'credit';
+  notes?: string;
+  idempotencyKey?: string;
+}
 
 export const ledgerApi = {
-  getCustomerLedger: async (customerId: string) => {
-    const response = await axiosInstance.get<{
-      success: boolean;
-      data: {
-        history: DBLedgerEntry[];
-      };
-      message: string;
-    }>(`/api/ledger/${customerId}`);
+  getPartyLedger: async (partyId: string, partyType: 'CUSTOMER' | 'SUPPLIER') => {
+    const response = await axiosInstance.get<PartyLedgerResponse>(`/api/ledger/${partyId}`, {
+      params: { partyType }
+    });
+    return response.data;
+  },
+
+  recordPayment: async (payload: RecordPaymentPayload) => {
+    const response = await axiosInstance.post<{ success: boolean; data: { paymentId: string; newBalance: number } }>('/api/ledger/payment', payload);
     return response.data;
   }
 };

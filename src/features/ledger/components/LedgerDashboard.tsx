@@ -1,43 +1,157 @@
 'use client';
 
-import React from 'react';
-import { useLedger } from '../hooks/useLedger';
-import { LedgerSummaryCards } from './LedgerSummaryCards';
-import { LedgerQuickStats } from './LedgerQuickStats';
-import { LedgerFilters } from './LedgerFilters';
-import { LedgerTabs } from './LedgerTabs';
-import { LedgerTable } from './LedgerTable';
+import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { useLedger, SelectedParty } from '../hooks/useLedger';
+import { customerApi } from '@/services/customer.api';
+import { supplierApi } from '@/services/supplier.api';
+import { Search, ArrowLeft, Building2, User, Wallet, History, FileText, Download } from 'lucide-react';
+import { LedgerBook } from './LedgerBook'; // We will create this
 
 export const LedgerDashboard: React.FC = () => {
-  const {
-    activeTab,
-    setActiveTab,
-    searchQuery,
-    setSearchQuery,
-    transactions,
-    summary,
-    quickStats,
-  } = useLedger();
+  const { selectedParty, setSelectedParty } = useLedger();
+  const [directoryTab, setDirectoryTab] = useState<'CUSTOMER' | 'SUPPLIER'>('CUSTOMER');
+  const [searchTerm, setSearchTerm] = useState('');
+
+  // Fetch directories
+  const { data: customersData, isLoading: isLoadingCustomers } = useQuery({
+    queryKey: ['customers', 1, 1000],
+    queryFn: () => customerApi.getCustomers(1, 1000)
+  });
+
+  const { data: suppliersData, isLoading: isLoadingSuppliers } = useQuery({
+    queryKey: ['suppliers', 1, 1000],
+    queryFn: () => supplierApi.getSuppliers(1, 1000)
+  });
+
+  if (selectedParty) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6 animate-in fade-in">
+        <button 
+          onClick={() => setSelectedParty(null)}
+          className="flex items-center gap-2 text-sm font-semibold text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to Directory
+        </button>
+        <LedgerBook />
+      </div>
+    );
+  }
+
+  // Directory View
+  const listToRender = directoryTab === 'CUSTOMER' ? (customersData?.data || []) : (suppliersData?.data || []);
+  const filteredList = listToRender.filter(item => 
+    item.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    item.phone?.includes(searchTerm)
+  );
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-
-      {/* Summary Cards & Quick Stats */}
       <div>
-        <LedgerSummaryCards summary={summary} />
-        <LedgerQuickStats stats={quickStats} />
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">General Ledger</h1>
+        <p className="text-gray-500 dark:text-gray-400">Manage receivable and payable accounts</p>
       </div>
 
-      {/* Main Ledger Area */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col">
-        <LedgerFilters searchQuery={searchQuery} onSearchChange={setSearchQuery} />
-        <LedgerTabs activeTab={activeTab} onTabChange={setActiveTab} />
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
         
-        <div className="p-4">
-          <LedgerTable transactions={transactions} />
+        {/* Directory Header Tabs & Search */}
+        <div className="p-4 border-b border-gray-200 dark:border-gray-700 space-y-4 sm:space-y-0 sm:flex sm:items-center sm:justify-between bg-gray-50 dark:bg-gray-800/50">
+          <div className="flex gap-2">
+            <button
+              onClick={() => setDirectoryTab('CUSTOMER')}
+              className={`px-4 py-2 text-sm font-bold rounded-lg flex items-center gap-2 transition-colors ${
+                directoryTab === 'CUSTOMER' 
+                ? 'bg-blue-600 text-white shadow-md' 
+                : 'bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800'
+              }`}
+            >
+              <User className="w-4 h-4" /> Customers (Receivables)
+            </button>
+            <button
+              onClick={() => setDirectoryTab('SUPPLIER')}
+              className={`px-4 py-2 text-sm font-bold rounded-lg flex items-center gap-2 transition-colors ${
+                directoryTab === 'SUPPLIER' 
+                ? 'bg-[#006970] text-white shadow-md' 
+                : 'bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800'
+              }`}
+            >
+              <Building2 className="w-4 h-4" /> Suppliers (Payables)
+            </button>
+          </div>
+
+          <div className="relative w-full sm:w-72">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder={`Search ${directoryTab.toLowerCase()}...`}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+            />
+          </div>
+        </div>
+
+        {/* Directory List */}
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm text-left">
+            <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+              <tr>
+                <th className="px-6 py-4 font-semibold text-gray-900 dark:text-white">Party Name</th>
+                <th className="px-6 py-4 font-semibold text-gray-900 dark:text-white">Contact</th>
+                <th className="px-6 py-4 font-semibold text-gray-900 dark:text-white text-right">Current Balance</th>
+                <th className="px-6 py-4 font-semibold text-gray-900 dark:text-white text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+              {filteredList.map((party) => {
+                const bal = party.currentBalance || 0;
+                const isCredit = bal < 0;
+                
+                return (
+                  <tr key={party.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors group">
+                    <td className="px-6 py-4">
+                      <div className="font-bold text-gray-900 dark:text-white">{party.name}</div>
+                      {party.companyName && <div className="text-xs text-gray-500">{party.companyName}</div>}
+                    </td>
+                    <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{party.phone}</td>
+                    <td className="px-6 py-4 text-right">
+                      <span className={`font-bold ${
+                        isCredit 
+                          ? 'text-green-600 dark:text-green-400' 
+                          : bal > 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-500'
+                      }`}>
+                        Rs {Math.abs(bal).toLocaleString()} {isCredit ? '(CR)' : bal > 0 ? '(DR)' : ''}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <button
+                        onClick={() => setSelectedParty({
+                          id: party.id,
+                          type: directoryTab,
+                          name: party.name,
+                          balance: party.currentBalance,
+                          creditLimit: party.creditLimit
+                        })}
+                        className="px-4 py-1.5 text-sm font-bold text-blue-600 bg-blue-50 dark:bg-blue-900/30 dark:text-blue-400 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        View Ledger
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+              {filteredList.length === 0 && (
+                <tr>
+                  <td colSpan={4} className="px-6 py-8 text-center text-gray-500">
+                    No {directoryTab.toLowerCase()}s found.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
-      
     </div>
   );
 };

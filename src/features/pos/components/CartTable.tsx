@@ -52,7 +52,7 @@ export const CartTable = () => {
     const inputValue = localQuantities[key] !== undefined ? localQuantities[key] : item.quantity;
     
     return (
-      <div key={key} className={`flex items-center px-4 h-[70px] border-b last:border-b-0 transition-colors group ${isReturn ? 'border-orange-100 bg-orange-50/50 dark:border-orange-900/30 dark:bg-orange-900/10' : 'border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50'}`}>
+      <div key={key} className={`flex items-center px-2 py-0.5 border-b last:border-b-0 transition-colors group ${isReturn ? 'border-orange-100 bg-orange-50/50 dark:border-orange-900/30 dark:bg-orange-900/10' : 'border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50'}`}>
         
         {/* S.No */}
         <div className="w-10 text-xs font-bold text-gray-400">
@@ -128,7 +128,7 @@ export const CartTable = () => {
     <div className="flex-1 h-full flex flex-col overflow-hidden bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl shadow-sm">
       
       {/* Classic Table Header */}
-      <div className="flex items-center px-4 py-2.5 border-b border-gray-200 dark:border-gray-800 bg-gray-50/80 dark:bg-gray-800/80 text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest shrink-0">
+      <div className="flex items-center px-2 py-1 border-b border-gray-200 dark:border-gray-800 bg-gray-50/80 dark:bg-gray-800/80 text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest shrink-0">
         <div className="w-10">S.No</div>
         <div className="flex-1 min-w-[120px]">Product Name</div>
         <div className="w-16 text-center">Stock</div>

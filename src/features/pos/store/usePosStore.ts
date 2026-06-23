@@ -361,6 +361,13 @@ export const usePosStore = create<PosStore>()(
         if (!session) return;
 
         try {
+          let method = 'cash';
+          if (paymentBreakdown && paymentBreakdown.length > 0) {
+            method = paymentBreakdown[0].method?.toLowerCase() || 'cash';
+          } else if (customer && customer.id !== 'walk-in') {
+            method = 'credit';
+          }
+
           const payload = {
             items: session.cart.map(item => ({
               productId: item.productId,
@@ -368,7 +375,7 @@ export const usePosStore = create<PosStore>()(
               price: item.unitPrice
             })),
             customerId: customer?.id === 'walk-in' ? undefined : customer?.id,
-            paymentMethod: paymentBreakdown[0]?.method?.toLowerCase() || 'cash',
+            paymentMethod: method,
             taxRate: 0,
             discount: session.invoiceDiscountValue || 0,
           };
@@ -380,7 +387,9 @@ export const usePosStore = create<PosStore>()(
             // ALWAYS prioritize the cloud API to ensure stock is reduced and sale is created centrally
             result = await salesApi.createOrder(payload);
           } catch (apiError: any) {
-            console.warn("Cloud API failed, checking for offline fallback...", apiError);
+            const errorMessage = apiError.response?.data?.message || apiError.message || "Unknown API error";
+            console.warn("Cloud API failed, checking for offline fallback...", errorMessage);
+            toast.error("Backend Sync Failed: " + errorMessage);
             
             if (isDesktop) {
               console.log("Using Electron SQLite Offline Fallback");
