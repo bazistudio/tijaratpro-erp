@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware';
 import toast from 'react-hot-toast';
 import { DBInventory } from '@/types/db.types';
 import { salesApi } from '@/services/sales.api';
+import { useInventoryStore } from '@/features/inventory/core/inventory.store';
 import { InvoiceDocument } from '../services/document/document.service';
 
 export interface CartItem {
@@ -106,6 +107,10 @@ interface PosStore {
   completeTransaction: (paymentBreakdown: { method: string; amount: number }[], customer: { id: string; name: string } | null) => Promise<any>;
   setLastInvoice: (invoice: InvoiceDocument | null) => void;
 
+  // Status Message
+  lastActionMessage: string | null;
+  setLastActionMessage: (msg: string | null) => void;
+
   // Selectors
   getActiveSession: () => SaleSession | undefined;
 }
@@ -138,7 +143,10 @@ export const usePosStore = create<PosStore>()(
       isWholesaleMode: false,
       transactions: [],
       lastInvoice: null,
+      lastActionMessage: null,
       
+      setLastActionMessage: (msg) => set({ lastActionMessage: msg }),
+
       createSaleTab: () => {
         const { saleTabs } = get();
         if (saleTabs.length >= 3) {
@@ -239,6 +247,7 @@ export const usePosStore = create<PosStore>()(
               }
               
               toast.success(`Increased ${existingItem.productName} quantity`);
+              get().setLastActionMessage(`Increased ${existingItem.productName} quantity to ${newQty}`);
               const updatedList = targetList.map(item => {
                 if (item.productId === product.id) {
                   return { ...item, quantity: newQty };
@@ -255,6 +264,7 @@ export const usePosStore = create<PosStore>()(
             }
 
             toast.success(`Added ${product.name} to ${isReturn ? 'returns' : 'cart'}`);
+            get().setLastActionMessage(`Added ${product.name} to cart`);
             const newItem: CartItem = {
               productId: product.id,
               sku: product.sku,
@@ -359,26 +369,45 @@ export const usePosStore = create<PosStore>()(
           let result;
           const isDesktop = typeof window !== 'undefined' && (window as any).electron;
 
-          if (isDesktop) {
-            const saleId = `SALE-${Date.now()}`;
-            const sqlitePayload = {
-              id: saleId,
-              customerId: payload.customerId || 'walk-in',
-              total: session.grandTotal || 0,
-              status: 'completed',
-              items: JSON.stringify(payload.items),
-              paymentMethod: payload.paymentMethod,
-              discount: payload.discount,
-            };
-            
-            const mutateResult = await (window as any).electron.db.mutate('orders', 'CREATE', sqlitePayload);
-            if (mutateResult.success) {
-              result = { success: true, order: { ...sqlitePayload, _id: saleId } };
-            } else {
-              throw new Error("Failed to save to local offline queue");
-            }
-          } else {
+          try {
+            // ALWAYS prioritize the cloud API to ensure stock is reduced and sale is created centrally
             result = await salesApi.createOrder(payload);
+          } catch (apiError: any) {
+            console.warn("Cloud API failed, checking for offline fallback...", apiError);
+            
+            if (isDesktop) {
+              console.log("Using Electron SQLite Offline Fallback");
+              // Calculate grandTotal for offline storage since it's not on the session object
+              const subtotal = session.cart.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
+              let discountAmt = 0;
+              if (session.invoiceDiscountType === 'percentage') {
+                discountAmt = subtotal * ((session.invoiceDiscountValue || 0) / 100);
+              } else {
+                discountAmt = session.invoiceDiscountValue || 0;
+              }
+              const offlineGrandTotal = subtotal - discountAmt;
+
+              const saleId = `SALE-${Date.now()}`;
+              const sqlitePayload = {
+                id: saleId,
+                customerId: payload.customerId || 'walk-in',
+                total: offlineGrandTotal,
+                status: 'completed',
+                items: JSON.stringify(payload.items),
+                paymentMethod: payload.paymentMethod,
+                discount: payload.discount,
+              };
+              
+              const mutateResult = await (window as any).electron.db.mutate('orders', 'CREATE', sqlitePayload);
+              if (mutateResult.success) {
+                result = { success: true, order: { ...sqlitePayload, _id: saleId } };
+              } else {
+                throw new Error("Failed to save to local offline queue. Order lost.");
+              }
+            } else {
+              // If not desktop, we can't fall back. Throw the original API error.
+              throw apiError;
+            }
           }
 
           if (!result.success) {
@@ -391,6 +420,13 @@ export const usePosStore = create<PosStore>()(
           }));
           get().clearCart();
           
+          // Re-fetch inventory globally so the POS search reflects the newly reduced stock instantly
+          try {
+            useInventoryStore.getState().forceSync();
+          } catch(e) {
+            console.error("Failed to sync inventory after sale", e);
+          }
+
           return result;
         } catch (error: any) {
           console.error("Transaction failed", error);

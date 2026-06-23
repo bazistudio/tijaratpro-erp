@@ -39,7 +39,7 @@ export const Topbar = ({ setMobileMenuOpen }: TopbarProps) => {
           
           {/* Fixed Sale Button */}
           <Link
-            href="/sale"
+            href="/dashboard/shop-admin/pos"
             className="flex items-center gap-2 rounded-full bg-[#006970] px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[#005a60] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#006970] transition-colors"
           >
             <ShoppingCart className="h-4 w-4" />

@@ -8,8 +8,9 @@ export interface GlobalSearchResult {
   invoices: any[];
 }
 
-export function useGlobalSearch(query: string, isFocused: boolean = true, delay: number = 300) {
+export function useGlobalSearch(query: string, type: string = 'quick', isFocused: boolean = true, delay: number = 300) {
   const [debouncedQuery, setDebouncedQuery] = useState(query);
+  const [debouncedType, setDebouncedType] = useState(type);
   const [results, setResults] = useState<GlobalSearchResult>({ products: [], customers: [], suppliers: [], invoices: [] });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -18,12 +19,13 @@ export function useGlobalSearch(query: string, isFocused: boolean = true, delay:
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedQuery(query);
+      setDebouncedType(type);
     }, delay);
 
     return () => {
       clearTimeout(handler);
     };
-  }, [query, delay]);
+  }, [query, type, delay]);
 
   // Fetch logic
   useEffect(() => {
@@ -41,7 +43,7 @@ export function useGlobalSearch(query: string, isFocused: boolean = true, delay:
 
       try {
         const response = await axiosInstance.get<{ success: boolean; data: GlobalSearchResult }>(
-          `/api/search?query=${encodeURIComponent(debouncedQuery)}&type=all`, 
+          `/api/search?query=${encodeURIComponent(debouncedQuery)}&type=${debouncedType}`, 
           { signal: controller.signal }
         );
         
@@ -70,7 +72,7 @@ export function useGlobalSearch(query: string, isFocused: boolean = true, delay:
     return () => {
       controller.abort();
     };
-  }, [debouncedQuery, isFocused]);
+  }, [debouncedQuery, debouncedType, isFocused]);
 
-  return { results, isLoading, error, debouncedQuery };
+  return { results, isLoading, error, debouncedQuery, debouncedType };
 }

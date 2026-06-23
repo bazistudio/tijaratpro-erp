@@ -89,8 +89,8 @@ export const CartSummary = () => {
       toast.error("Cart is empty");
       return;
     }
-    // Bypass modal for pure cash save
-    processTransaction([{ method: 'cash', amount: grandTotal > 0 ? grandTotal : 0 }]);
+    // Bypass modal for pure cash sale without printing
+    processTransaction([{ method: 'cash', amount: grandTotal > 0 ? grandTotal : 0 }], null, false);
   };
 
   const handlePayAndPrint = () => {
@@ -109,7 +109,7 @@ export const CartSummary = () => {
     setCustomerModalOpen(true);
   };
 
-  const processTransaction = async (paymentBreakdown: {method: string, amount: number}[] = [], customerObj: {id: string, name: string} | null = null) => {
+  const processTransaction = async (paymentBreakdown: {method: string, amount: number}[] = [], customerObj: {id: string, name: string} | null = null, shouldPrint: boolean = false) => {
     if (!activeSession) return;
     
     // If we have a selected customer in the UI, use it if none was explicitly passed
@@ -132,26 +132,50 @@ export const CartSummary = () => {
     try {
       const result = await completeTransaction(paymentBreakdown, targetCustomer);
       
-      if (result && result.transaction) {
+      if (result && (result.transaction || result.order)) {
+        const orderData = result.transaction || result.order;
         // Build the invoice purely for print view rendering
         const dummyShopProfile = {
           name: 'Shop',
           address: 'Address',
           phone1: '123'
         };
-        const invoice = DocumentService.buildInvoice(result.transaction as any, dummyShopProfile as any);
-        console.log("INVOICE GENERATED:", invoice);
         
-        // Pass to store to trigger InvoiceReceipt render
-        usePosStore.getState().setLastInvoice(invoice);
+        // Map backend order structure to the expected DBTransaction format for the invoice builder
+        const mappedTransaction: any = {
+          transactionId: orderData.orderNumber || orderData.transactionId || orderData._id || `TXN-${Date.now()}`,
+          items: orderData.items?.map((i: any) => ({
+            productName: i.name || i.productName || 'Item',
+            quantity: i.quantity || 1,
+            unitPrice: i.price || i.unitPrice || 0,
+            discount: i.discount || 0,
+            subtotal: (i.price || i.unitPrice || 0) * (i.quantity || 1)
+          })) || [],
+          subtotal: orderData.subtotal || 0,
+          discountTotal: orderData.discountAmount || orderData.discountTotal || 0,
+          grandTotal: orderData.totalAmount || orderData.grandTotal || 0,
+          totalPaid: orderData.totalAmount || orderData.grandTotal || 0,
+          remainingDue: 0,
+          changeReturned: 0,
+          paymentBreakdown: [{ method: orderData.paymentMethod || 'cash', amount: orderData.totalAmount || orderData.grandTotal || 0 }],
+          createdAt: orderData.createdAt || Date.now()
+        };
+
+        if (shouldPrint) {
+          const invoice = DocumentService.buildInvoice(mappedTransaction as any, dummyShopProfile as any);
+          console.log("INVOICE GENERATED:", invoice);
+          
+          // Pass to store to trigger InvoiceReceipt render
+          usePosStore.getState().setLastInvoice(invoice);
+          
+          await DocumentService.logPrint(invoice.invoiceId, 'PRINT');
+          
+          setTimeout(() => {
+            window.print();
+          }, 100);
+        }
         
-        await DocumentService.logPrint(invoice.invoiceId, 'PRINT');
-        
-        toast.success(isRefund ? `Refund Processed. Paid: Rs ${Math.abs(grandTotal)}` : "Sale Saved & Receipt Printing...");
-        
-        setTimeout(() => {
-          window.print();
-        }, 100);
+        toast.success(isRefund ? `Refund Processed. Paid: Rs ${Math.abs(grandTotal)}` : "Sale completed successfully");
         
         setPaymentModalOpen(false);
       }
@@ -245,11 +269,11 @@ export const CartSummary = () => {
         <button 
           onClick={handleCashSale}
           disabled={isCartEmpty}
-          title="Quick Cash Save (Ctrl+S)"
+          title="Quick Cash Sale (Ctrl+S)"
           className="h-14 flex flex-col items-center justify-center gap-1 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-[#006970]/10 hover:text-[#006970] hover:border-[#006970]/30 transition-colors disabled:opacity-50"
         >
           <Banknote className="h-5 w-5" />
-          <span className="text-[10px] font-bold uppercase tracking-wider">Save</span>
+          <span className="text-[10px] font-bold uppercase tracking-wider">Sale</span>
         </button>
         
         <button 
@@ -277,7 +301,7 @@ export const CartSummary = () => {
         <PaymentModal 
           grandTotal={grandTotal}
           onClose={() => setPaymentModalOpen(false)}
-          onConfirm={(breakdown) => processTransaction(breakdown)}
+          onConfirm={(breakdown) => processTransaction(breakdown, null, true)}
           onCreditSelect={() => {
             setPaymentModalOpen(false);
             setCustomerModalOpen(true);
@@ -304,7 +328,7 @@ export const CartSummary = () => {
           onSuccess={() => {
             setLedgerModalOpen(false);
             // Empty array means 0 paid, creating a pure DUE transaction assigned to the customer
-            processTransaction([], { id: selectedCustomer.id, name: selectedCustomer.name });
+            processTransaction([], { id: selectedCustomer.id, name: selectedCustomer.name }, false);
           }}
         />
       )}

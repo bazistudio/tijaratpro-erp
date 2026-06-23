@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { usePosStore } from '../store/usePosStore';
 import { ProductSearch } from './ProductSearch';
 import { CartTable } from './CartTable';
@@ -8,8 +8,18 @@ import { CartSummary } from './CartSummary';
 import { InvoiceReceipt } from './invoice/InvoiceReceipt';
 
 export const SaleWorkspace = () => {
-  const { activeTabId, saleTabs } = usePosStore();
+  const { activeTabId, saleTabs, lastActionMessage, setLastActionMessage } = usePosStore();
   const activeSession = saleTabs.find(t => t.id === activeTabId);
+
+  // Clear message after 3 seconds
+  useEffect(() => {
+    if (lastActionMessage) {
+      const timer = setTimeout(() => {
+        setLastActionMessage(null);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [lastActionMessage, setLastActionMessage]);
 
   if (!activeSession) return null;
 
@@ -27,28 +37,20 @@ export const SaleWorkspace = () => {
         </div>
 
         {/* RIGHT PANEL */}
-        <div className="w-[35%] flex flex-col bg-gray-50 dark:bg-gray-800/50 overflow-hidden border-l border-gray-200 dark:border-gray-800">
-          <div className="p-4 flex-1 flex flex-col gap-4 overflow-hidden">
-
-            {/* Customer */}
-            <div className="h-16 border border-gray-200 dark:border-gray-700 rounded-lg flex items-center px-4 bg-white dark:bg-gray-900 shrink-0 shadow-sm">
-              <div className="flex-1">
-                <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold">
-                  Customer
-                </p>
-                <p className="text-sm font-bold text-gray-900 dark:text-gray-100">
-                  {activeSession.customer?.name || 'Walk-In Customer'}
-                </p>
+        <div className="w-[35%] flex flex-col bg-gray-50 dark:bg-gray-800/50 overflow-hidden border-l border-gray-200 dark:border-gray-800 relative">
+          
+          {/* Status Message Banner */}
+          {lastActionMessage && (
+            <div className="absolute top-0 left-0 right-0 z-10 animate-in slide-in-from-top-2 fade-in duration-300">
+              <div className="bg-emerald-500/10 border-b border-emerald-500/20 px-4 py-2 text-center text-sm font-semibold text-emerald-600 dark:text-emerald-400 backdrop-blur-sm shadow-sm">
+                {lastActionMessage}
               </div>
-
-              <button className="text-xs text-[#006970] font-semibold hover:underline">
-                Change
-              </button>
             </div>
+          )}
 
+          <div className={`p-4 flex-1 flex flex-col gap-4 overflow-hidden ${lastActionMessage ? 'pt-12' : 'transition-all duration-300'}`}>
             <CartTable />
             <CartSummary />
-
           </div>
         </div>
 
@@ -56,3 +58,4 @@ export const SaleWorkspace = () => {
     </>
   );
 };
+
