@@ -139,7 +139,11 @@ export const usePosStore = create<PosStore>()(
   persist(
     (set, get) => ({
       activeTabId: 'sale-1',
-      saleTabs: [createDefaultSession('sale-1', 'Sale #1')],
+      saleTabs: [
+        createDefaultSession('sale-1', 'Sale #1'),
+        createDefaultSession('sale-2', 'Sale #2'),
+        createDefaultSession('sale-3', 'Sale #3')
+      ],
       isWholesaleMode: false,
       transactions: [],
       lastInvoice: null,
@@ -198,10 +202,13 @@ export const usePosStore = create<PosStore>()(
       },
 
       clearAllSessions: () => {
-        const resetId = `sale-${Date.now()}`;
         set({
-          saleTabs: [createDefaultSession(resetId, 'Sale #1')],
-          activeTabId: resetId,
+          saleTabs: [
+            createDefaultSession('sale-1', 'Sale #1'),
+            createDefaultSession('sale-2', 'Sale #2'),
+            createDefaultSession('sale-3', 'Sale #3')
+          ],
+          activeTabId: 'sale-1',
         });
       },
 

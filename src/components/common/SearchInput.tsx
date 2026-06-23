@@ -63,8 +63,8 @@ export const SearchInput = ({ placeholder = "Search products, customers, invoice
       sku: product.sku || '',
       barcode: product.barcode || '',
       name: product.name,
-      salePrice: product.salePrice || 0,
-      costPrice: product.costPrice || 0,
+      salePrice: product.price ?? product.salePrice ?? 0,
+      costPrice: product.purchasePrice ?? product.costPrice ?? 0,
       stock: product.quantity || 0
     };
     addToCart(posProduct as any);
@@ -335,7 +335,7 @@ export const SearchInput = ({ placeholder = "Search products, customers, invoice
                         </div>
                         <div className="flex flex-col items-end gap-1">
                           <span className="text-sm font-bold text-[#006970] dark:text-[#008990]">
-                            Rs {product.salePrice}
+                            Rs {product.price ?? product.salePrice ?? 0}
                           </span>
                           <span className="text-xs font-semibold bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 px-2 py-1 rounded">
                             Qty: {product.quantity}

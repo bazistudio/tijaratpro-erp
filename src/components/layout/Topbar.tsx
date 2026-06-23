@@ -19,7 +19,7 @@ export const Topbar = ({ setMobileMenuOpen }: TopbarProps) => {
   const isSyncing = inventoryStatus === 'loading';
 
   return (
-    <header className="sticky top-0 z-40 flex h-16 flex-shrink-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 transition-colors duration-200">
+    <header className="sticky top-0 z-[60] flex h-12 flex-shrink-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 transition-colors duration-200">
       <button
         type="button"
         className="border-r border-gray-200 dark:border-gray-800 px-4 text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#006970] lg:hidden"
@@ -31,7 +31,7 @@ export const Topbar = ({ setMobileMenuOpen }: TopbarProps) => {
 
       <div className="flex flex-1 items-center justify-between px-4 sm:px-6 lg:px-8">
         
-        <div className="flex flex-1 max-w-3xl">
+        <div className="flex flex-1 max-w-3xl items-center gap-4">
           <SearchInput placeholder="Search products, customers, invoices..." />
         </div>
         

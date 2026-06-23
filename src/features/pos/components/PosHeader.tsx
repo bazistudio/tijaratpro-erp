@@ -3,6 +3,8 @@
 import React, { useEffect, useState } from 'react';
 import { usePosStore } from '../store/usePosStore';
 import { Plus } from 'lucide-react';
+import { ProductSearch } from './ProductSearch';
+import { SaleTabNavigation } from './SaleTabNavigation';
 
 export const PosHeader = () => {
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
@@ -17,32 +19,26 @@ export const PosHeader = () => {
   }, []);
 
   return (
-    <header className="flex h-16 shrink-0 items-center justify-between border-b border-gray-200 bg-white px-4 shadow-sm dark:border-gray-800 dark:bg-gray-900 z-10">
-      <div className="flex items-center gap-4">
-
-        <div>
-          <h1 className="text-lg font-bold text-[#006970] dark:text-[#008990]">TijaratPro POS</h1>
-          <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
-            Cashier: Admin • <span className="font-semibold text-[#006970] dark:text-[#00B4BB]">Sales Active: {saleTabs.length}/3</span>
-          </p>
+    <header className="flex h-12 shrink-0 items-center justify-between border-b border-gray-200 bg-white px-4 shadow-sm dark:border-gray-800 dark:bg-gray-900 z-50">
+      <div className="flex-1 flex items-center relative z-50">
+        <div className="w-full max-w-sm">
+          <ProductSearch />
         </div>
       </div>
 
-      <div className="flex items-center gap-4 sm:gap-6">
-        <div className="hidden md:block text-right">
-          <p className="text-sm font-semibold text-gray-700 dark:text-gray-200 tabular-nums">
-            {currentTime ? currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '...'}
+      <div className="flex-1 flex justify-center h-full pt-2 shrink-0">
+        <SaleTabNavigation />
+      </div>
+
+      <div className="flex-1 flex items-center justify-end pb-2 pr-2 shrink-0">
+        <div className="flex flex-col items-end justify-center">
+          <p className="text-sm font-bold text-gray-800 dark:text-gray-100 tabular-nums leading-tight">
+            {currentTime ? currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '...'}
+          </p>
+          <p className="text-xs font-medium text-gray-500 dark:text-gray-400 leading-tight">
+            {currentTime ? currentTime.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }) : '...'}
           </p>
         </div>
-
-        <button
-          onClick={createSaleTab}
-          disabled={saleTabs.length >= 3}
-          className="flex items-center gap-2 rounded-lg bg-[#006970] px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[#005a60] disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-[#006970] focus:ring-offset-2 dark:focus:ring-offset-gray-900"
-        >
-          <Plus className="h-4 w-4" />
-          <span className="hidden sm:inline">New Sale</span>
-        </button>
       </div>
     </header>
   );

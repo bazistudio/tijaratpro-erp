@@ -48,8 +48,8 @@ export const MobileSidebar = ({ isOpen, setIsOpen }: MobileSidebarProps) => {
             </div>
           </div>
           
-          <div className="mt-5 h-0 flex-1 overflow-y-auto no-scrollbar">
-            <nav className="px-2 space-y-0.5">
+          <div className="mt-0 h-0 flex-1 overflow-hidden">
+            <nav className="px-2 space-y-0">
               {shopAdminNavigation.flatMap(group => group.items).map((item) => {
                 validateRoute(item.href, item.name);
                 const isActive =
@@ -63,7 +63,7 @@ export const MobileSidebar = ({ isOpen, setIsOpen }: MobileSidebarProps) => {
                     key={item.name}
                     href={item.href}
                     onClick={() => setIsOpen(false)}
-                    className={`group flex items-center px-2 py-2 mb-0.5 text-sm font-medium rounded-lg transition-all duration-200 ${
+                    className={`group flex items-center px-2 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 ${
                       isActive
                         ? 'bg-[#006970]/10 text-[#006970] dark:bg-[#006970]/20 dark:text-[#00B4BB]'
                         : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
@@ -82,17 +82,6 @@ export const MobileSidebar = ({ isOpen, setIsOpen }: MobileSidebarProps) => {
             </nav>
           </div>
           
-          <div className="flex-shrink-0 flex border-t border-gray-200 dark:border-gray-800 p-4">
-            <div className="w-full flex items-center p-2 rounded-lg bg-gray-50 dark:bg-gray-800/50">
-              <div className="h-10 w-10 rounded-full bg-[#006970]/20 flex items-center justify-center text-[#006970] dark:text-[#00B4BB] font-bold text-lg">
-                SA
-              </div>
-              <div className="ml-3">
-                <p className="text-base font-medium text-gray-700 dark:text-gray-200">{shop.name}</p>
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{shop.branchName}</p>
-              </div>
-            </div>
-          </div>
         </div>
         
         <div className="w-14 flex-shrink-0" aria-hidden="true">

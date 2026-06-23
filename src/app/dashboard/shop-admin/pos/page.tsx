@@ -39,7 +39,6 @@ export default function POSPage() {
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)] w-full">
       <PosHeader />
-      <SaleTabNavigation />
       <SaleWorkspace />
     </div>
   );

@@ -2,9 +2,9 @@
 
 import React, { useEffect } from 'react';
 import { usePosStore } from '../store/usePosStore';
-import { ProductSearch } from './ProductSearch';
 import { CartTable } from './CartTable';
 import { CartSummary } from './CartSummary';
+import { PosExtraActions } from './PosExtraActions';
 import { InvoiceReceipt } from './invoice/InvoiceReceipt';
 
 export const SaleWorkspace = () => {
@@ -29,15 +29,8 @@ export const SaleWorkspace = () => {
 
       <div className="flex-1 flex overflow-hidden">
 
-        {/* LEFT PANEL */}
-        <div className="w-[65%] flex flex-col border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 overflow-hidden">
-          <div className="p-4 flex-1 flex flex-col gap-4 overflow-hidden">
-            <ProductSearch />
-          </div>
-        </div>
-
-        {/* RIGHT PANEL */}
-        <div className="w-[35%] flex flex-col bg-gray-50 dark:bg-gray-800/50 overflow-hidden border-l border-gray-200 dark:border-gray-800 relative">
+        {/* MAIN PANEL (Cart) */}
+        <div className="flex-1 w-full flex flex-col bg-gray-50 dark:bg-gray-800/50 overflow-hidden relative h-full">
           
           {/* Status Message Banner */}
           {lastActionMessage && (
@@ -48,10 +41,27 @@ export const SaleWorkspace = () => {
             </div>
           )}
 
-          <div className={`p-4 flex-1 flex flex-col gap-4 overflow-hidden ${lastActionMessage ? 'pt-12' : 'transition-all duration-300'}`}>
-            <CartTable />
-            <CartSummary />
+          <div className={`px-2 pt-2 pb-[106px] flex-1 flex flex-col lg:flex-row gap-2 overflow-hidden ${lastActionMessage ? 'pt-12' : 'transition-all duration-300'}`}>
+            
+            {/* Left Column: Extra Actions (25%) */}
+            <div className="w-full lg:w-[25%] shrink-0 flex flex-col overflow-hidden h-full">
+              <PosExtraActions />
+            </div>
+
+            {/* Center Column: Cart Items (45%) */}
+            <div className="w-full lg:w-[45%] flex-1 min-w-0 flex flex-col overflow-hidden h-full">
+              <CartTable />
+            </div>
+            
+            {/* Right Column: Cart Summary (30%) */}
+            <div className="w-full lg:w-[30%] shrink-0 flex flex-col overflow-hidden h-full">
+              <CartSummary />
+            </div>
+
           </div>
+          
+          {/* Global POS Action Buttons Bottom Bar Portal Target */}
+          <div id="pos-action-bar-portal" className="fixed bottom-0 left-0 lg:left-64 right-0 z-50 bg-white dark:bg-gray-900"></div>
         </div>
 
       </div>

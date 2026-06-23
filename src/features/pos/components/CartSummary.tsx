@@ -10,8 +10,11 @@ import { LedgerSettlementModal } from './modals/LedgerSettlementModal';
 import { PaymentModal } from './modals/PaymentModal';
 import { DBCustomer } from '@/types/db.types';
 import { CustomerSelector } from './CustomerSelector';
+import { createPortal } from 'react-dom';
 
 export const CartSummary = () => {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   const clearCart = usePosStore(state => state.clearCart);
   const activeSession = usePosStore(state => state.getActiveSession());
   const setSessionMode = usePosStore(state => state.setSessionMode);
@@ -191,39 +194,72 @@ export const CartSummary = () => {
   };
 
   return (
-    <div className="flex flex-col gap-3 shrink-0">
-      <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-white dark:bg-gray-900 shadow-sm">
+    <div className="flex flex-col gap-2 h-full flex-1 w-full">
+      <div className="border border-gray-200/60 dark:border-gray-700/60 rounded-xl p-3 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl shadow-sm flex-1 flex flex-col overflow-hidden">
         
         {activeSession.mode === 'replace' && (
-          <div className="flex justify-between items-center mb-2 text-sm">
-            <span className="text-gray-500 dark:text-gray-400">Returned Value</span>
-            <span className="font-semibold text-orange-500 tabular-nums">- Rs {returnTotal.toLocaleString()}</span>
+          <div className="flex justify-between items-center mb-3 text-sm">
+            <span className="text-gray-500 dark:text-gray-400 font-medium tracking-wide uppercase text-[10px]">Returned Value</span>
+            <span className="font-black text-orange-500 tabular-nums">- Rs {returnTotal.toLocaleString()}</span>
           </div>
         )}
 
-        <CustomerSelector 
-          selectedCustomer={selectedCustomer} 
-          onSelectCustomer={setSelectedCustomer} 
-        />
-
-        <div className="flex justify-between items-center mb-2 mt-2">
-          <span className="text-sm text-gray-500 dark:text-gray-400">New Items Subtotal</span>
-          <span className="text-sm font-semibold text-gray-900 dark:text-gray-100 tabular-nums">Rs {subtotal.toLocaleString()}</span>
+        <div className="mb-4">
+          <CustomerSelector 
+            selectedCustomer={selectedCustomer} 
+            onSelectCustomer={setSelectedCustomer} 
+          />
         </div>
 
-        <div className="flex justify-between items-center mb-3 pb-3 border-b border-gray-200 dark:border-gray-800">
-          <span className="text-sm text-gray-500 dark:text-gray-400">Invoice Discount</span>
-          <div className="flex items-center gap-1 border border-gray-200 dark:border-gray-700 rounded overflow-hidden">
+        {/* Mini Receipt Table (Scrollable) */}
+        {!isCartEmpty && (
+          <div className="flex-1 h-full flex flex-col overflow-hidden border border-gray-200 dark:border-gray-800 rounded-xl mb-4 bg-gray-50/50 dark:bg-gray-900/50">
+            <table className="w-full text-left text-[11px]">
+              <thead className="bg-white dark:bg-gray-900 sticky top-0 z-10 border-b border-gray-200 dark:border-gray-800 shadow-sm">
+                <tr>
+                  <th className="px-3 py-3 font-black text-gray-500 dark:text-gray-400 uppercase tracking-wider">Item</th>
+                  <th className="px-3 py-3 font-black text-gray-500 dark:text-gray-400 uppercase tracking-wider text-center">Qty</th>
+                  <th className="px-3 py-3 font-black text-gray-500 dark:text-gray-400 uppercase tracking-wider text-right">Total</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-800/60">
+                {returnedItems.map((item, idx) => (
+                  <tr key={`ret-${idx}`} className="text-orange-600 dark:text-orange-400">
+                    <td className="px-3 py-3 font-bold truncate max-w-[120px]" title={item.productName}>[Ret] {item.productName}</td>
+                    <td className="px-3 py-3 font-bold text-center tabular-nums">{item.quantity}</td>
+                    <td className="px-3 py-3 font-black text-right tabular-nums">-{item.unitPrice * item.quantity}</td>
+                  </tr>
+                ))}
+                {cart.map((item, idx) => (
+                  <tr key={`new-${idx}`} className="text-gray-700 dark:text-gray-300">
+                    <td className="px-3 py-3 font-bold truncate max-w-[120px]" title={item.productName}>{item.productName}</td>
+                    <td className="px-3 py-3 font-bold text-center tabular-nums">{item.quantity}</td>
+                    <td className="px-3 py-3 font-black text-right tabular-nums text-[#006970] dark:text-[#00B4BB]">{item.unitPrice * item.quantity}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        <div className="flex justify-between items-center mb-3 mt-auto pt-2 border-t border-gray-200 dark:border-gray-800 border-dashed">
+          <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">New Items Subtotal</span>
+          <span className="text-sm font-black text-gray-900 dark:text-gray-100 tabular-nums">Rs {subtotal.toLocaleString()}</span>
+        </div>
+
+        <div className="flex justify-between items-center mb-4 pb-4 border-b border-gray-200 dark:border-gray-800 border-dashed">
+          <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Invoice Discount</span>
+          <div className="flex items-center gap-1 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-gray-50 dark:bg-gray-800">
             <input 
               type="number"
               value={activeSession.invoiceDiscountValue || ''}
               placeholder="0"
               onChange={(e) => setInvoiceDiscount(activeSession.invoiceDiscountType, parseFloat(e.target.value) || 0)}
-              className="w-16 text-sm font-semibold text-center py-1 bg-white dark:bg-gray-900 focus:outline-none focus:bg-gray-50 dark:focus:bg-gray-800 no-spinners"
+              className="w-20 text-sm font-black text-center py-1.5 bg-transparent focus:outline-none focus:bg-white dark:focus:bg-gray-700 no-spinners transition-colors"
             />
             <button 
               onClick={() => setInvoiceDiscount(activeSession.invoiceDiscountType === 'percentage' ? 'fixed' : 'percentage', activeSession.invoiceDiscountValue)}
-              className="px-2 py-1 text-xs font-bold bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
+              className="px-3 py-1.5 text-xs font-black bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
             >
               {activeSession.invoiceDiscountType === 'percentage' ? '%' : 'Rs'}
             </button>
@@ -231,71 +267,75 @@ export const CartSummary = () => {
         </div>
 
         {invoiceDiscountAmount > 0 && (
-          <div className="flex justify-between items-center mb-3 text-sm font-semibold text-red-500 tabular-nums">
-            <span>Bill Discount Applied</span>
+          <div className="flex justify-between items-center mb-4 text-sm font-black text-red-500 tabular-nums">
+            <span className="text-xs uppercase tracking-widest">Bill Discount Applied</span>
             <span>- Rs {invoiceDiscountAmount.toLocaleString()}</span>
           </div>
         )}
 
-        <div className="flex justify-between items-center">
-          <span className="text-base font-bold text-gray-900 dark:text-gray-100">{grandTotal < 0 ? 'Refund Due' : 'Total Due'}</span>
-          <span className={`text-xl font-black tabular-nums ${grandTotal < 0 ? 'text-red-500' : 'text-[#006970] dark:text-[#00B4BB]'}`}>
-            Rs {Math.abs(grandTotal).toLocaleString()}
+        <div className="flex justify-between items-end mt-2">
+          <span className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">{grandTotal < 0 ? 'Refund Due' : 'Total Due'}</span>
+          <span className={`text-3xl lg:text-4xl font-black tabular-nums tracking-tight ${grandTotal < 0 ? 'text-red-500' : 'text-[#006970] dark:text-[#00B4BB]'}`}>
+            <span className="text-lg mr-1 text-gray-400 dark:text-gray-500 font-bold">Rs</span>
+            {Math.abs(grandTotal).toLocaleString()}
           </span>
         </div>
       </div>
 
-      {/* POS Action Buttons Panel */}
-      <div className="grid grid-cols-5 gap-2 shrink-0">
-        <button 
-          onClick={handleClearCart}
-          disabled={isCartEmpty}
-          title="Clear Cart (Ctrl+Delete)"
-          className="h-14 flex flex-col items-center justify-center gap-1 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-colors disabled:opacity-50 disabled:hover:bg-white"
-        >
-          <Trash2 className="h-5 w-5" />
-          <span className="text-[10px] font-bold uppercase tracking-wider">Clear</span>
-        </button>
-        
-        <button 
-          onClick={toggleReplaceMode}
-          title="Toggle Replace/Exchange Mode"
-          className={`h-14 flex flex-col items-center justify-center gap-1 border rounded-lg transition-colors ${activeSession.mode === 'replace' ? 'bg-orange-100 border-orange-300 text-orange-700 dark:bg-orange-900/30 dark:border-orange-800 dark:text-orange-400' : 'bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-orange-50 hover:text-orange-600 hover:border-orange-200'}`}
-        >
-          <Repeat className="h-5 w-5" />
-          <span className="text-[10px] font-bold uppercase tracking-wider">Replace</span>
-        </button>
-        
-        <button 
-          onClick={handleCashSale}
-          disabled={isCartEmpty}
-          title="Quick Cash Sale (Ctrl+S)"
-          className="h-14 flex flex-col items-center justify-center gap-1 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-[#006970]/10 hover:text-[#006970] hover:border-[#006970]/30 transition-colors disabled:opacity-50"
-        >
-          <Banknote className="h-5 w-5" />
-          <span className="text-[10px] font-bold uppercase tracking-wider">Sale</span>
-        </button>
-        
-        <button 
-          onClick={handleCreditSale}
-          disabled={isCartEmpty}
-          title="Credit Ledger (Ctrl+L)"
-          className="h-14 flex flex-col items-center justify-center gap-1 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors disabled:opacity-50"
-        >
-          <UserCircle2 className="h-5 w-5" />
-          <span className="text-[10px] font-bold uppercase tracking-wider">Credit</span>
-        </button>
-        
-        <button 
-          onClick={handlePayAndPrint}
-          disabled={isCartEmpty}
-          title="Pay & Print (Ctrl+P)"
-          className="h-14 flex flex-col items-center justify-center gap-1 bg-[#006970] rounded-lg text-white hover:bg-[#005a60] transition-colors shadow-sm disabled:opacity-50"
-        >
-          <Printer className="h-5 w-5" />
-          <span className="text-[10px] font-bold uppercase tracking-wider">Print</span>
-        </button>
-      </div>
+      {/* POS Action Buttons Panel rendered to Bottom Bar */}
+      {mounted && document.getElementById('pos-action-bar-portal') ? createPortal(
+        <div className="grid grid-cols-5 gap-4 p-4 border-t border-gray-200 dark:border-gray-800 shadow-[0_-10px_30px_-15px_rgba(0,0,0,0.1)] dark:shadow-[0_-10px_30px_-15px_rgba(0,0,0,0.5)]">
+          <button 
+            onClick={handleClearCart}
+            disabled={isCartEmpty}
+            title="Clear Cart (Ctrl+Delete)"
+            className="h-16 flex flex-col items-center justify-center gap-1 bg-red-100 dark:bg-red-900/40 border border-red-300 dark:border-red-600/50 rounded-xl text-red-800 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-800/60 transition-all disabled:opacity-40 shadow-sm hover:shadow"
+          >
+            <Trash2 className="h-5 w-5" />
+            <span className="text-[10px] font-black uppercase tracking-widest mt-0.5">Clear</span>
+          </button>
+          
+          <button 
+            onClick={toggleReplaceMode}
+            title="Toggle Replace/Exchange Mode"
+            className={`h-16 flex flex-col items-center justify-center gap-1 border rounded-xl shadow-sm hover:shadow transition-all ${activeSession.mode === 'replace' ? 'bg-orange-200 border-orange-400 text-orange-800 dark:bg-orange-800/50 dark:border-orange-600 dark:text-orange-300' : 'bg-orange-50/50 dark:bg-orange-900/10 border-orange-200 dark:border-orange-800/50 text-orange-600 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/30'}`}
+          >
+            <Repeat className="h-5 w-5" />
+            <span className="text-[10px] font-black uppercase tracking-widest mt-0.5">Replace</span>
+          </button>
+          
+          <button 
+            onClick={handleCashSale}
+            disabled={isCartEmpty}
+            title="Quick Cash Sale (Ctrl+S)"
+            className="h-16 flex flex-col items-center justify-center gap-1 bg-teal-100 dark:bg-teal-900/40 border border-teal-300 dark:border-teal-600/50 rounded-xl text-teal-800 dark:text-teal-300 hover:bg-teal-200 dark:hover:bg-teal-800/60 transition-all shadow-sm hover:shadow disabled:opacity-40"
+          >
+            <Banknote className="h-5 w-5" />
+            <span className="text-[10px] font-black uppercase tracking-widest mt-0.5">Sale</span>
+          </button>
+          
+          <button 
+            onClick={handleCreditSale}
+            disabled={isCartEmpty}
+            title="Credit Ledger (Ctrl+L)"
+            className="h-16 flex flex-col items-center justify-center gap-1 bg-blue-100 dark:bg-blue-900/40 border border-blue-300 dark:border-blue-600/50 rounded-xl text-blue-800 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-800/60 transition-all shadow-sm hover:shadow disabled:opacity-40"
+          >
+            <UserCircle2 className="h-5 w-5" />
+            <span className="text-[10px] font-black uppercase tracking-widest mt-0.5">Credit</span>
+          </button>
+          
+          <button 
+            onClick={handlePayAndPrint}
+            disabled={isCartEmpty}
+            title="Pay & Print (Ctrl+P)"
+            className="h-16 flex flex-col items-center justify-center gap-1 bg-gradient-to-br from-[#006970] to-[#008990] dark:from-[#008990] dark:to-[#00A4AB] rounded-xl text-white hover:opacity-90 transition-all shadow-md hover:shadow-lg disabled:opacity-50"
+          >
+            <Printer className="h-5 w-5" />
+            <span className="text-[10px] font-black uppercase tracking-widest mt-0.5">Print</span>
+          </button>
+        </div>,
+        document.getElementById('pos-action-bar-portal')!
+      ) : null}
 
       {isPaymentModalOpen && (
         <PaymentModal 

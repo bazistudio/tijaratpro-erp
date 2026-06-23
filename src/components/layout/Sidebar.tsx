@@ -15,15 +15,15 @@ export const Sidebar = () => {
   return (
     <div className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 z-20 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 transition-colors duration-200">
       <div className="flex-1 flex flex-col min-h-0 bg-white/50 dark:bg-gray-900/50 backdrop-blur-md">
-        <div className="flex items-center h-16 flex-shrink-0 px-6 border-b border-gray-200 dark:border-gray-800">
-          <div className="text-xl font-bold text-[#006970] dark:text-[#008990] flex items-center gap-2">
+        <div className="flex items-center h-12 flex-shrink-0 px-6 border-b border-gray-200 dark:border-gray-800">
+          <div className="text-lg font-bold text-[#006970] dark:text-[#008990] flex items-center gap-2">
             <span className="w-8 h-8 rounded bg-[#006970] text-white flex items-center justify-center font-black">T</span>
             TijaratPro
           </div>
         </div>
         
-        <div className="flex-1 flex flex-col overflow-y-auto no-scrollbar pt-5 pb-4">
-          <nav className="mt-1 flex-1 px-2 space-y-0.5">
+        <div className="flex-1 flex flex-col overflow-hidden pt-0 pb-2">
+          <nav className="mt-1 flex-1 px-2 space-y-0">
             {shopAdminNavigation.flatMap(group => group.items).map((item) => {
               validateRoute(item.href, item.name);
               const isActive =
@@ -36,7 +36,7 @@ export const Sidebar = () => {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`group flex items-center px-2 py-1.5 mb-0.5 text-sm font-medium rounded-lg transition-all duration-200 ${
+                  className={`group flex items-center px-2 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 ${
                     isActive
                       ? 'bg-[#006970]/10 text-[#006970] dark:bg-[#006970]/20 dark:text-[#00B4BB]'
                       : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
@@ -55,17 +55,6 @@ export const Sidebar = () => {
           </nav>
         </div>
         
-        <div className="flex-shrink-0 flex border-t border-gray-200 dark:border-gray-800 p-4">
-          <div className="w-full flex items-center p-2 rounded-lg bg-gray-50 dark:bg-gray-800/50">
-            <div className="h-8 w-8 rounded-full bg-[#006970]/20 flex items-center justify-center text-[#006970] dark:text-[#00B4BB] font-bold">
-              SA
-            </div>
-            <div className="ml-3">
-              <p className="text-sm font-medium text-gray-700 dark:text-gray-200">{shop.name}</p>
-              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 text-ellipsis overflow-hidden">{shop.branchName}</p>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );
