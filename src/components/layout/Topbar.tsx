@@ -5,14 +5,19 @@ import Link from 'next/link';
 import { Menu, Bell, ShoppingCart } from 'lucide-react';
 import { UserMenu } from './UserMenu';
 import { SearchInput } from '../common/SearchInput';
-import { PackagePlus, ReceiptText } from 'lucide-react';
+import { PackagePlus, ReceiptText, RefreshCw, Plus } from 'lucide-react';
 import { DesktopAppButton } from './DesktopAppButton';
+import { selectForceSync, selectStatus } from '@/features/inventory/core/inventory.selectors';
 
 interface TopbarProps {
   setMobileMenuOpen: (isOpen: boolean) => void;
 }
 
 export const Topbar = ({ setMobileMenuOpen }: TopbarProps) => {
+  const forceSync = selectForceSync();
+  const inventoryStatus = selectStatus();
+  const isSyncing = inventoryStatus === 'loading';
+
   return (
     <header className="sticky top-0 z-40 flex h-16 flex-shrink-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 transition-colors duration-200">
       <button
@@ -41,22 +46,32 @@ export const Topbar = ({ setMobileMenuOpen }: TopbarProps) => {
             <span className="hidden sm:inline">New Sale</span>
             <span className="sm:hidden">Sale</span>
           </Link>
-          {/* Add Stock Button */}
+          {/* Add Product Button */}
           <Link
-            href="/dashboard/inventory"
-            className="hidden md:flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white dark:bg-gray-800 dark:text-gray-200 border border-gray-300 dark:border-gray-700 rounded-lg shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            href="/dashboard/shop-admin/products/new"
+            title="Add Product"
+            className="hidden md:flex items-center p-2 text-gray-700 bg-white dark:bg-gray-800 dark:text-gray-200 border border-gray-300 dark:border-gray-700 rounded-lg shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
           >
-            <PackagePlus className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-            <span className="hidden lg:inline">Add Stock</span>
+            <Plus className="h-5 w-5 text-[#006970] dark:text-emerald-400" />
           </Link>
+
+          {/* Sync Inventory Button */}
+          <button
+            onClick={() => forceSync()}
+            disabled={isSyncing}
+            title="Sync Inventory"
+            className="hidden md:flex items-center p-2 text-gray-700 bg-white dark:bg-gray-800 dark:text-gray-200 border border-gray-300 dark:border-gray-700 rounded-lg shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
+          >
+            <RefreshCw className={`h-5 w-5 text-blue-600 dark:text-blue-400 ${isSyncing ? 'animate-spin' : ''}`} />
+          </button>
 
           {/* Add Expense Button */}
           <Link
             href="/dashboard/expenses"
-            className="hidden md:flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white dark:bg-gray-800 dark:text-gray-200 border border-gray-300 dark:border-gray-700 rounded-lg shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            title="Add Expense"
+            className="hidden md:flex items-center p-2 text-gray-700 bg-white dark:bg-gray-800 dark:text-gray-200 border border-gray-300 dark:border-gray-700 rounded-lg shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
           >
-            <ReceiptText className="h-4 w-4 text-rose-600 dark:text-rose-400" />
-            <span className="hidden lg:inline">Add Expense</span>
+            <ReceiptText className="h-5 w-5 text-rose-600 dark:text-rose-400" />
           </Link>
 
           {/* Download / Open App */}
