@@ -77,18 +77,18 @@ export const SuspendedTenantsTable = () => {
         <table className="w-full text-left text-sm">
           <thead className="bg-gray-50 text-gray-700 font-medium border-b border-gray-200">
             <tr>
-              <th className="px-6 py-4">Business Name</th>
-              <th className="px-6 py-4">Contact Details</th>
-              <th className="px-6 py-4">Suspended At</th>
-              <th className="px-6 py-4">Status</th>
-              <th className="px-6 py-4 text-right">Actions</th>
+              <th className="px-6 py-1.5">Business Name</th>
+              <th className="px-6 py-1.5">Contact Details</th>
+              <th className="px-6 py-1.5">Suspended At</th>
+              <th className="px-6 py-1.5">Status</th>
+              <th className="px-6 py-1.5 text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
             {tenants.map((tenant) => (
               <tr key={tenant._id} className="hover:bg-gray-50 transition-colors">
-                <td className="px-6 py-4 font-medium text-gray-900">{tenant.name}</td>
-                <td className="px-6 py-4">
+                <td className="px-6 py-1.5 font-medium text-gray-900">{tenant.name}</td>
+                <td className="px-6 py-1.5">
                   <div className="flex flex-col text-sm">
                     <span className="text-gray-900">{tenant.ownerEmail || 'N/A'}</span>
                     <span className="text-gray-500">{tenant.ownerPhone || 'N/A'}</span>
@@ -97,15 +97,15 @@ export const SuspendedTenantsTable = () => {
                     )}
                   </div>
                 </td>
-                <td className="px-6 py-4 text-gray-600">
+                <td className="px-6 py-1.5 text-gray-600">
                   {tenant.suspendedAt ? format(new Date(tenant.suspendedAt), 'MMM d, yyyy') : 'N/A'}
                 </td>
-                <td className="px-6 py-4">
+                <td className="px-6 py-1.5">
                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 capitalize">
                     {tenant.status}
                   </span>
                 </td>
-                <td className="px-6 py-4 flex justify-end gap-2">
+                <td className="px-6 py-1.5 flex justify-end gap-2">
                   <button
                     onClick={() => handleRestoreClick(tenant)}
                     className="p-1.5 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded transition-colors"

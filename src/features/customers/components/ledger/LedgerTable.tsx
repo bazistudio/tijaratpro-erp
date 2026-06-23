@@ -79,32 +79,32 @@ export const LedgerTable = ({ entries }: LedgerTableProps) => {
         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
           <thead className="bg-gray-50 dark:bg-gray-800/50 sticky top-0 z-10">
             <tr>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Date</th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Description</th>
-              <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider text-red-600 dark:text-red-400">Debit (You Gave)</th>
-              <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider text-green-600 dark:text-green-400">Credit (You Got)</th>
-              <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Balance</th>
+              <th scope="col" className="px-6 py-1.5 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Date</th>
+              <th scope="col" className="px-6 py-1.5 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Description</th>
+              <th scope="col" className="px-6 py-1.5 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider text-red-600 dark:text-red-400">Debit (You Gave)</th>
+              <th scope="col" className="px-6 py-1.5 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider text-green-600 dark:text-green-400">Credit (You Got)</th>
+              <th scope="col" className="px-6 py-1.5 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Balance</th>
             </tr>
           </thead>
           <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-800">
             {displayEntries.map((entry) => (
               <tr key={entry.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{entry.formattedDate}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{entry.description}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-red-600 dark:text-red-400 font-medium">
+                <td className="px-6 py-1.5 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{entry.formattedDate}</td>
+                <td className="px-6 py-1.5 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{entry.description}</td>
+                <td className="px-6 py-1.5 whitespace-nowrap text-sm text-right text-red-600 dark:text-red-400 font-medium">
                   {entry.debit ? entry.debit.toLocaleString() : '-'}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-green-600 dark:text-green-400 font-medium">
+                <td className="px-6 py-1.5 whitespace-nowrap text-sm text-right text-green-600 dark:text-green-400 font-medium">
                   {entry.credit ? entry.credit.toLocaleString() : '-'}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-gray-900 dark:text-white">
+                <td className="px-6 py-1.5 whitespace-nowrap text-sm text-right font-bold text-gray-900 dark:text-white">
                   {entry.balance.toLocaleString()}
                 </td>
               </tr>
             ))}
             {displayEntries.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-6 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
+                <td colSpan={5} className="px-6 py-1.5 text-center text-sm text-gray-500 dark:text-gray-400">
                   No ledger entries found.
                 </td>
               </tr>

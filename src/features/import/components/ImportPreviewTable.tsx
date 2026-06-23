@@ -143,12 +143,12 @@ export const ImportPreviewTable = ({ data, errors, priceOverrides, onPriceChange
               <table className="w-full text-sm text-left">
                 <thead className="text-xs text-gray-500 bg-gray-50 dark:bg-gray-800/50 uppercase">
                   <tr>
-                    <th className="px-4 py-3 font-medium">Product Name</th>
-                    <th className="px-4 py-3 font-medium text-right">Quantity</th>
-                    <th className="px-4 py-3 font-medium text-right">Cost Price</th>
-                    <th className="px-4 py-3 font-medium text-right">Sale Price</th>
-                    <th className="px-4 py-3 font-medium text-right">Total Cost</th>
-                    <th className="px-4 py-3 font-medium text-center">Action</th>
+                    <th className="px-4 py-1.5 font-medium">Product Name</th>
+                    <th className="px-4 py-1.5 font-medium text-right">Quantity</th>
+                    <th className="px-4 py-1.5 font-medium text-right">Cost Price</th>
+                    <th className="px-4 py-1.5 font-medium text-right">Sale Price</th>
+                    <th className="px-4 py-1.5 font-medium text-right">Total Cost</th>
+                    <th className="px-4 py-1.5 font-medium text-center">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
@@ -160,7 +160,7 @@ export const ImportPreviewTable = ({ data, errors, priceOverrides, onPriceChange
 
                     return (
                       <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                        <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">
+                        <td className="px-4 py-1.5 font-medium text-gray-900 dark:text-white">
                           <input
                             type="text"
                             value={item.name}
@@ -168,7 +168,7 @@ export const ImportPreviewTable = ({ data, errors, priceOverrides, onPriceChange
                             className="w-full min-w-[150px] px-2 py-1 text-sm border border-transparent hover:border-gray-300 dark:hover:border-gray-700 rounded bg-transparent focus:bg-white dark:focus:bg-gray-900 focus:border-[#006970] focus:ring-1 focus:ring-[#006970] transition-colors"
                           />
                         </td>
-                        <td className="px-4 py-3 text-right">
+                        <td className="px-4 py-1.5 text-right">
                           <input
                             type="number"
                             min="1"
@@ -177,7 +177,7 @@ export const ImportPreviewTable = ({ data, errors, priceOverrides, onPriceChange
                             className="w-16 px-2 py-1 text-right text-sm border border-gray-300 dark:border-gray-700 rounded bg-white dark:bg-gray-900 focus:ring-2 focus:ring-[#006970]"
                           />
                         </td>
-                        <td className="px-4 py-3 text-right">
+                        <td className="px-4 py-1.5 text-right">
                           <input
                             type="number"
                             min="0"
@@ -186,7 +186,7 @@ export const ImportPreviewTable = ({ data, errors, priceOverrides, onPriceChange
                             className="w-24 px-2 py-1 text-right text-sm border border-gray-300 dark:border-gray-700 rounded bg-white dark:bg-gray-900 focus:ring-2 focus:ring-[#006970]"
                           />
                         </td>
-                        <td className="px-4 py-3 text-right">
+                        <td className="px-4 py-1.5 text-right">
                           <input
                             type="number"
                             min="0"
@@ -195,10 +195,10 @@ export const ImportPreviewTable = ({ data, errors, priceOverrides, onPriceChange
                             className="w-24 px-2 py-1 text-right text-sm border border-gray-300 dark:border-gray-700 rounded bg-white dark:bg-gray-900 focus:ring-2 focus:ring-[#006970]"
                           />
                         </td>
-                        <td className="px-4 py-3 text-right font-medium text-gray-700 dark:text-gray-300">
+                        <td className="px-4 py-1.5 text-right font-medium text-gray-700 dark:text-gray-300">
                           Rs {rowTotal.toLocaleString()}
                         </td>
-                        <td className="px-4 py-3 text-center">
+                        <td className="px-4 py-1.5 text-center">
                           <button 
                             onClick={() => handleRemoveItem(idx)}
                             className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors"

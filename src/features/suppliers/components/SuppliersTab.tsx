@@ -83,24 +83,24 @@ export const SuppliersTab = () => {
         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
           <thead className="bg-gray-50 dark:bg-gray-800/50 sticky top-0 z-10">
             <tr>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Name</th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Company</th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Phone</th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Current Payable</th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total Purchases</th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
-              <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+              <th scope="col" className="px-6 py-1.5 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Name</th>
+              <th scope="col" className="px-6 py-1.5 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Company</th>
+              <th scope="col" className="px-6 py-1.5 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Phone</th>
+              <th scope="col" className="px-6 py-1.5 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Current Payable</th>
+              <th scope="col" className="px-6 py-1.5 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total Purchases</th>
+              <th scope="col" className="px-6 py-1.5 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+              <th scope="col" className="px-6 py-1.5 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
           <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-800">
             {filteredSuppliers.map((supplier) => (
               <tr key={supplier.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{supplier.name}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{supplier.companyName || '-'}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{supplier.phone}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-orange-600 dark:text-orange-400">Rs {(supplier.currentPayable || 0).toLocaleString()}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">Rs {(supplier.totalPurchases || 0).toLocaleString()}</td>
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="px-6 py-1.5 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{supplier.name}</td>
+                <td className="px-6 py-1.5 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{supplier.companyName || '-'}</td>
+                <td className="px-6 py-1.5 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{supplier.phone}</td>
+                <td className="px-6 py-1.5 whitespace-nowrap text-sm font-semibold text-orange-600 dark:text-orange-400">Rs {(supplier.currentPayable || 0).toLocaleString()}</td>
+                <td className="px-6 py-1.5 whitespace-nowrap text-sm text-gray-900 dark:text-white">Rs {(supplier.totalPurchases || 0).toLocaleString()}</td>
+                <td className="px-6 py-1.5 whitespace-nowrap">
                   <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                     supplier.status === 'active' 
                       ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' 
@@ -109,7 +109,7 @@ export const SuppliersTab = () => {
                     {supplier.status || 'Active'}
                   </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <td className="px-6 py-1.5 whitespace-nowrap text-right text-sm font-medium">
                   <div className="flex justify-end gap-2">
                     <button 
                       className="text-gray-400 hover:text-blue-600 transition-colors" 
@@ -138,7 +138,7 @@ export const SuppliersTab = () => {
             ))}
             {filteredSuppliers.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-6 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
+                <td colSpan={7} className="px-6 py-1.5 text-center text-sm text-gray-500 dark:text-gray-400">
                   {isLoading ? 'Loading suppliers...' : 'No suppliers found.'}
                 </td>
               </tr>

@@ -120,15 +120,15 @@ export const StockTable = ({ products, isLoading }: StockTableProps) => {
               key={product.id}
               className={`group transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/40 ${rowBg(product)}`}
             >
-              <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">
+              <td className="px-4 py-1.5 font-medium text-gray-900 dark:text-white">
                 {product.name}
               </td>
-              <td className="px-4 py-3">
+              <td className="px-4 py-1.5">
                 <code className="text-xs bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded text-gray-600 dark:text-gray-400">
                   {product.sku}
                 </code>
               </td>
-              <td className="px-4 py-3">
+              <td className="px-4 py-1.5">
                 {editingId === product.id ? (
                   <div className="flex items-center gap-2">
                     <input
@@ -157,7 +157,7 @@ export const StockTable = ({ products, isLoading }: StockTableProps) => {
                   </span>
                 )}
               </td>
-              <td className="px-4 py-3">
+              <td className="px-4 py-1.5">
                 <span className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium ${
                     product.status === StockStatus.HEALTHY ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400' :
                     product.status === StockStatus.LOW_STOCK ? 'bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400' :
@@ -166,7 +166,7 @@ export const StockTable = ({ products, isLoading }: StockTableProps) => {
                   {product.status.replace('_', ' ')}
                 </span>
               </td>
-              <td className="px-4 py-3">
+              <td className="px-4 py-1.5">
                 <button
                   className="p-1.5 text-gray-400 hover:text-[#006970] hover:bg-[#006970]/10 rounded-lg transition-colors"
                   title="View Stock History"

@@ -95,7 +95,7 @@ export const ProductTable = ({ products, isLoading }: ProductTableProps) => {
                 key={product.id}
                 className={`group transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/40 ${rowBg(product)}`}
               >
-                <td className="px-4 py-3">
+                <td className="px-4 py-1.5">
                   <button
                     onClick={() => setViewProduct(product)}
                     className="font-medium text-gray-900 dark:text-white whitespace-nowrap hover:text-[#006970] dark:hover:text-[#00B4BB] transition-colors text-left"
@@ -103,15 +103,15 @@ export const ProductTable = ({ products, isLoading }: ProductTableProps) => {
                     {product.name}
                   </button>
                 </td>
-                <td className="px-4 py-3">
+                <td className="px-4 py-1.5">
                   <span className="text-gray-500 dark:text-gray-400">{product.category}</span>
                 </td>
-                <td className="px-4 py-3">
+                <td className="px-4 py-1.5">
                   <code className="text-xs bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded text-gray-600 dark:text-gray-400">
                     {product.sku}
                   </code>
                 </td>
-                <td className="px-4 py-3">
+                <td className="px-4 py-1.5">
                   <span
                     className={`font-semibold ${
                       product.status === StockStatus.OUT_OF_STOCK ? 'text-red-600 dark:text-red-400' :
@@ -122,15 +122,15 @@ export const ProductTable = ({ products, isLoading }: ProductTableProps) => {
                     {product.stock} {product.unit}
                   </span>
                 </td>
-                <td className="px-4 py-3">
+                <td className="px-4 py-1.5">
                   <StockStatusBadge status={product.status} />
                 </td>
-                <td className="px-4 py-3 whitespace-nowrap">
+                <td className="px-4 py-1.5 whitespace-nowrap">
                   <span className="text-gray-700 dark:text-gray-300 font-medium">
                     PKR {product.price.toLocaleString()}
                   </span>
                 </td>
-                <td className="px-4 py-3">
+                <td className="px-4 py-1.5">
                   <ProductActions
                     product={product}
                     onView={setViewProduct}

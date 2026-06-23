@@ -438,20 +438,20 @@ export const ProductForm = () => {
           <table className="w-full text-left text-sm text-gray-600 dark:text-gray-400">
             <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-800/80 sticky top-0 shadow-sm z-10">
               <tr>
-                <th className="px-6 py-3 font-semibold">S.No</th>
-                <th className="px-6 py-3 font-semibold">Name</th>
-                <th className="px-6 py-3 font-semibold">SKU</th>
-                <th className="px-6 py-3 font-semibold text-right">Stock</th>
-                <th className="px-6 py-3 font-semibold text-right">Cost</th>
-                <th className="px-6 py-3 font-semibold text-right">Sale</th>
-                <th className="px-6 py-3 font-semibold text-center">Status</th>
-                <th className="px-6 py-3 font-semibold text-right">Actions</th>
+                <th className="px-6 py-1.5 font-semibold">S.No</th>
+                <th className="px-6 py-1.5 font-semibold">Name</th>
+                <th className="px-6 py-1.5 font-semibold">SKU</th>
+                <th className="px-6 py-1.5 font-semibold text-right">Stock</th>
+                <th className="px-6 py-1.5 font-semibold text-right">Cost</th>
+                <th className="px-6 py-1.5 font-semibold text-right">Sale</th>
+                <th className="px-6 py-1.5 font-semibold text-center">Status</th>
+                <th className="px-6 py-1.5 font-semibold text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
               {recentProducts.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-8 text-center text-gray-500">
+                  <td colSpan={8} className="px-6 py-1.5 text-center text-gray-500">
                     No products recently added.
                   </td>
                 </tr>
@@ -464,26 +464,26 @@ export const ProductForm = () => {
                   
                   return (
                     <tr key={product._id || product.id || idx} className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                      <td className="px-6 py-4 font-medium">{idx + 1}</td>
-                      <td className="px-6 py-4 text-gray-900 dark:text-gray-200 font-medium truncate max-w-[150px]" title={product.name}>
+                      <td className="px-6 py-1.5 font-medium">{idx + 1}</td>
+                      <td className="px-6 py-1.5 text-gray-900 dark:text-gray-200 font-medium truncate max-w-[150px]" title={product.name}>
                         {product.name}
                       </td>
-                      <td className="px-6 py-4 font-mono text-xs text-gray-500">{product.sku || '-'}</td>
-                      <td className="px-6 py-4 text-right font-medium">
+                      <td className="px-6 py-1.5 font-mono text-xs text-gray-500">{product.sku || '-'}</td>
+                      <td className="px-6 py-1.5 text-right font-medium">
                         <span className={isLowStock ? 'text-red-500' : 'text-gray-900 dark:text-gray-200'}>
                           {currentStock}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-right">PKR {currentCost.toLocaleString()}</td>
-                      <td className="px-6 py-4 text-right font-medium text-gray-900 dark:text-gray-200">PKR {product.price?.toLocaleString()}</td>
-                      <td className="px-6 py-4 text-center">
+                      <td className="px-6 py-1.5 text-right">PKR {currentCost.toLocaleString()}</td>
+                      <td className="px-6 py-1.5 text-right font-medium text-gray-900 dark:text-gray-200">PKR {product.price?.toLocaleString()}</td>
+                      <td className="px-6 py-1.5 text-center">
                         {isLowStock ? (
                            <span title="Low Stock"><AlertTriangle className="w-4 h-4 text-orange-500 mx-auto" /></span>
                         ) : (
                            <span title="Saved"><CheckCircle className="w-4 h-4 text-green-500 mx-auto" /></span>
                         )}
                       </td>
-                      <td className="px-6 py-4 text-right">
+                      <td className="px-6 py-1.5 text-right">
                         <div className="flex items-center justify-end gap-3">
                           <button 
                             onClick={() => handleEdit(product)}

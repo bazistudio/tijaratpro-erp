@@ -12,6 +12,7 @@ import {
   BarChart3,
   FileUp,
   Bug,
+  BookOpen,
 } from 'lucide-react';
 import { NavigationGroup } from '../../types/navigation';
 
@@ -48,6 +49,12 @@ export const shopAdminNavigation: NavigationGroup[] = [
     items: [
       { name: 'Repairs', href: '/dashboard/shop-admin/repairs', icon: Wrench },
       { name: 'Expenses', href: '/dashboard/shop-admin/expenses', icon: Receipt },
+    ],
+  },
+  {
+    label: 'Accounting',
+    items: [
+      { name: 'Ledger', href: '/dashboard/shop-admin/ledger', icon: BookOpen },
     ],
   },
   {

@@ -1,0 +1,98 @@
+import { LedgerTransaction, LedgerSummary, LedgerQuickStats } from '../types/ledger.types';
+
+export const mockLedgerSummary: LedgerSummary = {
+  totalReceivable: 125000,
+  totalPayable: 98000,
+  cashIn: 350000,
+  cashOut: 200000,
+};
+
+export const mockLedgerQuickStats: LedgerQuickStats = {
+  todaySales: 25000,
+  todayExpenses: 5000,
+  pendingReceivable: 80000,
+  pendingPayable: 40000,
+};
+
+export const mockTransactions: LedgerTransaction[] = [
+  {
+    id: 'INV-1001',
+    date: '23 Jun 2026, 11:45 AM',
+    partyName: 'Ahmed Ali',
+    partyPhone: '03001234567',
+    type: 'Sale',
+    sourceType: 'sale',
+    debit: 5000,
+    credit: null,
+    balance: 5000,
+    status: 'unpaid',
+    items: [
+      { id: '1', name: 'Pepsi', quantity: 2, price: 200, total: 400 },
+      { id: '2', name: 'Chips', quantity: 1, price: 100, total: 100 },
+    ],
+    subtotal: 500,
+    paidAmount: 0,
+    remainingAmount: 5000,
+  },
+  {
+    id: 'PAY-2001',
+    date: '23 Jun 2026, 09:30 AM',
+    partyName: 'ABC Supplier',
+    partyPhone: '03211234567',
+    type: 'Payment',
+    sourceType: 'supplier_payment',
+    debit: null,
+    credit: 3000,
+    balance: 2000,
+    status: 'paid',
+    notes: 'Paid via bank transfer',
+  },
+  {
+    id: 'INV-1002',
+    date: '22 Jun 2026, 04:15 PM',
+    partyName: 'Bilal Khan',
+    partyPhone: '03331234567',
+    type: 'Sale',
+    sourceType: 'sale',
+    debit: 3000,
+    credit: null,
+    balance: 2000,
+    status: 'partial',
+    items: [
+      { id: '3', name: 'Keyboard', quantity: 1, price: 1500, total: 1500 },
+      { id: '4', name: 'Mouse', quantity: 1, price: 1500, total: 1500 },
+    ],
+    subtotal: 3000,
+    paidAmount: 1000,
+    remainingAmount: 2000,
+  },
+  {
+    id: 'PUR-001',
+    date: '21 Jun 2026, 02:00 PM',
+    partyName: 'Tech Wholesalers',
+    type: 'Purchase',
+    sourceType: 'purchase',
+    debit: null,
+    credit: 7000,
+    balance: -7000,
+    status: 'unpaid',
+    items: [
+      { id: '5', name: 'Monitors', quantity: 1, price: 7000, total: 7000 },
+    ],
+    subtotal: 7000,
+    paidAmount: 0,
+    remainingAmount: 7000,
+  },
+  {
+    id: 'EXP-004',
+    date: '20 Jun 2026, 10:00 AM',
+    partyName: 'K-Electric',
+    type: 'Expense',
+    sourceType: 'expense',
+    debit: 800,
+    credit: null,
+    balance: -6200,
+    status: 'paid',
+    notes: 'Electricity bill for June',
+  },
+];

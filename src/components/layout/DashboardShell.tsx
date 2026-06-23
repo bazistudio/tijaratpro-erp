@@ -9,7 +9,7 @@ interface DashboardShellProps {
 export const DashboardShell = ({ children }: DashboardShellProps) => {
   return (
     <main className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-950 transition-colors duration-200">
-      <div className="mx-auto max-w-[1800px] py-6 sm:py-8 px-4 sm:px-6 md:px-8">
+      <div className="mx-auto max-w-[1800px] py-6 sm:py-8 px-4 sm:px-6 md:px-8" style={{ zoom: 0.8 }}>
         {children}
       </div>
     </main>
