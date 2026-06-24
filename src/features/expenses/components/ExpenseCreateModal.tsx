@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useExpensesStore } from '../store/expenses.store';
 import { X } from 'lucide-react';
 import { ExpenseCategory } from '../types/expenses.types';
@@ -10,14 +10,22 @@ interface Props {
 
 export const ExpenseCreateModal: React.FC<Props> = ({ isOpen, onClose }) => {
   const { addExpense, isAdding } = useExpensesStore();
-  const [formData, setFormData] = useState({
+  const defaultFormData = {
     title: '',
     category: 'other' as ExpenseCategory,
     amount: '',
     paymentMethod: 'cash' as 'cash' | 'bank' | 'online',
     status: 'paid' as 'paid' | 'pending',
     note: ''
-  });
+  };
+
+  const [formData, setFormData] = useState(defaultFormData);
+
+  useEffect(() => {
+    if (isOpen) {
+      setFormData(defaultFormData);
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -143,7 +151,7 @@ export const ExpenseCreateModal: React.FC<Props> = ({ isOpen, onClose }) => {
               disabled={isAdding}
               className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-50"
             >
-              {isAdding ? 'Recording...' : 'Record Expense'}
+              {isAdding ? 'Saving...' : 'Record Expense'}
             </button>
           </div>
         </form>

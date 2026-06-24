@@ -30,7 +30,7 @@ export const ExpensesTable: React.FC = () => {
   };
 
   if (isLoading && items.length === 0) {
-    return <div className="h-64 flex items-center justify-center text-neutral-500">Loading expenses...</div>;
+    return <div className="h-64 flex items-center justify-center text-neutral-500 font-medium">Loading expenses...</div>;
   }
 
   const totalPages = Math.ceil(total / filters.limit);
@@ -109,8 +109,11 @@ export const ExpensesTable: React.FC = () => {
               ))}
               {items.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-neutral-500">
-                    No expenses found.
+                  <td colSpan={7} className="px-6 py-12 text-center">
+                    <div className="flex flex-col items-center justify-center">
+                      <p className="text-neutral-500 dark:text-neutral-400 mb-2 font-medium">No expenses recorded yet.</p>
+                      <p className="text-sm text-neutral-400 dark:text-neutral-500">Click "Add Expense" to create your first expense.</p>
+                    </div>
                   </td>
                 </tr>
               )}

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { ExpenseItem, ExpenseStats } from '../types/expenses.types';
 import { expensesApi } from '../services/expenses.api';
+import toast from 'react-hot-toast';
 
 export type ExpenseFilterState = {
   page: number;
@@ -71,8 +72,11 @@ export const useExpensesStore = create<ExpensesState>((set, get) => ({
       await expensesApi.addExpense(expense);
       await get().fetchExpenses(); // Refresh list and stats
       set({ isAdding: false });
+      toast.success('Expense recorded and posted to ledger');
     } catch (error: any) {
-      set({ error: error.message || 'Failed to add expense', isAdding: false });
+      const errorMsg = error?.response?.data?.message || error?.message || 'Operation failed';
+      set({ error: errorMsg, isAdding: false });
+      toast.error(errorMsg);
       throw error;
     }
   },
@@ -82,8 +86,11 @@ export const useExpensesStore = create<ExpensesState>((set, get) => ({
       set({ isLoading: true, error: null });
       await expensesApi.updateExpense(id, expense);
       await get().fetchExpenses(); // Refresh to get accurate sorted list and new stats
+      toast.success('Expense updated and posted to ledger');
     } catch (error: any) {
-      set({ error: error.message || 'Failed to update expense', isLoading: false });
+      const errorMsg = error?.response?.data?.message || error?.message || 'Operation failed';
+      set({ error: errorMsg, isLoading: false });
+      toast.error(errorMsg);
       throw error;
     }
   },
@@ -93,8 +100,11 @@ export const useExpensesStore = create<ExpensesState>((set, get) => ({
       set({ isLoading: true, error: null });
       await expensesApi.deleteExpense(id);
       await get().fetchExpenses(); // Refresh to reflect deletion
+      toast.success('Expense deleted and ledger reversed');
     } catch (error: any) {
-      set({ error: error.message || 'Failed to delete expense', isLoading: false });
+      const errorMsg = error?.response?.data?.message || error?.message || 'Operation failed';
+      set({ error: errorMsg, isLoading: false });
+      toast.error(errorMsg);
       throw error;
     }
   }
