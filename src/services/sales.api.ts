@@ -23,11 +23,11 @@ export const salesApi = {
     return response.data;
   },
 
-  getOrders: async () => {
+  getOrders: async (params?: { startDate?: string; endDate?: string; limit?: number; orderNumber?: string }) => {
     const response = await axiosInstance.get<{
       success: boolean;
       data: any[];
-    }>('/api/orders');
+    }>('/api/orders', { params });
     return response.data;
   },
 

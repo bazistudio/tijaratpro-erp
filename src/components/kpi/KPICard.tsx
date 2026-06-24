@@ -21,14 +21,19 @@ export const KPICard = ({ data, isLoading = false }: KPICardProps) => {
     );
   }
 
-  const { title, value, trend, icon, timeframe = 'vs last month' } = data;
+  const { title, value, trend, icon, timeframe = 'vs last month', onClick } = data;
   
   const isPositive = trend > 0;
   const isNegative = trend < 0;
   const isNeutral = trend === 0;
 
   return (
-    <div className="flex flex-col bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200 border border-gray-100 dark:border-gray-800">
+    <div 
+      onClick={onClick}
+      className={`flex flex-col bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-800 transition-all duration-200 ${
+        onClick ? 'cursor-pointer hover:shadow-md hover:border-[#006970]/30 dark:hover:border-[#00B4BB]/30 active:scale-[0.98]' : 'hover:shadow-md'
+      }`}
+    >
       <div className="flex items-start justify-between mb-4 gap-4">
         <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
           {title}

@@ -7,4 +7,5 @@ export interface KPIData {
   icon: ReactNode;
   format?: 'currency' | 'number' | 'percentage';
   timeframe?: string;
+  onClick?: () => void;
 }

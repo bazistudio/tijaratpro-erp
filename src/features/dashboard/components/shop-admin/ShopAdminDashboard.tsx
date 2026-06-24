@@ -6,12 +6,33 @@ import { DollarSign, TrendingUp, CreditCard, Receipt, Plus } from 'lucide-react'
 import { KPIGrid } from '@/components/kpi/KPIGrid';
 import { KPIData } from '@/types/dashboard/kpi.types';
 import { StockWidget } from '@/features/inventory/stock/StockWidget';
+import { DailySalesModal } from './DailySalesModal';
 
 import { useQuery } from '@tanstack/react-query';
 import { dashboardApi } from '@/services/dashboard.api';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 
 export const ShopAdminDashboard = () => {
   const [filter, setFilter] = useState<'today' | 'week' | 'month'>('today');
+  const [isDailySalesModalOpen, setIsDailySalesModalOpen] = useState(false);
+  
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchInvoice = searchParams.get('invoice');
+
+  React.useEffect(() => {
+    if (searchInvoice) {
+      setIsDailySalesModalOpen(true);
+    }
+  }, [searchInvoice]);
+
+  const handleCloseModal = () => {
+    setIsDailySalesModalOpen(false);
+    if (searchInvoice) {
+      router.replace(pathname, { scroll: false });
+    }
+  };
   
   const { data: dashboardResponse, isLoading } = useQuery({
     queryKey: ['dashboard-metrics'],
@@ -31,6 +52,15 @@ export const ShopAdminDashboard = () => {
   };
 
   const kpiData: KPIData[] = [
+    {
+      title: "Today's Sales",
+      value: isLoading ? 'Loading...' : `${metrics?.summary.orders.today || 0} Sales`,
+      trend: 0,
+      icon: <Receipt className="h-5 w-5" />,
+      format: 'number',
+      timeframe: `₨ ${(metrics?.summary.revenue.today || 0).toLocaleString()}`,
+      onClick: () => setIsDailySalesModalOpen(true),
+    },
     {
       title: 'Net Revenue',
       value: isLoading ? 'Loading...' : `₨ ${(getFilterValue('revenue', filter)).toLocaleString()}`,
@@ -101,6 +131,11 @@ export const ShopAdminDashboard = () => {
           [Outstanding Balances — Phase 5]
         </div>
       </div>
+
+      <DailySalesModal 
+        isOpen={isDailySalesModalOpen} 
+        onClose={handleCloseModal} 
+      />
     </div>
   );
 };

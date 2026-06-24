@@ -92,7 +92,9 @@ export const SearchInput = ({ placeholder = "Search products, customers, invoice
       router.push(`/dashboard/shop-admin/suppliers/${item._id}`);
       handleLinkClick();
     } else if (type === 'invoice') {
-      router.push(`/dashboard/shop-admin/history?invoice=${item._id}`);
+      const orderNum = item.orderNumber || item.invoiceNumber || query;
+      const cleanNum = orderNum.replace(/^ORD-/i, '');
+      router.push(`/dashboard/shop-admin?invoice=${cleanNum}`);
       handleLinkClick();
     }
   };
@@ -236,10 +238,15 @@ export const SearchInput = ({ placeholder = "Search products, customers, invoice
               <Search className="h-5 w-5" aria-hidden="true" />
             )}
           </div>
+          {category === 'invoice' && (
+            <span className="absolute inset-y-0 left-10 flex items-center pr-1 text-sm font-medium text-gray-400 dark:text-gray-500 select-none">
+              ORD-
+            </span>
+          )}
           <input
             id="search-field"
-            className="block h-10 w-full bg-transparent border-0 py-2 pl-10 pr-3 text-gray-900 dark:text-gray-100 placeholder-gray-500 focus:outline-none sm:text-sm"
-            placeholder={placeholder}
+            className={`block h-10 w-full bg-transparent border-0 py-2 ${category === 'invoice' ? 'pl-20' : 'pl-10'} pr-3 text-gray-900 dark:text-gray-100 placeholder-gray-500 focus:outline-none sm:text-sm`}
+            placeholder={category === 'invoice' ? '000027' : placeholder}
             type="search"
             name="search"
             autoComplete="off"
@@ -441,9 +448,10 @@ export const SearchInput = ({ placeholder = "Search products, customers, invoice
                       >
                         <div>
                           <p className="text-sm font-medium text-gray-900 dark:text-gray-100 group-hover:text-[#006970] dark:group-hover:text-[#008990] flex items-center">
-                            Invoice #{invoice.invoiceNumber}
+                            Invoice #{invoice.orderNumber || invoice.invoiceNumber}
                             {getMatchBadge(invoice, query, [
-                              { key: 'invoiceNumber', label: 'Invoice #' }
+                              { key: 'invoiceNumber', label: 'Invoice #' },
+                              { key: 'orderNumber', label: 'Order #' }
                             ])}
                           </p>
                           <p className="text-xs text-gray-500">
