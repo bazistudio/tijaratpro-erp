@@ -52,8 +52,8 @@ export const printFormatter = {
 
   formatPaymentReceipt: (ledger: any, settings: PrinterSettings, shop: ShopHeader): string => {
     const invoice: UnifiedInvoice = {
-      invoiceNo: ledger.transactionId || ledger._id.slice(-8).toUpperCase(),
-      date: new Date(ledger.createdAt).toLocaleString(),
+      invoiceNo: ledger.transactionId || (ledger.id ? ledger.id.slice(-8).toUpperCase() : ledger._id?.slice(-8).toUpperCase()),
+      date: new Date(ledger.createdAt || ledger.timestamp).toLocaleString(),
       customer: { name: ledger.customerId?.name || ledger.supplierId?.name || 'Party' },
       items: [{ name: `Payment: ${ledger.description || ledger.type}`, qty: 1, price: ledger.amount, total: ledger.amount }],
       subtotal: ledger.amount,
@@ -116,12 +116,16 @@ export const printFormatter = {
       const isCustomer = party.type === 'CUSTOMER';
       const showDebit = isCustomer ? !isPayment : isPayment;
       const showCredit = isCustomer ? isPayment : !isPayment;
-      const bal = entry.runningBalance;
+      const bal = entry.runningBalance || 0;
+
+      let displayDesc = entry.description || '';
+      if (displayDesc.toLowerCase().includes('credit')) displayDesc = 'Credit';
+      else if (displayDesc.toLowerCase().includes('cash')) displayDesc = 'Cash';
 
       html += '<tr style="border-bottom: 1px solid #eee;">';
       html += '<td style="padding: 5px;">' + new Date(entry.timestamp).toLocaleDateString() + '</td>';
       html += '<td style="padding: 5px;">' + entry.transactionId + '</td>';
-      html += '<td style="padding: 5px;">' + entry.description + '</td>';
+      html += '<td style="padding: 5px;">' + displayDesc + '</td>';
       html += '<td style="text-align: right; padding: 5px;">' + (showDebit ? entry.amount.toLocaleString() : '-') + '</td>';
       html += '<td style="text-align: right; padding: 5px;">' + (showCredit ? entry.amount.toLocaleString() : '-') + '</td>';
       html += '<td style="text-align: right; padding: 5px;">' + Math.abs(bal).toLocaleString() + (bal < 0 ? ' CR' : ' DR') + '</td>';

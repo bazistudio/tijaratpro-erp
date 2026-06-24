@@ -3,6 +3,9 @@ import { persist } from 'zustand/middleware';
 import toast from 'react-hot-toast';
 import { DBInventory } from '@/types/db.types';
 import { salesApi } from '@/services/sales.api';
+import { customerApi } from '@/services/customer.api';
+import { shopApi } from '@/services/shop.api';
+import { ledgerApi } from '@/services/ledger.api';
 import { useInventoryStore } from '@/features/inventory/core/inventory.store';
 import { InvoiceDocument } from '../services/document/document.service';
 
@@ -73,6 +76,7 @@ export interface SaleSession {
   
   isScanMode: boolean;
   transactionId: string;
+  linkedInvoiceId?: string;
   createdAt: number;
   updatedAt: number;
 }
@@ -95,21 +99,38 @@ interface PosStore {
 
   // Cart Actions (operates on active tab)
   setSessionMode: (mode: 'sale' | 'replace') => void;
+  prepareReplaceExchange: () => void;
   addToCart: (product: DBInventory, isReturn?: boolean) => void;
   updateQuantity: (productId: string, quantity: number, isReturn?: boolean) => void;
   removeFromCart: (productId: string, isReturn?: boolean) => void;
   clearCart: () => void;
+  loadInvoice: (invoice: any) => void;
   
   // Global Discount Action
   setInvoiceDiscount: (discountType: 'percentage' | 'fixed', discountValue: number) => void;
 
   // Transaction Lifecycle
   completeTransaction: (paymentBreakdown: { method: string; amount: number }[], customer: { id: string; name: string } | null) => Promise<any>;
+  processCashReturn: () => Promise<any>;
+  processInvoiceReturn: (skipOverflowCheck?: boolean, forceCashRefund?: boolean) => Promise<any>;
   setLastInvoice: (invoice: InvoiceDocument | null) => void;
 
   // Status Message
   lastActionMessage: string | null;
   setLastActionMessage: (msg: string | null) => void;
+
+  // Return Overflow Modal State
+  returnOverflowState: {
+    isOpen: boolean;
+    currentBalance: number;
+    refundAmount: number;
+    overflowAmount: number;
+    shopCashBalance: number;
+    onKeepCredit: () => void;
+    onRefundCash: () => void;
+    onCancel: () => void;
+  } | null;
+  setReturnOverflowState: (state: PosStore['returnOverflowState']) => void;
 
   // Selectors
   getActiveSession: () => SaleSession | undefined;
@@ -148,8 +169,10 @@ export const usePosStore = create<PosStore>()(
       transactions: [],
       lastInvoice: null,
       lastActionMessage: null,
+      returnOverflowState: null,
       
       setLastActionMessage: (msg) => set({ lastActionMessage: msg }),
+      setReturnOverflowState: (state) => set({ returnOverflowState: state }),
 
       createSaleTab: () => {
         const { saleTabs } = get();
@@ -225,6 +248,55 @@ export const usePosStore = create<PosStore>()(
               ...tab,
               mode,
               transactionType: mode === 'replace' ? 'replace_exchange' : 'sale'
+            };
+          })
+        });
+      },
+
+      prepareReplaceExchange: () => {
+        const { saleTabs, activeTabId } = get();
+        set({
+          saleTabs: saleTabs.map(tab => {
+            if (tab.id !== activeTabId) return tab;
+            
+            // If in sale mode with items, move them to returns and bake in the discount
+            if (tab.mode === 'sale' && tab.cart.length > 0) {
+              const subtotal = tab.cart.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
+              let discountAmt = 0;
+              if (tab.invoiceDiscountType === 'percentage') {
+                discountAmt = Math.max(0, subtotal) * ((tab.invoiceDiscountValue || 0) / 100);
+              } else {
+                discountAmt = tab.invoiceDiscountValue || 0;
+              }
+
+              const newReturnedItems = tab.cart.map(item => {
+                const itemTotal = item.unitPrice * item.quantity;
+                const proportion = subtotal > 0 ? (itemTotal / subtotal) : 0;
+                const itemDiscount = discountAmt * proportion;
+                const unitDiscount = item.quantity > 0 ? (itemDiscount / item.quantity) : 0;
+                
+                return {
+                  ...item,
+                  unitPrice: Math.max(0, item.unitPrice - unitDiscount)
+                };
+              });
+
+              return {
+                ...tab,
+                mode: 'replace',
+                transactionType: 'replace_exchange',
+                returnedItems: [...tab.returnedItems, ...newReturnedItems],
+                cart: [],
+                invoiceDiscountValue: 0 // Reset for new items
+              };
+            }
+            
+            // Otherwise just toggle mode
+            const newMode = tab.mode === 'sale' ? 'replace' : 'sale';
+            return {
+              ...tab,
+              mode: newMode,
+              transactionType: newMode === 'replace' ? 'replace_exchange' : 'sale'
             };
           })
         });
@@ -340,7 +412,39 @@ export const usePosStore = create<PosStore>()(
               returnedItems: [],
               mode: 'sale',
               transactionType: 'sale',
-              transactionId: `TXN-${Date.now()}` // Reset TXN id for next sale
+              transactionId: `TXN-${Date.now()}`, // Reset TXN id for next sale
+              linkedInvoiceId: undefined
+            };
+          })
+        });
+      },
+
+      loadInvoice: (invoice: any) => {
+        const { saleTabs, activeTabId } = get();
+        
+        set({
+          saleTabs: saleTabs.map(tab => {
+            if (tab.id !== activeTabId) return tab;
+            
+            const mappedItems: CartItem[] = (invoice.items || []).map((i: any) => ({
+              productId: i.productId || i.product || i._id,
+              sku: i.sku || '',
+              barcode: i.barcode || '',
+              productName: i.name || i.productName || 'Unknown Item',
+              unitPrice: i.price || i.unitPrice || 0,
+              maxStock: i.quantity || 1, // Restrict return to originally purchased quantity
+              quantity: i.quantity || 1
+            }));
+
+            toast.success(`Invoice ${invoice.orderNumber || invoice._id} loaded`);
+            
+            const loadedCustomer = invoice.customer || invoice.customerId;
+            
+            return {
+              ...tab,
+              cart: mappedItems,
+              linkedInvoiceId: invoice._id || invoice.orderNumber,
+              customer: loadedCustomer ? { id: loadedCustomer._id || loadedCustomer.id, name: loadedCustomer.name || 'Unknown' } : tab.customer
             };
           })
         });
@@ -369,15 +473,24 @@ export const usePosStore = create<PosStore>()(
           }
 
           const payload = {
-            items: session.cart.map(item => ({
-              productId: item.productId,
-              quantity: item.quantity,
-              price: item.unitPrice
-            })),
-            customerId: customer?.id === 'walk-in' ? undefined : customer?.id,
+            items: [
+              ...session.cart.map(item => ({
+                productId: item.productId,
+                quantity: item.quantity,
+                price: item.unitPrice
+              })),
+              ...session.returnedItems.map(item => ({
+                productId: item.productId,
+                quantity: -Math.abs(item.quantity),
+                price: item.unitPrice
+              }))
+            ],
+            customerId: session.customer?.id === 'walk-in' ? undefined : session.customer?.id,
             paymentMethod: method,
+            transactionType: session.transactionType,
             taxRate: 0,
             discount: session.invoiceDiscountValue || 0,
+            linkedInvoiceId: session.linkedInvoiceId || undefined,
           };
 
           let result;
@@ -447,6 +560,190 @@ export const usePosStore = create<PosStore>()(
         } catch (error: any) {
           console.error("Transaction failed", error);
           toast.error(error.message || "Payment failed. Nothing was saved.");
+          throw error;
+        }
+      },
+
+      processCashReturn: async () => {
+        const session = get().getActiveSession();
+        if (!session) return;
+
+        if (session.cart.length === 0 && !session.invoiceDiscountValue) {
+          toast.error("Cart is empty and no adjustment value set.");
+          return;
+        }
+        
+        const isPureAdjustment = session.cart.length === 0;
+
+        try {
+          const payload = {
+            items: session.cart.map(item => ({
+              productId: item.productId,
+              // Send negative quantity to process as return and restock
+              quantity: -Math.abs(item.quantity),
+              price: item.unitPrice
+            })),
+            customerId: session.customer?.id === 'walk-in' ? undefined : session.customer?.id,
+            paymentMethod: 'cash',
+            transactionType: isPureAdjustment ? 'refund_adjustment' : 'sale',
+            taxRate: 0,
+            // Convert positive discount input into negative for the return order
+            discount: -(session.invoiceDiscountValue || 0),
+            linkedInvoiceId: session.linkedInvoiceId || undefined,
+          };
+
+          let result;
+          try {
+            result = await salesApi.createOrder(payload);
+          } catch (apiError: any) {
+            const errorMessage = apiError.response?.data?.message || apiError.message || "Unknown API error";
+            toast.error("Return failed: " + errorMessage);
+            throw apiError;
+          }
+
+          if (!result.success) throw new Error(result.message);
+
+          set(state => ({
+            transactions: [...state.transactions, result.order as any]
+          }));
+          get().clearCart();
+          
+          try {
+            useInventoryStore.getState().forceSync();
+          } catch(e) {}
+
+          toast.success("Walk-in Return processed successfully. Cash reduced.");
+          return result;
+        } catch (error: any) {
+          console.error("Cash Return failed", error);
+          throw error;
+        }
+      },
+
+      processInvoiceReturn: async (skipOverflowCheck = false, forceCashRefund = false) => {
+        const session = get().getActiveSession();
+        if (!session) return;
+
+        if (!session.linkedInvoiceId) {
+          toast.error("No invoice linked. Search for an invoice first.");
+          return;
+        }
+
+        if (session.cart.length === 0) {
+          toast.error("No items in cart to return.");
+          return;
+        }
+
+        const returnTotal = session.cart.reduce((sum, item) => sum + (item.unitPrice * item.quantity), 0);
+        const finalRefund = returnTotal - (session.invoiceDiscountValue || 0);
+
+        // ─── Dual Action Overflow Check ──────────────────────────────────────
+        if (!skipOverflowCheck && session.customer?.id && session.customer.id !== 'walk-in') {
+          try {
+            const customerRes = await customerApi.getCustomerDetail(session.customer.id);
+            const currentBalance = customerRes.data?.stats?.outstanding || 0;
+
+            if (finalRefund > currentBalance) {
+              const overflowAmount = finalRefund - currentBalance;
+              
+              // Fetch Shop Cash Balance for validation
+              const shopRes = await shopApi.getMyShop();
+              const shopCashBalance = shopRes.data?.cashBalance || 0;
+
+              // Trigger Modal State
+              set({
+                returnOverflowState: {
+                  isOpen: true,
+                  currentBalance,
+                  refundAmount: finalRefund,
+                  overflowAmount,
+                  shopCashBalance,
+                  onKeepCredit: async () => {
+                    set({ returnOverflowState: null });
+                    await get().processInvoiceReturn(true, false);
+                  },
+                  onRefundCash: async () => {
+                    set({ returnOverflowState: null });
+                    await get().processInvoiceReturn(true, true);
+                  },
+                  onCancel: () => {
+                    set({ returnOverflowState: null });
+                  }
+                }
+              });
+              return; // Halt execution until modal callback
+            }
+          } catch (error) {
+            console.error("Failed to check customer balance for overflow", error);
+            toast.error("Failed to verify customer balance.");
+            return;
+          }
+        }
+
+        // ─── Proceed with Return Invoice ──────────────────────────────────────
+        try {
+          // Send negative quantity for return
+          const payload = {
+            items: session.cart.map(item => ({
+              productId: item.productId,
+              quantity: -Math.abs(item.quantity),
+              price: item.unitPrice
+            })),
+            customerId: session.customer?.id === 'walk-in' ? undefined : session.customer?.id,
+            // Automatically credit if customer is known, otherwise cash
+            paymentMethod: session.customer?.id && session.customer.id !== 'walk-in' ? 'credit' : 'cash',
+            transactionType: 'invoice_return',
+            taxRate: 0,
+            discount: -(session.invoiceDiscountValue || 0),
+            linkedInvoiceId: session.linkedInvoiceId,
+          };
+
+          let result;
+          try {
+            result = await salesApi.createOrder(payload);
+          } catch (apiError: any) {
+            const errorMessage = apiError.response?.data?.message || apiError.message || "Unknown API error";
+            toast.error("Invoice Return failed: " + errorMessage);
+            throw apiError;
+          }
+
+          if (!result.success) throw new Error(result.message);
+
+          // ─── Dual Action: Refund Cash Payout if requested ───────────────────
+          if (forceCashRefund && session.customer?.id && session.customer.id !== 'walk-in') {
+             try {
+                // Fetch latest balance to exactly determine the payout amount needed to bring it to 0
+                // We assume it's the exact overflow amount calculated earlier.
+                const overflowAmount = finalRefund - (get().returnOverflowState?.currentBalance || 0);
+                
+                await ledgerApi.recordPayout({
+                  partyId: session.customer.id,
+                  partyType: 'CUSTOMER',
+                  amount: overflowAmount,
+                  method: 'cash',
+                  notes: `Cash Refund for Return Overflow on ${session.linkedInvoiceId}`
+                });
+                toast.success(`Refunded Rs ${overflowAmount} in Cash.`);
+             } catch (payoutError: any) {
+                const msg = payoutError.response?.data?.message || payoutError.message || "Cash Payout Failed";
+                toast.error(`Return processed, but ${msg}. Balance left as Credit.`);
+             }
+          } else {
+             toast.success("Invoice Return processed successfully.");
+          }
+
+          set(state => ({
+            transactions: [...state.transactions, result.order as any]
+          }));
+          get().clearCart();
+          
+          try {
+            useInventoryStore.getState().forceSync();
+          } catch(e) {}
+
+          return result;
+        } catch (error: any) {
+          console.error("Invoice Return failed", error);
           throw error;
         }
       },

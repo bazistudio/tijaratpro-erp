@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { PosHeader } from '@/features/pos/components/PosHeader';
 import { SaleTabNavigation } from '@/features/pos/components/SaleTabNavigation';
 import { SaleWorkspace } from '@/features/pos/components/SaleWorkspace';
+import { ReturnOverflowModal } from '@/features/pos/components/ReturnOverflowModal';
 import { usePosStore } from '@/features/pos/store/usePosStore';
 import { toast } from 'react-hot-toast';
 
@@ -37,9 +38,10 @@ export default function POSPage() {
   if (!mounted) return null; // Avoid hydration mismatch for Zustand persist
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] w-full">
+    <div className="flex flex-col h-[calc(100vh-4rem)] w-full relative">
       <PosHeader />
       <SaleWorkspace />
+      <ReturnOverflowModal />
     </div>
   );
 }

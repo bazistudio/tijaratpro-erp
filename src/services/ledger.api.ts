@@ -60,5 +60,10 @@ export const ledgerApi = {
   recordPayment: async (payload: RecordPaymentPayload) => {
     const response = await axiosInstance.post<{ success: boolean; data: { paymentId: string; newBalance: number } }>('/api/ledger/payment', payload);
     return response.data;
+  },
+
+  recordPayout: async (payload: RecordPaymentPayload) => {
+    const response = await axiosInstance.post<{ success: boolean; data: { paymentId: string; newBalance: number; shopCashBalance: number } }>('/api/ledger/payout', payload);
+    return response.data;
   }
 };

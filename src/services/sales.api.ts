@@ -9,6 +9,7 @@ export interface CreateOrderPayload {
   }[];
   customerId?: string;
   paymentMethod: string;
+  transactionType?: string;
   taxRate?: number;
   discount?: number;
 }

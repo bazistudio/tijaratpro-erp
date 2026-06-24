@@ -11,6 +11,12 @@ import { PaymentModal } from './modals/PaymentModal';
 import { DBCustomer } from '@/types/db.types';
 import { CustomerSelector } from './CustomerSelector';
 import { createPortal } from 'react-dom';
+import { useSearchParams } from 'next/navigation';
+import { customerApi } from '@/services/customer.api';
+import { CreditLimitWarningModal } from './modals/CreditLimitWarningModal';
+import { usePrintStore } from '@/lib/printer';
+import { usePrinterStore } from '@/features/settings/printer/store/printer.store';
+import { printFormatter } from '@/features/settings/printer/utils/printFormatter';
 
 export const CartSummary = () => {
   const [mounted, setMounted] = useState(false);
@@ -22,10 +28,65 @@ export const CartSummary = () => {
   const completeTransaction = usePosStore(state => state.completeTransaction);
   const removeFromCart = usePosStore(state => state.removeFromCart);
 
+  const { openPreview } = usePrintStore();
+  const { settings, shopHeader, fetchSettings } = usePrinterStore();
+
+  useEffect(() => {
+    if (!settings || !shopHeader) {
+      fetchSettings();
+    }
+  }, [settings, shopHeader, fetchSettings]);
+
   const [isCustomerModalOpen, setCustomerModalOpen] = useState(false);
   const [isLedgerModalOpen, setLedgerModalOpen] = useState(false);
-  const [isPaymentModalOpen, setPaymentModalOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<DBCustomer | null>(null);
+  const [pendingTransaction, setPendingTransaction] = useState<{
+    paymentBreakdown: {method: string, amount: number}[];
+    customerObj: {id: string, name: string} | null;
+    shouldPrint: boolean;
+    projectedBalance: number;
+  } | null>(null);
+
+  const searchParams = useSearchParams();
+  const preSelectedCustomerId = searchParams.get('customerId');
+
+  useEffect(() => {
+    if (preSelectedCustomerId) {
+      customerApi.getCustomerDetail(preSelectedCustomerId)
+        .then(res => {
+          if (res.data?.customer) {
+            setSelectedCustomer({
+              ...res.data.customer,
+              currentBalance: res.data.stats?.outstanding || 0
+            });
+          }
+        })
+        .catch(err => console.error("Failed to load preselected customer", err));
+    }
+  }, [preSelectedCustomerId]);
+
+  // Sync session customer (from invoice load) into local selectedCustomer state
+  useEffect(() => {
+    const sessionId = activeSession?.customer?.id;
+    if (sessionId && sessionId !== 'walk-in') {
+      if (!selectedCustomer || selectedCustomer.id !== sessionId) {
+        customerApi.getCustomerDetail(sessionId)
+          .then(res => {
+            if (res.data?.customer) {
+              setSelectedCustomer({
+                ...res.data.customer,
+                currentBalance: res.data.stats?.outstanding || 0
+              });
+            }
+          })
+          .catch(err => console.error("Failed to sync session customer", err));
+      }
+    } else if (sessionId === 'walk-in' || !sessionId) {
+      if (selectedCustomer) {
+        setSelectedCustomer(null);
+      }
+    }
+  }, [activeSession?.customer?.id]); // Intentionally omitting selectedCustomer to avoid loops
 
   // Global Keyboard Shortcuts
   useEffect(() => {
@@ -102,7 +163,28 @@ export const CartSummary = () => {
       toast.error("Cart is empty");
       return;
     }
-    setPaymentModalOpen(true);
+    
+    if (!settings || !shopHeader) {
+      toast.error("Printer settings not loaded yet. Please wait.");
+      return;
+    }
+
+    const html = printFormatter.formatSaleInvoice({
+      orderNumber: activeSession.transactionId || `TXN-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+      customerId: selectedCustomer ? { name: selectedCustomer.name, phone: selectedCustomer.mobile || selectedCustomer.phone } : { name: 'Walk-in Customer' },
+      items: activeSession.cart?.map((i: any) => ({ 
+        name: i.productName || 'Item', 
+        qty: i.quantity || 1, 
+        price: i.unitPrice || 0, 
+        total: (i.unitPrice || 0) * (i.quantity || 1) 
+      })) || [],
+      totalAmount: grandTotal,
+      paymentMethod: 'Cash',
+      status: 'pending'
+    }, settings, shopHeader);
+
+    openPreview({ html, documentType: 'SaleInvoice', referenceId: activeSession.transactionId || `TXN-${Date.now()}`, title: 'Sale Invoice' });
   };
 
   const handleCreditSale = () => {
@@ -110,7 +192,11 @@ export const CartSummary = () => {
       toast.error("Cart is empty. Add items before assigning to customer.");
       return;
     }
-    setCustomerModalOpen(true);
+    if (selectedCustomer) {
+      setLedgerModalOpen(true);
+    } else {
+      setCustomerModalOpen(true);
+    }
   };
 
   const processTransaction = async (paymentBreakdown: {method: string, amount: number}[] = [], customerObj: {id: string, name: string} | null = null, shouldPrint: boolean = false) => {
@@ -122,14 +208,23 @@ export const CartSummary = () => {
     // Warning override logic
     if (selectedCustomer) {
       const { currentBalance = 0, creditLimit = 0 } = selectedCustomer;
-      // if grandTotal > 0, we are adding to their balance if credit, but just doing a sale.
-      // Actually, warn if their balance is already over limit, or if this transaction makes it over limit.
-      const isOverLimit = currentBalance > creditLimit;
-      if (isOverLimit) {
-        const proceed = window.confirm(`WARNING: ${selectedCustomer.name} is over their credit limit (Balance: ${currentBalance}, Limit: ${creditLimit}). Proceed anyway?`);
-        if (!proceed) return;
+      const totalPaid = paymentBreakdown.reduce((sum, p) => sum + p.amount, 0);
+      const dueAmount = grandTotal - totalPaid;
+      
+      // Only warn if they are increasing their debt and going over limit
+      if (dueAmount > 0) {
+        const projectedBalance = currentBalance + dueAmount;
+        if (projectedBalance > creditLimit) {
+          setPendingTransaction({ paymentBreakdown, customerObj: targetCustomer, shouldPrint, projectedBalance });
+          return;
+        }
       }
     }
+
+    executeTransaction(paymentBreakdown, targetCustomer, shouldPrint);
+  };
+
+  const executeTransaction = async (paymentBreakdown: {method: string, amount: number}[], targetCustomer: {id: string, name: string} | null, shouldPrint: boolean) => {
 
     const isRefund = grandTotal < 0;
     
@@ -181,7 +276,19 @@ export const CartSummary = () => {
         
         toast.success(isRefund ? `Refund Processed. Paid: Rs ${Math.abs(grandTotal)}` : "Sale completed successfully");
         
-        setPaymentModalOpen(false);
+        // Reset customer selection to prepare for next transaction
+        setSelectedCustomer(null);
+        // Reset the store's session customer back to walk-in
+        const { saleTabs, activeTabId } = usePosStore.getState();
+        usePosStore.setState({
+          saleTabs: saleTabs.map(tab => {
+            if (tab.id !== activeTabId) return tab;
+            return {
+              ...tab,
+              customer: { id: 'walk-in', name: 'Walk-In Customer' }
+            };
+          })
+        });
       }
     } catch (error) {
       // Error handled by store
@@ -208,7 +315,19 @@ export const CartSummary = () => {
         <div className="mb-4">
           <CustomerSelector 
             selectedCustomer={selectedCustomer} 
-            onSelectCustomer={setSelectedCustomer} 
+            onSelectCustomer={(customer) => {
+              setSelectedCustomer(customer);
+              const { saleTabs, activeTabId } = usePosStore.getState();
+              usePosStore.setState({
+                saleTabs: saleTabs.map(tab => {
+                  if (tab.id !== activeTabId) return tab;
+                  return {
+                    ...tab,
+                    customer: customer ? { id: customer.id, name: customer.name } : { id: 'walk-in', name: 'Walk-In Customer' }
+                  };
+                })
+              });
+            }} 
           />
         </div>
 
@@ -279,7 +398,7 @@ export const CartSummary = () => {
 
       {/* POS Action Buttons Panel rendered to Bottom Bar */}
       {mounted && document.getElementById('pos-action-bar-portal') ? createPortal(
-        <div className="grid grid-cols-5 gap-4 p-4 border-t border-gray-200 dark:border-gray-800 shadow-[0_-10px_30px_-15px_rgba(0,0,0,0.1)] dark:shadow-[0_-10px_30px_-15px_rgba(0,0,0,0.5)]">
+        <div className="grid grid-cols-4 gap-4 p-4 border-t border-gray-200 dark:border-gray-800 shadow-[0_-10px_30px_-15px_rgba(0,0,0,0.1)] dark:shadow-[0_-10px_30px_-15px_rgba(0,0,0,0.5)]">
           <button 
             onClick={handleClearCart}
             disabled={isCartEmpty}
@@ -291,12 +410,13 @@ export const CartSummary = () => {
           </button>
           
           <button 
-            onClick={toggleReplaceMode}
-            title="Toggle Replace/Exchange Mode"
-            className={`h-16 flex flex-col items-center justify-center gap-1 border rounded-xl shadow-sm hover:shadow transition-all ${activeSession.mode === 'replace' ? 'bg-orange-200 border-orange-400 text-orange-800 dark:bg-orange-800/50 dark:border-orange-600 dark:text-orange-300' : 'bg-orange-50/50 dark:bg-orange-900/10 border-orange-200 dark:border-orange-800/50 text-orange-600 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/30'}`}
+            onClick={handlePayAndPrint}
+            disabled={isCartEmpty}
+            title="Pay & Print (Ctrl+P)"
+            className="h-16 flex flex-col items-center justify-center gap-1 bg-gradient-to-br from-[#006970] to-[#008990] dark:from-[#008990] dark:to-[#00A4AB] rounded-xl text-white hover:opacity-90 transition-all shadow-md hover:shadow-lg disabled:opacity-50"
           >
-            <Repeat className="h-5 w-5" />
-            <span className="text-[10px] font-black uppercase tracking-widest mt-0.5">Replace</span>
+            <Printer className="h-5 w-5" />
+            <span className="text-[10px] font-black uppercase tracking-widest mt-0.5">Print</span>
           </button>
           
           <button 
@@ -319,30 +439,11 @@ export const CartSummary = () => {
             <span className="text-[10px] font-black uppercase tracking-widest mt-0.5">Credit</span>
           </button>
           
-          <button 
-            onClick={handlePayAndPrint}
-            disabled={isCartEmpty}
-            title="Pay & Print (Ctrl+P)"
-            className="h-16 flex flex-col items-center justify-center gap-1 bg-gradient-to-br from-[#006970] to-[#008990] dark:from-[#008990] dark:to-[#00A4AB] rounded-xl text-white hover:opacity-90 transition-all shadow-md hover:shadow-lg disabled:opacity-50"
-          >
-            <Printer className="h-5 w-5" />
-            <span className="text-[10px] font-black uppercase tracking-widest mt-0.5">Print</span>
-          </button>
         </div>,
         document.getElementById('pos-action-bar-portal')!
       ) : null}
 
-      {isPaymentModalOpen && (
-        <PaymentModal 
-          grandTotal={grandTotal}
-          onClose={() => setPaymentModalOpen(false)}
-          onConfirm={(breakdown) => processTransaction(breakdown, null, true)}
-          onCreditSelect={() => {
-            setPaymentModalOpen(false);
-            setCustomerModalOpen(true);
-          }}
-        />
-      )}
+
 
       {isCustomerModalOpen && (
         <CreditCustomerModal 
@@ -365,6 +466,19 @@ export const CartSummary = () => {
             // Empty array means 0 paid, creating a pure DUE transaction assigned to the customer
             processTransaction([], { id: selectedCustomer.id, name: selectedCustomer.name }, false);
           }}
+        />
+      )}
+
+      {pendingTransaction && selectedCustomer && (
+        <CreditLimitWarningModal
+          customer={selectedCustomer}
+          projectedBalance={pendingTransaction.projectedBalance}
+          onCancel={() => setPendingTransaction(null)}
+          onProceed={() => {
+            executeTransaction(pendingTransaction.paymentBreakdown, pendingTransaction.customerObj, pendingTransaction.shouldPrint);
+            setPendingTransaction(null);
+          }}
+          onLimitUpdated={(updatedCustomer) => setSelectedCustomer(updatedCustomer)}
         />
       )}
     </div>

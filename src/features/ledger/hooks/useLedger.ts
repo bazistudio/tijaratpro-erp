@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ledgerApi } from '@/services/ledger.api';
 
@@ -18,6 +18,13 @@ export function useLedger(initialParty?: SelectedParty | null) {
   const [selectedParty, setSelectedParty] = useState<SelectedParty | null>(initialParty || null);
   const [activeTab, setActiveTab] = useState<LedgerBookTab>('all');
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Sync state with incoming props
+  React.useEffect(() => {
+    if (initialParty) {
+      setSelectedParty(initialParty);
+    }
+  }, [initialParty?.id, initialParty?.balance, initialParty?.name]);
 
   // Fetch Ledger data for selected party
   const { data: ledgerResponse, isLoading: isLedgerLoading, refetch: refetchLedger } = useQuery({

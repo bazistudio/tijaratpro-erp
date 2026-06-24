@@ -8,9 +8,10 @@ interface ReceivePaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
   customer: DBCustomer | null;
+  onPaymentSuccess?: () => void;
 }
 
-export const ReceivePaymentModal = ({ isOpen, onClose, customer }: ReceivePaymentModalProps) => {
+export const ReceivePaymentModal = ({ isOpen, onClose, customer, onPaymentSuccess }: ReceivePaymentModalProps) => {
   const [amount, setAmount] = useState('');
   const [method, setMethod] = useState('Cash');
 
@@ -20,11 +21,12 @@ export const ReceivePaymentModal = ({ isOpen, onClose, customer }: ReceivePaymen
     mutationFn: ledgerApi.recordPayment,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customers'] });
-      if (customer) {
-        queryClient.invalidateQueries({ queryKey: ['ledger', customer.id] });
-      }
+      queryClient.invalidateQueries({ queryKey: ['ledger'] });
       setAmount('');
       onClose();
+      if (onPaymentSuccess) {
+        onPaymentSuccess();
+      }
     },
     onError: (err: any) => {
       console.error('Failed to save payment', err);
@@ -91,6 +93,13 @@ export const ReceivePaymentModal = ({ isOpen, onClose, customer }: ReceivePaymen
                 placeholder="0.00"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleSave();
+                  }
+                }}
+                autoFocus
               />
             </div>
           </div>

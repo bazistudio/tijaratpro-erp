@@ -2,8 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supplierApi } from '@/services/supplier.api';
 import { LedgerBook } from '@/features/ledger/components/LedgerBook';
-import { Phone, MapPin, FileText, ShoppingCart, DollarSign, Calendar, Printer, Edit, Plus, CreditCard, ArrowLeft, Building2 } from 'lucide-react';
+import { Phone, MapPin, FileText, ShoppingCart, DollarSign, Calendar, Printer, Edit, Plus, CreditCard, ArrowLeft, Building2, ChevronDown, ChevronUp } from 'lucide-react';
 import { usePrintStore } from '@/lib/printer';
+import { downloadHtmlAsPdf } from '@/lib/printer/pdfExport';
 import { usePrinterStore } from '@/features/settings/printer/store/printer.store';
 import { printFormatter } from '@/features/settings/printer/utils/printFormatter';
 import { useLedger } from '@/features/ledger/hooks/useLedger';
@@ -17,7 +18,33 @@ export const SupplierProfile: React.FC<SupplierProfileProps> = ({ id }) => {
   const [detail, setDetail] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const { openPreview } = usePrintStore();
-  const { settings, shopHeader } = usePrinterStore();
+  const { settings, shopHeader, fetchSettings } = usePrinterStore();
+  const [expandedPurchases, setExpandedPurchases] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    if (!settings || !shopHeader) {
+      fetchSettings();
+    }
+  }, [settings, shopHeader, fetchSettings]);
+
+  const togglePurchase = (id: string) => {
+    setExpandedPurchases(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const handlePrintPurchase = (e: React.MouseEvent, p: any) => {
+    e.stopPropagation();
+    if (!settings || !shopHeader) return;
+    const html = printFormatter.formatPurchaseInvoice({
+      invoiceNumber: p.purchaseNumber,
+      createdAt: p.createdAt,
+      supplierId: { name: detail?.supplier?.name },
+      items: p.items.map((i: any) => ({ name: i.productId?.name || 'Unknown Item', qty: i.qty || i.quantity || 0, price: i.price || 0, total: (i.qty || i.quantity || 0) * (i.price || 0) })),
+      totalAmount: p.totalAmount,
+      paymentMethod: p.paymentMethod || 'Cash',
+      status: p.status
+    }, settings, shopHeader);
+    openPreview({ html, documentType: 'PurchaseInvoice', referenceId: p.purchaseNumber, title: 'Purchase Invoice' });
+  };
 
   const { rawTimeline } = useLedger(detail?.supplier ? {
     id: detail.supplier.id,
@@ -72,8 +99,20 @@ export const SupplierProfile: React.FC<SupplierProfileProps> = ({ id }) => {
     openPreview({ html, documentType: 'Generic', referenceId: 'ledger', title: 'Ledger Statement' });
   };
 
+  const handleDownloadFullLedgerPDF = () => {
+    if (!settings || !shopHeader || !rawTimeline) return;
+    const html = printFormatter.formatLedgerStatement(
+      { id: supplier.id, type: 'SUPPLIER', name: supplier.name, balance: actualBalance },
+      rawTimeline,
+      settings,
+      shopHeader,
+      'Full Ledger'
+    );
+    downloadHtmlAsPdf(html, `Ledger_${supplier.name.replace(/\s+/g, '_')}`);
+  };
+
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
+    <div className="space-y-6 max-w-7xl mx-auto -mt-[30px]">
       {/* Top Bar Navigation */}
       <div className="flex items-center gap-4">
         <button 
@@ -126,9 +165,15 @@ export const SupplierProfile: React.FC<SupplierProfileProps> = ({ id }) => {
             </button>
             <button 
               onClick={handlePrintFullLedger}
-              className="w-full flex items-center gap-3 px-4 py-2 bg-gray-50 hover:bg-gray-100 dark:bg-gray-700/50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold rounded-lg transition-colors"
+              className="w-full flex items-center gap-3 px-4 py-2 bg-gray-50 hover:bg-gray-100 active:scale-95 active:bg-blue-600 active:text-white dark:bg-gray-700/50 dark:hover:bg-gray-700 dark:active:bg-blue-600 transition-all font-semibold rounded-lg text-gray-700 dark:text-gray-300"
             >
               <Printer className="w-4 h-4" /> Print Ledger
+            </button>
+            <button 
+              onClick={handleDownloadFullLedgerPDF}
+              className="w-full flex items-center gap-3 px-4 py-2 bg-gray-50 hover:bg-gray-100 active:scale-95 active:bg-blue-600 active:text-white dark:bg-gray-700/50 dark:hover:bg-gray-700 dark:active:bg-blue-600 transition-all font-semibold rounded-lg text-gray-700 dark:text-gray-300"
+            >
+              <Download className="w-4 h-4" /> Export Ledger PDF
             </button>
             <button className="w-full flex items-center gap-3 px-4 py-2 bg-gray-50 hover:bg-gray-100 dark:bg-gray-700/50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold rounded-lg transition-colors">
               <Edit className="w-4 h-4" /> Edit Supplier
@@ -139,19 +184,61 @@ export const SupplierProfile: React.FC<SupplierProfileProps> = ({ id }) => {
           <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700 shadow-sm">
             <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Recent Purchases</h3>
             <div className="space-y-3">
-              {stats.recentPurchases.length > 0 ? stats.recentPurchases.map((inv: any) => (
-                <div key={inv._id} className="flex justify-between items-center text-sm border-b border-gray-100 dark:border-gray-700 pb-2 last:border-0 last:pb-0">
-                  <div>
-                    <div className="font-semibold text-gray-900 dark:text-white">{inv.transactionId}</div>
-                    <div className="text-xs text-gray-500">{new Date(inv.timestamp).toLocaleDateString()}</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-bold text-gray-900 dark:text-white">Rs {inv.amount?.toLocaleString()}</div>
-                  </div>
-                </div>
-              )) : (
+              {stats.recentPurchases.length === 0 && (
                 <div className="text-sm text-gray-500 text-center py-4">No recent purchases</div>
               )}
+              {stats.recentPurchases.length > 0 && stats.recentPurchases.map((p: any) => (
+                <div key={p._id || p.purchaseNumber} className="border-b border-gray-100 dark:border-gray-700 pb-2 last:border-0 last:pb-0">
+                  <div 
+                    className="flex justify-between items-center text-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 p-1 rounded transition-colors"
+                    onClick={() => togglePurchase(p._id || p.purchaseNumber)}
+                  >
+                    <div className="flex items-center gap-2">
+                      <button className="text-gray-400 hover:text-blue-500">
+                        {expandedPurchases[p._id || p.purchaseNumber] ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                      </button>
+                      <div>
+                        <div className="font-semibold text-gray-900 dark:text-white">{p.purchaseNumber || p.transactionId}</div>
+                        <div className="text-xs text-gray-500">{new Date(p.createdAt || p.timestamp).toLocaleDateString()}</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 text-right">
+                      <div>
+                        <div className="font-bold text-gray-900 dark:text-white">Rs {(p.totalAmount || p.amount)?.toLocaleString()}</div>
+                        {p.status && (
+                          <div className={`text-[10px] font-bold px-2 py-0.5 rounded-full inline-block ${p.status === 'paid' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
+                            {p.status}
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <button 
+                          onClick={(e) => handlePrintPurchase(e, p)}
+                          className="p-1.5 text-neutral-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded transition-colors"
+                          title="Print/PDF"
+                        >
+                          <Printer className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {expandedPurchases[p._id || p.purchaseNumber] && p.items && (
+                    <div className="mt-2 pl-8 pr-2 py-2 bg-gray-50 dark:bg-gray-800/80 rounded-lg text-xs space-y-1">
+                      <div className="font-bold text-gray-500 mb-1 flex justify-between border-b border-gray-200 dark:border-gray-700 pb-1">
+                        <span>Item</span>
+                        <span>Amount</span>
+                      </div>
+                      {p.items.map((item: any, idx: number) => (
+                        <div key={idx} className="flex justify-between text-gray-700 dark:text-gray-300">
+                          <span>{item.qty || item.quantity}x {item.productId?.name || 'Item'}</span>
+                          <span>Rs {((item.qty || item.quantity) * item.price).toLocaleString()}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
         </div>
