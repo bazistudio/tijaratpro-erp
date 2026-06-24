@@ -5,9 +5,11 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { shopAdminNavigation } from '../../constants/navigation/shop-admin-navigation';
 import { validateRoute } from '../../lib/navigation/route-validator';
+import { usePermissions } from '../../lib/auth/usePermissions';
 
 export const Sidebar = () => {
   const pathname = usePathname();
+  const { hasPermission } = usePermissions();
   
   // Future: const shop = useAuthStore();
   const shop = { name: 'Shop Admin', branchName: 'Main Branch' };
@@ -25,6 +27,9 @@ export const Sidebar = () => {
         <div className="flex-1 flex flex-col overflow-hidden pt-0 pb-2">
           <nav className="mt-1 flex-1 px-2 space-y-0">
             {shopAdminNavigation.flatMap(group => group.items).map((item) => {
+              // ENFORCE PERMISSIONS
+              if (item.permission && !hasPermission(item.permission)) return null;
+
               validateRoute(item.href, item.name);
               const isActive =
                 item.href === '/dashboard/shop-admin'

@@ -8,6 +8,7 @@ import { SearchInput } from '../common/SearchInput';
 import { PackagePlus, ReceiptText, RefreshCw, Plus } from 'lucide-react';
 import { DesktopAppButton } from './DesktopAppButton';
 import { selectForceSync, selectStatus } from '@/features/inventory/core/inventory.selectors';
+import { useExpensesStore } from '@/features/expenses';
 
 interface TopbarProps {
   setMobileMenuOpen: (isOpen: boolean) => void;
@@ -66,13 +67,13 @@ export const Topbar = ({ setMobileMenuOpen }: TopbarProps) => {
           </button>
 
           {/* Add Expense Button */}
-          <Link
-            href="/dashboard/expenses"
+          <button
+            onClick={() => useExpensesStore.getState().setGlobalModalOpen(true)}
             title="Add Expense"
             className="hidden md:flex items-center p-2 text-gray-700 bg-white dark:bg-gray-800 dark:text-gray-200 border border-gray-300 dark:border-gray-700 rounded-lg shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
           >
             <ReceiptText className="h-5 w-5 text-rose-600 dark:text-rose-400" />
-          </Link>
+          </button>
 
           {/* Download / Open App */}
           <DesktopAppButton />
