@@ -71,5 +71,32 @@ export const supplierApi = {
       message: string;
     }>(`/api/suppliers/${id}`);
     return response.data;
+  },
+
+  getSupplierDetail: async (id: string) => {
+    const response = await axiosInstance.get<{
+      success: boolean;
+      data: {
+        supplier: any;
+        stats: {
+          totalPurchases: number;
+          payable: number;
+          purchaseCount: number;
+          lastTransactionDate: string | null;
+          recentPurchases: any[];
+        }
+      };
+    }>(`/api/suppliers/${id}/detail`);
+    
+    return {
+      ...response.data,
+      data: {
+        ...response.data.data,
+        supplier: {
+          ...response.data.data.supplier,
+          id: response.data.data.supplier._id || response.data.data.supplier.id,
+        }
+      }
+    };
   }
 };

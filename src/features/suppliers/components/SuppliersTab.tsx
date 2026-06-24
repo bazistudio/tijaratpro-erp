@@ -32,7 +32,7 @@ export const SuppliersTab = () => {
   );
 
   const navigateToLedger = (supplierId: string) => {
-    toast('Ledger coming soon in next module!', { icon: '🚧' });
+    router.push(`/dashboard/shop-admin/suppliers/${supplierId}`);
   };
 
   const handleDelete = async (id: string) => {
@@ -95,7 +95,14 @@ export const SuppliersTab = () => {
           <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-800">
             {filteredSuppliers.map((supplier) => (
               <tr key={supplier.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                <td className="px-6 py-1.5 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{supplier.name}</td>
+                <td className="px-6 py-1.5 whitespace-nowrap text-sm font-medium">
+                  <button 
+                    onClick={() => navigateToLedger(supplier.id)}
+                    className="text-[#006970] hover:text-[#00585e] hover:underline"
+                  >
+                    {supplier.name}
+                  </button>
+                </td>
                 <td className="px-6 py-1.5 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{supplier.companyName || '-'}</td>
                 <td className="px-6 py-1.5 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{supplier.phone}</td>
                 <td className="px-6 py-1.5 whitespace-nowrap text-sm font-semibold text-orange-600 dark:text-orange-400">Rs {(supplier.currentPayable || 0).toLocaleString()}</td>

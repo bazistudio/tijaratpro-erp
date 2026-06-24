@@ -4,6 +4,9 @@ import { useQuery } from '@tanstack/react-query';
 import { salesApi } from '@/services/sales.api';
 import { format, startOfWeek, startOfMonth } from 'date-fns';
 import { useSearchParams } from 'next/navigation';
+import { usePrintStore } from '@/lib/printer';
+import { usePrinterStore } from '@/features/settings/printer/store/printer.store';
+import { printFormatter } from '@/features/settings/printer/utils/printFormatter';
 
 interface DailySalesModalProps {
   isOpen: boolean;
@@ -18,6 +21,15 @@ export const DailySalesModal = ({ isOpen, onClose }: DailySalesModalProps) => {
   
   const searchParams = useSearchParams();
   const searchInvoice = searchParams.get('invoice');
+
+  const { openPreview } = usePrintStore();
+  const { settings, shopHeader } = usePrinterStore();
+
+  const handleReprint = (order: any) => {
+    if (!settings || !shopHeader) return;
+    const html = printFormatter.formatSaleInvoice(order, settings, shopHeader);
+    openPreview({ html, documentType: 'SaleInvoice', referenceId: order._id, title: `Invoice - ${order.orderNumber}` });
+  };
 
   useEffect(() => {
     if (searchInvoice && isOpen) {
@@ -214,7 +226,10 @@ export const DailySalesModal = ({ isOpen, onClose }: DailySalesModalProps) => {
                             <td colSpan={7} className="px-6 py-4">
                               <div className="flex justify-between items-start mb-3">
                                 <h4 className="text-sm font-semibold text-gray-900 dark:text-white">Invoice Details</h4>
-                                <button className="flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors shadow-sm">
+                                <button 
+                                  onClick={() => handleReprint(order)}
+                                  className="flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors shadow-sm"
+                                >
                                   <Printer className="w-4 h-4" />
                                   Reprint Invoice
                                 </button>

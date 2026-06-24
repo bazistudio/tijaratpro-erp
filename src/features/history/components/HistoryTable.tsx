@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useHistoryStore } from '../store/history.store';
 import { HistoryRowActions } from './HistoryRowActions';
+import Link from 'next/link';
 
 export const HistoryTable: React.FC = () => {
   const { items, isLoading } = useHistoryStore();
@@ -55,7 +56,16 @@ export const HistoryTable: React.FC = () => {
                 <td className="px-6 py-4 whitespace-nowrap">{getTypeBadge(item.type)}</td>
                 <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900 dark:text-white">{item.referenceId}</td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="font-medium text-gray-900 dark:text-white">{item.party.name}</div>
+                  {item.party.id && (item.party.type === 'customer' || item.party.type === 'supplier') ? (
+                    <Link 
+                      href={`/dashboard/shop-admin/${item.party.type === 'supplier' ? 'suppliers' : 'customers'}/${item.party.id}`}
+                      className="font-medium text-[#006970] hover:text-[#00585e] hover:underline"
+                    >
+                      {item.party.name}
+                    </Link>
+                  ) : (
+                    <div className="font-medium text-gray-900 dark:text-white">{item.party.name}</div>
+                  )}
                   {item.party.type && <div className="text-xs text-gray-500 capitalize">{item.party.type}</div>}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right font-bold text-gray-900 dark:text-white">

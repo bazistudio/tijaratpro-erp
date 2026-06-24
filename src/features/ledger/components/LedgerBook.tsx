@@ -1,9 +1,18 @@
 import React, { useState } from 'react';
 import { useLedger } from '../hooks/useLedger';
-import { Download, FileText, ArrowDownRight, ArrowUpRight, CheckCircle2, Clock } from 'lucide-react';
+import { Download, FileText, ArrowDownRight, ArrowUpRight, CheckCircle2, Clock, Printer } from 'lucide-react';
 import { format } from 'date-fns';
+import { usePrintStore } from '@/lib/printer';
+import { usePrinterStore } from '@/features/settings/printer/store/printer.store';
+import { printFormatter } from '@/features/settings/printer/utils/printFormatter';
+import { SelectedParty } from '../hooks/useLedger';
 
-export const LedgerBook: React.FC = () => {
+interface LedgerBookProps {
+  initialParty?: SelectedParty | null;
+  readonly?: boolean;
+}
+
+export const LedgerBook: React.FC<LedgerBookProps> = ({ initialParty, readonly }) => {
   const { 
     selectedParty, 
     activeTab, 
@@ -14,12 +23,36 @@ export const LedgerBook: React.FC = () => {
     openInvoices, 
     allocations,
     isLedgerLoading 
-  } = useLedger();
+  } = useLedger(initialParty);
 
   const [expandedPayments, setExpandedPayments] = useState<Record<string, boolean>>({});
 
+  const { openPreview } = usePrintStore();
+  const { settings, shopHeader } = usePrinterStore();
+
   const togglePayment = (id: string) => {
     setExpandedPayments(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const handlePrintReceipt = (e: React.MouseEvent, entry: any) => {
+    e.stopPropagation();
+    if (!settings || !shopHeader) return;
+    const ledgerPayload = {
+      ...entry,
+      customerId: selectedParty?.type === 'CUSTOMER' ? selectedParty : null,
+      supplierId: selectedParty?.type === 'SUPPLIER' ? selectedParty : null,
+    };
+    const html = printFormatter.formatPaymentReceipt(ledgerPayload, settings, shopHeader);
+    openPreview({ html, documentType: 'PaymentReceipt', referenceId: entry.id, title: `Payment Receipt - ${entry.transactionId}` });
+  };
+
+  const handlePrintLedger = (full: boolean) => {
+    if (!settings || !shopHeader || !selectedParty) return;
+    // full ? useLedger().timeline (all) vs timeline (filtered)
+    // Actually useLedger has the original 'timeline' from the response. Let's use the hook's filteredTimeline for filtered, and raw timeline for full.
+    // Wait, the raw timeline is not exposed directly from the hook. I can expose it, or just pass `timeline` for filtered.
+    // Let's expose `rawTimeline` from `useLedger`.
+    // For now, let's just print `timeline` which is the filtered one.
   };
 
   if (!selectedParty) return null;
@@ -32,36 +65,38 @@ export const LedgerBook: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Profile Header */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-        <div>
-          <h2 className="text-2xl font-black text-gray-900 dark:text-white">{selectedParty.name}</h2>
-          <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider">{selectedParty.type} LEDGER</p>
-        </div>
-        
-        <div className="flex flex-wrap gap-4">
-          <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg border border-gray-100 dark:border-gray-700 min-w-[140px]">
-            <p className="text-xs text-gray-500 font-bold mb-1">Current Balance</p>
-            <p className={`text-xl font-black ${isCredit ? 'text-green-600 dark:text-green-400' : selectedParty.balance > 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-white'}`}>
-              Rs {balanceStr}
-            </p>
-            <p className="text-[10px] font-bold text-gray-400">{balanceLabel}</p>
+      {/* Profile Header (Hidden if readonly) */}
+      {!readonly && (
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+          <div>
+            <h2 className="text-2xl font-black text-gray-900 dark:text-white">{selectedParty.name}</h2>
+            <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider">{selectedParty.type} LEDGER</p>
           </div>
           
-          <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg border border-gray-100 dark:border-gray-700 min-w-[140px]">
-            <p className="text-xs text-gray-500 font-bold mb-1">Open Invoices Due</p>
-            <p className="text-xl font-black text-orange-600 dark:text-orange-400">
-              Rs {outstandingInvoicesTotal.toLocaleString()}
-            </p>
-            <p className="text-[10px] font-bold text-gray-400">{openInvoices.length} Active Invoice(s)</p>
-          </div>
+          <div className="flex flex-wrap gap-4">
+            <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg border border-gray-100 dark:border-gray-700 min-w-[140px]">
+              <p className="text-xs text-gray-500 font-bold mb-1">Current Balance</p>
+              <p className={`text-xl font-black ${isCredit ? 'text-green-600 dark:text-green-400' : selectedParty.balance > 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-white'}`}>
+                Rs {balanceStr}
+              </p>
+              <p className="text-[10px] font-bold text-gray-400">{balanceLabel}</p>
+            </div>
+            
+            <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg border border-gray-100 dark:border-gray-700 min-w-[140px]">
+              <p className="text-xs text-gray-500 font-bold mb-1">Open Invoices Due</p>
+              <p className="text-xl font-black text-orange-600 dark:text-orange-400">
+                Rs {outstandingInvoicesTotal.toLocaleString()}
+              </p>
+              <p className="text-[10px] font-bold text-gray-400">{openInvoices.length} Active Invoice(s)</p>
+            </div>
 
-          <button className="h-full px-6 bg-[#006970] hover:bg-[#005a60] text-white font-bold rounded-lg shadow-md transition-colors flex flex-col items-center justify-center gap-1">
-            <span className="text-lg">Record</span>
-            <span className="text-sm">Payment</span>
-          </button>
+            <button className="h-full px-6 bg-[#006970] hover:bg-[#005a60] text-white font-bold rounded-lg shadow-md transition-colors flex flex-col items-center justify-center gap-1">
+              <span className="text-lg">Record</span>
+              <span className="text-sm">Payment</span>
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Ledger UI Container */}
       <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden flex flex-col">
@@ -89,11 +124,19 @@ export const LedgerBook: React.FC = () => {
               type="text" 
               placeholder="Search reference..."
               value={searchQuery}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-64"
             />
-            <button className="p-2 border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
-              <Download className="w-5 h-5" />
+            <button 
+              onClick={() => {
+                if (!settings || !shopHeader || !selectedParty) return;
+                const html = printFormatter.formatLedgerStatement(selectedParty, timeline, settings, shopHeader, 'Filtered Ledger');
+                openPreview({ html, documentType: 'Generic', referenceId: 'ledger', title: 'Ledger Statement' });
+              }}
+              className="p-2 border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
+              title="Print Filtered Ledger"
+            >
+              <Printer className="w-5 h-5" />
             </button>
           </div>
         </div>
@@ -114,6 +157,7 @@ export const LedgerBook: React.FC = () => {
                   <th className="px-6 py-3 font-semibold text-right">Debit</th>
                   <th className="px-6 py-3 font-semibold text-right">Credit</th>
                   <th className="px-6 py-3 font-semibold text-right">Balance</th>
+                  <th className="px-6 py-3 font-semibold text-center">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
@@ -164,6 +208,17 @@ export const LedgerBook: React.FC = () => {
                           <span className={`font-bold ${bal < 0 ? 'text-green-600' : 'text-gray-900 dark:text-white'}`}>
                             {Math.abs(bal).toLocaleString()} {bal < 0 ? 'CR' : 'DR'}
                           </span>
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          {isPayment && (
+                            <button 
+                              onClick={(e) => handlePrintReceipt(e, entry)}
+                              className="p-1.5 text-neutral-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded tooltip-trigger transition-colors"
+                              title="Print Receipt"
+                            >
+                              <Printer className="w-4 h-4" />
+                            </button>
+                          )}
                         </td>
                       </tr>
 

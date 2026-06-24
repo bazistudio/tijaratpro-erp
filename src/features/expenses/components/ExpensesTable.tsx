@@ -1,11 +1,22 @@
 import React, { useState } from 'react';
 import { useExpensesStore } from '../store/expenses.store';
-import { FileText, MoreHorizontal, Activity, Trash2, Edit, Download } from 'lucide-react';
+import { FileText, MoreHorizontal, Activity, Trash2, Edit, Download, Printer } from 'lucide-react';
 import { ExpenseLedgerTraceModal } from './ExpenseLedgerTraceModal';
+import { usePrintStore } from '@/lib/printer';
+import { usePrinterStore } from '@/features/settings/printer/store/printer.store';
+import { printFormatter } from '@/features/settings/printer/utils/printFormatter';
 
 export const ExpensesTable: React.FC = () => {
   const { items, total, filters, setFilters, deleteExpense, isLoading } = useExpensesStore();
+  const { openPreview } = usePrintStore();
+  const { settings, shopHeader } = usePrinterStore();
   const [traceExpenseId, setTraceExpenseId] = useState<string | null>(null);
+
+  const handlePrint = (expense: any) => {
+    if (!settings || !shopHeader) return;
+    const html = printFormatter.formatExpenseVoucher(expense, settings, shopHeader);
+    openPreview({ html, documentType: 'ExpenseVoucher', referenceId: expense.id, title: `Expense Voucher - ${expense.title}` });
+  };
 
   const getCategoryColor = (category: string) => {
     switch (category) {
@@ -89,6 +100,13 @@ export const ExpensesTable: React.FC = () => {
                         title="Ledger Trace"
                       >
                         <Activity className="w-4 h-4" />
+                      </button>
+                      <button 
+                        onClick={() => handlePrint(item)}
+                        className="p-1.5 text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded tooltip-trigger"
+                        title="Print Voucher"
+                      >
+                        <Printer className="w-4 h-4" />
                       </button>
                       <button 
                         className="p-1.5 text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded tooltip-trigger"

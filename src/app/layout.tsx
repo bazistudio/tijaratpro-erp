@@ -6,6 +6,7 @@ import AuthHydrator from "@/components/auth/AuthHydrator";
 import { Toaster } from "react-hot-toast";
 import ReactQueryProvider from "@/components/providers/ReactQueryProvider";
 import { DesktopShell } from "@/components/layout/desktop/DesktopShell";
+import { GlobalPrintPreviewModal } from "@/lib/printer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -40,6 +41,7 @@ export default function RootLayout({
           <DesktopShell>
             {children}
           </DesktopShell>
+          <GlobalPrintPreviewModal />
         </ReactQueryProvider>
       </body>
     </html>

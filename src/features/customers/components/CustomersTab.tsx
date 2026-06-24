@@ -31,8 +31,7 @@ export const CustomersTab = () => {
   );
 
   const navigateToLedger = (customerId: string) => {
-    // Basic stub for now
-    toast('Ledger coming soon in next module!', { icon: '🚧' });
+    router.push(`/dashboard/shop-admin/customers/${customerId}`);
   };
 
   const handleDelete = async (id: string) => {
@@ -94,7 +93,14 @@ export const CustomersTab = () => {
           <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-800">
             {filteredCustomers.map((customer) => (
               <tr key={customer.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                <td className="px-6 py-1.5 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{customer.name}</td>
+                <td className="px-6 py-1.5 whitespace-nowrap text-sm font-medium">
+                  <button 
+                    onClick={() => navigateToLedger(customer.id)}
+                    className="text-[#006970] hover:text-[#00585e] hover:underline"
+                  >
+                    {customer.name}
+                  </button>
+                </td>
                 <td className="px-6 py-1.5 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{customer.phone}</td>
                 <td className="px-6 py-1.5 whitespace-nowrap text-sm text-gray-900 dark:text-white">Rs {customer.currentBalance.toLocaleString()}</td>
                 <td className="px-6 py-1.5 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">Rs {customer.creditLimit.toLocaleString()}</td>

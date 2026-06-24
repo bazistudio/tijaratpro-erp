@@ -71,5 +71,32 @@ export const customerApi = {
       message: string;
     }>(`/api/customers/${id}`);
     return response.data;
+  },
+
+  getCustomerDetail: async (id: string) => {
+    const response = await axiosInstance.get<{
+      success: boolean;
+      data: {
+        customer: DBCustomer;
+        stats: {
+          totalSales: number;
+          outstanding: number;
+          invoiceCount: number;
+          lastTransactionDate: string | null;
+          recentInvoices: any[];
+        }
+      };
+    }>(`/api/customers/${id}/detail`);
+    
+    return {
+      ...response.data,
+      data: {
+        ...response.data.data,
+        customer: {
+          ...response.data.data.customer,
+          id: (response.data.data.customer as any)._id || response.data.data.customer.id,
+        }
+      }
+    };
   }
 };

@@ -14,8 +14,8 @@ export interface SelectedParty {
 
 export type LedgerBookTab = 'all' | 'invoices' | 'payments' | 'adjustments';
 
-export function useLedger() {
-  const [selectedParty, setSelectedParty] = useState<SelectedParty | null>(null);
+export function useLedger(initialParty?: SelectedParty | null) {
+  const [selectedParty, setSelectedParty] = useState<SelectedParty | null>(initialParty || null);
   const [activeTab, setActiveTab] = useState<LedgerBookTab>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -58,6 +58,7 @@ export function useLedger() {
     searchQuery,
     setSearchQuery,
     timeline: filteredTimeline,
+    rawTimeline: timeline,
     openInvoices,
     allocations,
     isLedgerLoading,

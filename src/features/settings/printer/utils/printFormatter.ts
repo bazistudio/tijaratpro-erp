@@ -1,26 +1,166 @@
-import { UnifiedInvoice, PrinterSettings } from '../types/printer.types';
+import { UnifiedInvoice, PrinterSettings, ShopHeader } from '../types/printer.types';
 
 // Print Strategy Layer
 export const printFormatter = {
-  format: (invoice: UnifiedInvoice, settings: PrinterSettings): string => {
-    switch (settings.printerType) {
-      case 'A4':
-        return formatA4(invoice, settings);
-      case 'THERMAL_80MM':
-        return formatThermal(invoice, settings, 80);
-      case 'THERMAL_58MM':
-        return formatThermal(invoice, settings, 58);
-      case 'PDF_ONLY':
-        return formatA4(invoice, settings); // Fallback to A4 for PDF
-      default:
-        return formatThermal(invoice, settings, 80);
+  formatSaleInvoice: (order: any, settings: PrinterSettings, shop: ShopHeader): string => {
+    const invoice: UnifiedInvoice = {
+      invoiceNo: order.orderNumber,
+      date: new Date(order.createdAt).toLocaleString(),
+      customer: order.customerId ? { name: order.customerId.name || 'Walk-in', phone: order.customerId.phone } : undefined,
+      items: order.items.map((i: any) => ({ name: i.name, qty: i.quantity, price: i.price, total: i.quantity * i.price })),
+      subtotal: order.totalAmount,
+      discount: 0, // Implement if added to order
+      tax: 0,
+      total: order.totalAmount,
+      paymentMethod: order.paymentMethod,
+      shop
+    };
+    return renderDocument(invoice, settings, 'Sale Receipt');
+  },
+
+  formatPurchaseInvoice: (purchase: any, settings: PrinterSettings, shop: ShopHeader): string => {
+    const invoice: UnifiedInvoice = {
+      invoiceNo: purchase.invoiceNumber || purchase._id.slice(-6).toUpperCase(),
+      date: new Date(purchase.issuedAt || purchase.createdAt).toLocaleString(),
+      customer: purchase.supplierId ? { name: purchase.supplierId.name || 'Supplier' } : undefined,
+      items: (purchase.items || []).map((i: any) => ({ name: i.name, qty: i.quantity, price: i.price, total: i.total || (i.quantity * i.price) })),
+      subtotal: purchase.subtotal || purchase.grandTotal,
+      discount: purchase.discount || 0,
+      tax: purchase.tax || 0,
+      total: purchase.grandTotal || purchase.totalAmount,
+      paymentMethod: purchase.paymentMethod || 'cash',
+      shop
+    };
+    return renderDocument(invoice, settings, 'Purchase Invoice');
+  },
+
+  formatExpenseVoucher: (expense: any, settings: PrinterSettings, shop: ShopHeader): string => {
+    const invoice: UnifiedInvoice = {
+      invoiceNo: expense._id.slice(-8).toUpperCase(),
+      date: new Date(expense.date || expense.createdAt).toLocaleString(),
+      customer: { name: 'Internal Expense' },
+      items: [{ name: `${expense.title} (${expense.category})`, qty: 1, price: expense.amount, total: expense.amount }],
+      subtotal: expense.amount,
+      discount: 0,
+      tax: 0,
+      total: expense.amount,
+      paymentMethod: expense.paymentMethod,
+      shop
+    };
+    return renderDocument(invoice, settings, 'Expense Voucher');
+  },
+
+  formatPaymentReceipt: (ledger: any, settings: PrinterSettings, shop: ShopHeader): string => {
+    const invoice: UnifiedInvoice = {
+      invoiceNo: ledger.transactionId || ledger._id.slice(-8).toUpperCase(),
+      date: new Date(ledger.createdAt).toLocaleString(),
+      customer: { name: ledger.customerId?.name || ledger.supplierId?.name || 'Party' },
+      items: [{ name: `Payment: ${ledger.description || ledger.type}`, qty: 1, price: ledger.amount, total: ledger.amount }],
+      subtotal: ledger.amount,
+      discount: 0,
+      tax: 0,
+      total: ledger.amount,
+      paymentMethod: ledger.debitAccount,
+      shop
+    };
+    return renderDocument(invoice, settings, 'Payment Receipt');
+  },
+
+  formatLedgerStatement: (party: any, timeline: any[], settings: PrinterSettings, shop: ShopHeader, filterTitle: string = 'Full Ledger'): string => {
+    // We only support A4/PDF for ledger statements as thermal is too narrow
+    const title = (party.type === 'CUSTOMER' ? 'Customer' : 'Supplier') + ' Ledger Statement';
+    
+    let html = '';
+    html += '<div style="font-family: ' + settings.font.family + '; font-size: ' + settings.font.size + 'px; padding: 20px; max-width: 800px; margin: 0 auto; color: #000;">';
+    html += '<div style="text-align: center; margin-bottom: 20px;">';
+    
+    if (settings.invoice.showLogo && shop.logoUrl) {
+      html += '<img src="' + shop.logoUrl + '" style="max-height: 80px;" />';
     }
+    
+    if (settings.invoice.showShopInfo) {
+      html += '<h1 style="margin: 5px 0;">' + shop.name + '</h1>';
+      html += '<p style="margin: 2px 0;">' + shop.address + '</p>';
+      html += '<p style="margin: 2px 0;">' + shop.phone + '</p>';
+    }
+    
+    html += '<h2 style="margin: 10px 0; border: 1px solid #000; display: inline-block; padding: 5px 15px; border-radius: 4px;">' + title + '</h2>';
+    html += '</div>';
+
+    html += '<div style="display: flex; justify-content: space-between; margin-bottom: 20px; border-bottom: 1px solid #000; padding-bottom: 10px;">';
+    html += '<div>';
+    html += '<p style="margin: 2px 0;"><strong>Party:</strong> ' + party.name + '</p>';
+    html += '<p style="margin: 2px 0;"><strong>Type:</strong> ' + party.type + '</p>';
+    html += '</div>';
+    html += '<div style="text-align: right;">';
+    html += '<p style="margin: 2px 0;"><strong>Filter:</strong> ' + filterTitle + '</p>';
+    html += '<p style="margin: 2px 0;"><strong>Current Balance:</strong> ' + Math.abs(party.balance).toLocaleString() + (party.balance < 0 ? ' CR' : ' DR') + '</p>';
+    html += '</div>';
+    html += '</div>';
+
+    html += '<table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">';
+    html += '<thead>';
+    html += '<tr style="border-bottom: 2px solid #000;">';
+    html += '<th style="text-align: left; padding: 5px;">Date</th>';
+    html += '<th style="text-align: left; padding: 5px;">Reference</th>';
+    html += '<th style="text-align: left; padding: 5px;">Details</th>';
+    html += '<th style="text-align: right; padding: 5px;">Debit</th>';
+    html += '<th style="text-align: right; padding: 5px;">Credit</th>';
+    html += '<th style="text-align: right; padding: 5px;">Balance</th>';
+    html += '</tr>';
+    html += '</thead>';
+    html += '<tbody>';
+
+    timeline.forEach(entry => {
+      const isPayment = entry.type === 'payment';
+      const isCustomer = party.type === 'CUSTOMER';
+      const showDebit = isCustomer ? !isPayment : isPayment;
+      const showCredit = isCustomer ? isPayment : !isPayment;
+      const bal = entry.runningBalance;
+
+      html += '<tr style="border-bottom: 1px solid #eee;">';
+      html += '<td style="padding: 5px;">' + new Date(entry.timestamp).toLocaleDateString() + '</td>';
+      html += '<td style="padding: 5px;">' + entry.transactionId + '</td>';
+      html += '<td style="padding: 5px;">' + entry.description + '</td>';
+      html += '<td style="text-align: right; padding: 5px;">' + (showDebit ? entry.amount.toLocaleString() : '-') + '</td>';
+      html += '<td style="text-align: right; padding: 5px;">' + (showCredit ? entry.amount.toLocaleString() : '-') + '</td>';
+      html += '<td style="text-align: right; padding: 5px;">' + Math.abs(bal).toLocaleString() + (bal < 0 ? ' CR' : ' DR') + '</td>';
+      html += '</tr>';
+    });
+
+    html += '</tbody>';
+    html += '</table>';
+    html += '<div style="clear: both; margin-top: 50px; text-align: center;">';
+    html += '<p>' + (shop.footerText || '') + '</p>';
+    html += '</div>';
+    html += '</div>';
+
+    return html;
+  },
+
+  // Fallback for generic/mock preview
+  format: (invoice: UnifiedInvoice, settings: PrinterSettings): string => {
+    return renderDocument(invoice, settings, 'Receipt');
   }
 };
 
-const formatA4 = (invoice: UnifiedInvoice, settings: PrinterSettings): string => {
+const renderDocument = (invoice: UnifiedInvoice, settings: PrinterSettings, title: string): string => {
+  switch (settings.printerType) {
+    case 'A4':
+    case 'PDF_ONLY':
+      return formatA4(invoice, settings, title);
+    case 'THERMAL_80MM':
+      return formatThermal(invoice, settings, 80, title);
+    case 'THERMAL_58MM':
+      return formatThermal(invoice, settings, 58, title);
+    default:
+      return formatThermal(invoice, settings, 80, title);
+  }
+};
+
+const formatA4 = (invoice: UnifiedInvoice, settings: PrinterSettings, title: string): string => {
   return `
-    <div style="font-family: ${settings.font.family}; font-size: ${settings.font.size}px; padding: ${settings.layout.marginTop}px ${settings.layout.marginRight}px ${settings.layout.marginBottom}px ${settings.layout.marginLeft}px; max-width: 800px; margin: 0 auto;">
+    <div style="font-family: ${settings.font.family}; font-size: ${settings.font.size}px; padding: ${settings.layout.marginTop}px ${settings.layout.marginRight}px ${settings.layout.marginBottom}px ${settings.layout.marginLeft}px; max-width: 800px; margin: 0 auto; color: #000;">
       <div style="text-align: center; margin-bottom: 20px;">
         ${settings.invoice.showLogo && invoice.shop.logoUrl ? `<img src="${invoice.shop.logoUrl}" style="max-height: 80px;" />` : ''}
         ${settings.invoice.showShopInfo ? `
@@ -28,6 +168,7 @@ const formatA4 = (invoice: UnifiedInvoice, settings: PrinterSettings): string =>
           <p style="margin: 2px 0;">${invoice.shop.address}</p>
           <p style="margin: 2px 0;">${invoice.shop.phone}</p>
         ` : ''}
+        <h2 style="margin: 10px 0; border: 1px solid #000; display: inline-block; padding: 5px 15px; border-radius: 4px;">${title}</h2>
       </div>
       
       <div style="display: flex; justify-content: space-between; margin-bottom: 20px; border-bottom: 1px solid #000; padding-bottom: 10px;">
@@ -37,7 +178,7 @@ const formatA4 = (invoice: UnifiedInvoice, settings: PrinterSettings): string =>
         </div>
         ${invoice.customer ? `
         <div style="text-align: right;">
-          <p style="margin: 2px 0;"><strong>Customer:</strong> ${invoice.customer.name}</p>
+          <p style="margin: 2px 0;"><strong>Party:</strong> ${invoice.customer.name}</p>
           ${invoice.customer.phone ? `<p style="margin: 2px 0;">${invoice.customer.phone}</p>` : ''}
         </div>` : ''}
       </div>
@@ -45,10 +186,10 @@ const formatA4 = (invoice: UnifiedInvoice, settings: PrinterSettings): string =>
       <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
         <thead>
           <tr style="border-bottom: 2px solid #000;">
-            <th style="text-align: left; padding: 5px;">Item</th>
+            <th style="text-align: left; padding: 5px;">Description</th>
             <th style="text-align: right; padding: 5px;">Qty</th>
-            <th style="text-align: right; padding: 5px;">Price</th>
-            <th style="text-align: right; padding: 5px;">Total</th>
+            <th style="text-align: right; padding: 5px;">Rate</th>
+            <th style="text-align: right; padding: 5px;">Amount</th>
           </tr>
         </thead>
         <tbody>
@@ -86,47 +227,44 @@ const formatA4 = (invoice: UnifiedInvoice, settings: PrinterSettings): string =>
       
       <div style="clear: both; margin-top: 50px; text-align: center;">
         <p>${invoice.shop.footerText || ''}</p>
-        ${settings.invoice.showBarcode ? `<div style="margin-top: 20px;">[BARCODE MOCK: ${invoice.invoiceNo}]</div>` : ''}
       </div>
     </div>
   `;
 };
 
-const formatThermal = (invoice: UnifiedInvoice, settings: PrinterSettings, width: number): string => {
-  // width: 80mm ~ 302px, 58mm ~ 219px (approx scale)
-  const pxWidth = width === 80 ? 302 : 219;
+const formatThermal = (invoice: UnifiedInvoice, settings: PrinterSettings, width: number, title: string): string => {
+  const is58 = width === 58;
+  const pxWidth = is58 ? 219 : 302;
   
   return `
-    <div style="font-family: ${settings.font.family}; font-size: ${settings.font.size}px; width: ${pxWidth}px; margin: 0 auto; line-height: 1.2;">
+    <div style="font-family: ${settings.font.family}; font-size: ${is58 ? settings.font.size - 2 : settings.font.size}px; width: ${pxWidth}px; margin: 0 auto; line-height: 1.2; color: #000;">
       <div style="text-align: center; margin-bottom: 10px;">
-        ${settings.invoice.showLogo && invoice.shop.logoUrl ? `<img src="${invoice.shop.logoUrl}" style="max-width: 80%; max-height: 100px; margin-bottom: 5px;" />` : ''}
+        ${!is58 && settings.invoice.showLogo && invoice.shop.logoUrl ? `<img src="${invoice.shop.logoUrl}" style="max-width: 80%; max-height: 80px; margin-bottom: 5px;" />` : ''}
         ${settings.invoice.showShopInfo ? `
-          <div style="font-weight: bold; font-size: 1.2em;">${invoice.shop.name}</div>
-          <div>${invoice.shop.address}</div>
+          <div style="font-weight: bold; font-size: ${is58 ? '1.1em' : '1.2em'};">${invoice.shop.name}</div>
+          ${!is58 ? `<div>${invoice.shop.address}</div>` : ''}
           <div>${invoice.shop.phone}</div>
-          ${invoice.shop.taxNumber ? `<div>NTN: ${invoice.shop.taxNumber}</div>` : ''}
         ` : ''}
+        <div style="margin-top: 3px; font-weight: bold;">*** ${title.toUpperCase()} ***</div>
       </div>
       
-      <div style="border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 5px 0; margin-bottom: 5px;">
+      <div style="border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 5px 0; margin-bottom: 5px; font-size: 0.9em;">
         <div>Inv: ${invoice.invoiceNo}</div>
         <div>Date: ${invoice.date}</div>
         ${invoice.customer ? `<div>Cust: ${invoice.customer.name}</div>` : ''}
       </div>
 
-      <table style="width: 100%; text-align: left; margin-bottom: 5px;">
+      <table style="width: 100%; text-align: left; margin-bottom: 5px; font-size: 0.95em;">
         <tr style="border-bottom: 1px dashed #000;">
-          <th>Item</th>
-          <th style="text-align: right;">Qty</th>
-          <th style="text-align: right;">Amt</th>
+          <th style="padding-bottom: 2px;">Item</th>
+          <th style="text-align: right; padding-bottom: 2px;">Amount</th>
         </tr>
         ${invoice.items.map(item => `
           <tr>
-            <td colspan="3" style="padding-top: 3px;">${item.name}</td>
+            <td colspan="2" style="padding-top: 3px; word-break: break-word;">${item.name}</td>
           </tr>
           <tr>
-            <td></td>
-            <td style="text-align: right;">${item.qty} x ${item.price}</td>
+            <td style="color: #444;">${item.qty} x ${item.price}</td>
             <td style="text-align: right;">${item.total.toFixed(2)}</td>
           </tr>
         `).join('')}
@@ -153,9 +291,8 @@ const formatThermal = (invoice: UnifiedInvoice, settings: PrinterSettings, width
         </div>
       </div>
       
-      <div style="text-align: center; margin-top: 15px;">
+      <div style="text-align: center; margin-top: 15px; font-size: 0.9em;">
         <div>${invoice.shop.footerText || ''}</div>
-        ${settings.invoice.showBarcode ? `<div style="margin-top: 10px;">||||||||||||||||||||<br/><small>${invoice.invoiceNo}</small></div>` : ''}
       </div>
     </div>
   `;
