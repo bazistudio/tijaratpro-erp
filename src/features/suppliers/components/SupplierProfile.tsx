@@ -9,6 +9,7 @@ import { usePrinterStore } from '@/features/settings/printer/store/printer.store
 import { printFormatter } from '@/features/settings/printer/utils/printFormatter';
 import { useLedger } from '@/features/ledger/hooks/useLedger';
 import { MakeSupplierPaymentModal } from './modals/MakeSupplierPaymentModal';
+import { SupplierFormDrawer } from './modals/AddSupplierDrawer';
 
 interface SupplierProfileProps {
   id: string;
@@ -22,6 +23,7 @@ export const SupplierProfile: React.FC<SupplierProfileProps> = ({ id }) => {
   const { settings, shopHeader, fetchSettings } = usePrinterStore();
   const [expandedPurchases, setExpandedPurchases] = useState<Record<string, boolean>>({});
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   useEffect(() => {
     if (!settings || !shopHeader) {
@@ -238,6 +240,12 @@ export const SupplierProfile: React.FC<SupplierProfileProps> = ({ id }) => {
             >
               <Download className="w-5 h-5 text-gray-400" /> Export PDF
             </button>
+            <button 
+              onClick={() => setIsEditModalOpen(true)}
+              className="w-full flex items-center gap-3 px-4 py-3 bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700/80 active:scale-95 transition-all font-semibold rounded-xl text-gray-700 dark:text-gray-300 mt-4 border border-gray-200 dark:border-gray-700"
+            >
+              <Edit className="w-5 h-5 text-gray-400" /> Edit Supplier
+            </button>
           </div>
 
           {/* Recent Purchases Widget */}
@@ -326,6 +334,13 @@ export const SupplierProfile: React.FC<SupplierProfileProps> = ({ id }) => {
           fetchDetail();
           refetchLedger();
         }}
+      />
+
+      <SupplierFormDrawer
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        suppliers={[]} // Pass empty or fetched if needed, only used for phone dupe check
+        editingSupplier={supplier}
       />
     </div>
   );

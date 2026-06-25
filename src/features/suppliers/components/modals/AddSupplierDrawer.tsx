@@ -67,7 +67,7 @@ export const SupplierFormDrawer: React.FC<SupplierFormDrawerProps> = ({ isOpen, 
   const saveMutation = useMutation({
     mutationFn: (data: any) => 
       editingSupplier 
-        ? supplierApi.updateSupplier(editingSupplier.id, data) 
+        ? supplierApi.updateSupplier(editingSupplier.id || editingSupplier._id, data) 
         : supplierApi.addSupplier(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['suppliers'] });
