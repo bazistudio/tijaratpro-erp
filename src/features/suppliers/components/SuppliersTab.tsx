@@ -129,7 +129,7 @@ export const SuppliersTab = () => {
               setEditingSupplier(null);
               setIsAddModalOpen(true);
             }}
-            className="w-full sm:w-auto flex items-center justify-center gap-2 bg-gradient-to-r from-[#006970] to-[#008990] hover:from-[#00585e] hover:to-[#00767c] text-white px-5 py-2.5 rounded-xl font-semibold transition-all shadow-md hover:shadow-lg active:scale-95"
+            className="w-full sm:w-auto flex items-center justify-center gap-2 bg-linear-to-r from-[#006970] to-[#008990] hover:from-[#00585e] hover:to-[#00767c] text-white px-5 py-2.5 rounded-xl font-semibold transition-all shadow-md hover:shadow-lg active:scale-95"
           >
             <Plus className="w-5 h-5" />
             New Supplier
@@ -153,7 +153,7 @@ export const SuppliersTab = () => {
                 <tr key={supplier.id} className="hover:bg-[#006970]/5 dark:hover:bg-[#006970]/10 transition-colors group">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
-                      <div className="flex-shrink-0 h-10 w-10 bg-[#006970]/10 dark:bg-[#006970]/20 rounded-xl flex items-center justify-center text-[#006970] dark:text-[#00B4BB] font-black text-lg shadow-sm">
+                      <div className="shrink-0 h-10 w-10 bg-[#006970]/10 dark:bg-[#006970]/20 rounded-xl flex items-center justify-center text-[#006970] dark:text-[#00B4BB] font-black text-lg shadow-sm">
                         {supplier.name.charAt(0).toUpperCase()}
                       </div>
                       <div className="ml-4">
