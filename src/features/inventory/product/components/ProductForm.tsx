@@ -63,7 +63,7 @@ export const ProductForm = () => {
     setValue,
     reset,
     setFocus,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),
     defaultValues: {
@@ -71,6 +71,18 @@ export const ProductForm = () => {
       lowStockThreshold: 5,
     }
   });
+
+  // Warn on unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty && !isSubmitting) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [isDirty, isSubmitting]);
 
   useEffect(() => {
     fetchCategories();

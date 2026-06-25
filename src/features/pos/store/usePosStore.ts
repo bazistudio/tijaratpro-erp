@@ -110,7 +110,7 @@ interface PosStore {
   setInvoiceDiscount: (discountType: 'percentage' | 'fixed', discountValue: number) => void;
 
   // Transaction Lifecycle
-  completeTransaction: (paymentBreakdown: { method: string; amount: number }[], customer: { id: string; name: string } | null) => Promise<any>;
+  completeTransaction: (paymentBreakdown: { method: string; amount: number }[], customer: { id: string; name: string } | null, idempotencyKey?: string) => Promise<any>;
   processCashReturn: () => Promise<any>;
   processInvoiceReturn: (skipOverflowCheck?: boolean, forceCashRefund?: boolean) => Promise<any>;
   setLastInvoice: (invoice: InvoiceDocument | null) => void;
@@ -460,7 +460,7 @@ export const usePosStore = create<PosStore>()(
         });
       },
 
-      completeTransaction: async (paymentBreakdown, customer) => {
+      completeTransaction: async (paymentBreakdown, customer, idempotencyKey) => {
         const session = get().getActiveSession();
         if (!session) return;
 
@@ -491,6 +491,7 @@ export const usePosStore = create<PosStore>()(
             taxRate: 0,
             discount: session.invoiceDiscountValue || 0,
             linkedInvoiceId: session.linkedInvoiceId || undefined,
+            idempotencyKey,
           };
 
           let result;
@@ -576,6 +577,7 @@ export const usePosStore = create<PosStore>()(
         const isPureAdjustment = session.cart.length === 0;
 
         try {
+          const idempotencyKey = `pos_txn_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
           const payload = {
             items: session.cart.map(item => ({
               productId: item.productId,
@@ -590,6 +592,7 @@ export const usePosStore = create<PosStore>()(
             // Convert positive discount input into negative for the return order
             discount: -(session.invoiceDiscountValue || 0),
             linkedInvoiceId: session.linkedInvoiceId || undefined,
+            idempotencyKey,
           };
 
           let result;
@@ -682,6 +685,7 @@ export const usePosStore = create<PosStore>()(
 
         // ─── Proceed with Return Invoice ──────────────────────────────────────
         try {
+          const idempotencyKey = `pos_txn_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
           // Send negative quantity for return
           const payload = {
             items: session.cart.map(item => ({
@@ -696,6 +700,7 @@ export const usePosStore = create<PosStore>()(
             taxRate: 0,
             discount: -(session.invoiceDiscountValue || 0),
             linkedInvoiceId: session.linkedInvoiceId,
+            idempotencyKey,
           };
 
           let result;

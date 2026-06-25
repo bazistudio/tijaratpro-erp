@@ -20,13 +20,16 @@ interface PrintState {
   clearPayload: () => void;
 }
 
-export const usePrintStore = create<PrintState>((set) => ({
+export const usePrintStore = create<PrintState>((set, get) => ({
   currentPayload: null,
   isPreviewOpen: false,
   isPrinting: false,
 
-  openPreview: (payload) => set({ currentPayload: payload, isPreviewOpen: true }),
+  openPreview: (payload) => {
+    if (get().isPreviewOpen || get().isPrinting) return;
+    set({ currentPayload: payload, isPreviewOpen: true, isPrinting: true });
+  },
   closePreview: () => set({ isPreviewOpen: false }),
   setPrinting: (isPrinting) => set({ isPrinting }),
-  clearPayload: () => set({ currentPayload: null, isPreviewOpen: false })
+  clearPayload: () => set({ currentPayload: null, isPreviewOpen: false, isPrinting: false })
 }));

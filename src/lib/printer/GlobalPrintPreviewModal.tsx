@@ -3,8 +3,10 @@ import React, { useRef } from 'react';
 import { usePrintStore } from './print.store';
 import { X, Printer, Download } from 'lucide-react';
 
+import { GlobalLoadingOverlay } from '@/components/ui/GlobalLoadingOverlay';
+
 export const GlobalPrintPreviewModal: React.FC = () => {
-  const { currentPayload, isPreviewOpen, closePreview } = usePrintStore();
+  const { currentPayload, isPreviewOpen, isPrinting, closePreview, setPrinting } = usePrintStore();
   const printIframeRef = useRef<HTMLIFrameElement>(null);
 
   // Automatically trigger print when payload is available
@@ -35,17 +37,24 @@ export const GlobalPrintPreviewModal: React.FC = () => {
           iframe.contentWindow?.focus();
           iframe.contentWindow?.print();
           closePreview(); // Clean up state immediately after opening print dialog
+          
+          // In some browsers, print() blocks JavaScript. Once it unblocks (dialog closed), we stop printing state.
+          // In non-blocking browsers, this timeout runs right away. We just clear the UI immediately so the user can continue.
+          setPrinting(false);
         }, 250);
       }
     }
-  }, [isPreviewOpen, currentPayload, closePreview]);
-
-  if (!isPreviewOpen || !currentPayload) return null;
+  }, [isPreviewOpen, currentPayload, closePreview, setPrinting]);
 
   return (
-    <iframe 
-      ref={printIframeRef} 
-      style={{ display: 'none', position: 'absolute', width: 0, height: 0, border: 0 }} 
-    />
+    <>
+      <GlobalLoadingOverlay isOpen={isPrinting} message="Preparing Print Dialog..." />
+      {(isPreviewOpen && currentPayload) && (
+        <iframe 
+          ref={printIframeRef} 
+          style={{ display: 'none', position: 'absolute', width: 0, height: 0, border: 0 }} 
+        />
+      )}
+    </>
   );
 };

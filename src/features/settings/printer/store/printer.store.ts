@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { PrinterSettings, ShopHeader } from '../types/printer.types';
 import axiosInstance from '@/lib/api/axios';
+import toast from 'react-hot-toast';
 
 interface PrinterState {
   settings: PrinterSettings | null;
@@ -55,8 +56,10 @@ export const usePrinterStore = create<PrinterState>((set, get) => ({
       const { settings, shopHeader } = get();
       await axiosInstance.put('/api/settings', { printer: settings, shopHeader });
       set({ isLoading: false });
+      toast.success('Printer settings saved successfully');
     } catch (err: any) {
       set({ error: err.message || 'Failed to save settings', isLoading: false });
+      toast.error('Failed to save printer settings');
     }
   }
 }));

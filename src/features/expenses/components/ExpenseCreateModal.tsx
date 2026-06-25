@@ -20,29 +20,64 @@ export const ExpenseCreateModal: React.FC<Props> = ({ isOpen, onClose }) => {
   };
 
   const [formData, setFormData] = useState(defaultFormData);
+  const [isDirty, setIsDirty] = useState(false);
+
+  useEffect(() => {
+    setIsDirty(
+      formData.title !== defaultFormData.title ||
+      formData.amount !== defaultFormData.amount ||
+      formData.note !== defaultFormData.note
+    );
+  }, [formData]);
 
   useEffect(() => {
     if (isOpen) {
       setFormData(defaultFormData);
+      setIsDirty(false);
     }
   }, [isOpen]);
 
+  const handleClose = () => {
+    if (isDirty && !window.confirm("You have unsaved changes. Are you sure you want to cancel?")) {
+      return;
+    }
+    onClose();
+  };
+
   if (!isOpen) return null;
+
+  const { openPreview } = require('@/lib/printer').usePrintStore();
+  const { settings, shopHeader } = require('@/features/settings/printer/store/printer.store').usePrinterStore();
+  const { printFormatter } = require('@/features/settings/printer/utils/printFormatter');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.title || !formData.amount) return;
 
-    await addExpense({
+    const idempotencyKey = `exp_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+
+    const expensePayload = {
       date: new Date().toISOString(),
       title: formData.title,
       category: formData.category,
       amount: parseFloat(formData.amount),
       paymentMethod: formData.paymentMethod,
       status: formData.status,
-      note: formData.note
-      // idempotencyKey is handled safely by the backend or we can generate it here
-    });
+      note: formData.note,
+      idempotencyKey
+    };
+
+    await addExpense(expensePayload as any);
+    
+    // Print logic
+    if (settings && shopHeader) {
+      const mockExpense = {
+        _id: idempotencyKey,
+        ...expensePayload
+      };
+      const html = printFormatter.formatExpenseVoucher(mockExpense, settings, shopHeader);
+      openPreview({ html, documentType: 'ExpenseVoucher', referenceId: idempotencyKey, title: 'Expense Voucher' });
+    }
 
     onClose();
   };
@@ -53,7 +88,7 @@ export const ExpenseCreateModal: React.FC<Props> = ({ isOpen, onClose }) => {
         
         <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-100 dark:border-neutral-800">
           <h2 className="text-lg font-bold text-neutral-900 dark:text-white">Record Expense</h2>
-          <button onClick={onClose} className="p-2 text-neutral-500 hover:text-red-600 dark:hover:text-red-400 rounded-lg transition-colors">
+          <button onClick={handleClose} className="p-2 text-neutral-500 hover:text-red-600 dark:hover:text-red-400 rounded-lg transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -141,7 +176,7 @@ export const ExpenseCreateModal: React.FC<Props> = ({ isOpen, onClose }) => {
           <div className="pt-4 mt-4 border-t border-neutral-100 dark:border-neutral-800 flex justify-end gap-3">
             <button 
               type="button" 
-              onClick={onClose}
+              onClick={handleClose}
               className="px-4 py-2 text-sm font-medium text-neutral-700 bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700 rounded-lg transition-colors"
             >
               Cancel

@@ -17,6 +17,7 @@ import { CreditLimitWarningModal } from './modals/CreditLimitWarningModal';
 import { usePrintStore } from '@/lib/printer';
 import { usePrinterStore } from '@/features/settings/printer/store/printer.store';
 import { printFormatter } from '@/features/settings/printer/utils/printFormatter';
+import { GlobalLoadingOverlay } from '@/components/ui/GlobalLoadingOverlay';
 
 export const CartSummary = () => {
   const [mounted, setMounted] = useState(false);
@@ -46,6 +47,8 @@ export const CartSummary = () => {
     shouldPrint: boolean;
     projectedBalance: number;
   } | null>(null);
+  
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const searchParams = useSearchParams();
   const preSelectedCustomerId = searchParams.get('customerId');
@@ -227,9 +230,14 @@ export const CartSummary = () => {
   const executeTransaction = async (paymentBreakdown: {method: string, amount: number}[], targetCustomer: {id: string, name: string} | null, shouldPrint: boolean) => {
 
     const isRefund = grandTotal < 0;
+    setIsProcessing(true);
+    
+    // Generate an Idempotency Key unique to this specific click attempt
+    // Using Date.now() + random string to ensure uniqueness even on rapid clicks
+    const idempotencyKey = `pos_txn_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
     
     try {
-      const result = await completeTransaction(paymentBreakdown, targetCustomer);
+      const result = await completeTransaction(paymentBreakdown, targetCustomer, idempotencyKey);
       
       if (result && (result.transaction || result.order)) {
         const orderData = result.transaction || result.order;
@@ -292,6 +300,8 @@ export const CartSummary = () => {
       }
     } catch (error) {
       // Error handled by store
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -401,7 +411,7 @@ export const CartSummary = () => {
         <div className="grid grid-cols-4 gap-4 p-4 border-t border-gray-200 dark:border-gray-800 shadow-[0_-10px_30px_-15px_rgba(0,0,0,0.1)] dark:shadow-[0_-10px_30px_-15px_rgba(0,0,0,0.5)]">
           <button 
             onClick={handleClearCart}
-            disabled={isCartEmpty}
+            disabled={isCartEmpty || isProcessing}
             title="Clear Cart (Ctrl+Delete)"
             className="h-16 flex flex-col items-center justify-center gap-1 bg-red-100 dark:bg-red-900/40 border border-red-300 dark:border-red-600/50 rounded-xl text-red-800 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-800/60 transition-all disabled:opacity-40 shadow-sm hover:shadow"
           >
@@ -411,7 +421,7 @@ export const CartSummary = () => {
           
           <button 
             onClick={handlePayAndPrint}
-            disabled={isCartEmpty}
+            disabled={isCartEmpty || isProcessing}
             title="Pay & Print (Ctrl+P)"
             className="h-16 flex flex-col items-center justify-center gap-1 bg-gradient-to-br from-[#006970] to-[#008990] dark:from-[#008990] dark:to-[#00A4AB] rounded-xl text-white hover:opacity-90 transition-all shadow-md hover:shadow-lg disabled:opacity-50"
           >
@@ -421,7 +431,7 @@ export const CartSummary = () => {
           
           <button 
             onClick={handleCashSale}
-            disabled={isCartEmpty}
+            disabled={isCartEmpty || isProcessing}
             title="Quick Cash Sale (Ctrl+S)"
             className="h-16 flex flex-col items-center justify-center gap-1 bg-teal-100 dark:bg-teal-900/40 border border-teal-300 dark:border-teal-600/50 rounded-xl text-teal-800 dark:text-teal-300 hover:bg-teal-200 dark:hover:bg-teal-800/60 transition-all shadow-sm hover:shadow disabled:opacity-40"
           >
@@ -431,7 +441,7 @@ export const CartSummary = () => {
           
           <button 
             onClick={handleCreditSale}
-            disabled={isCartEmpty}
+            disabled={isCartEmpty || isProcessing}
             title="Credit Ledger (Ctrl+L)"
             className="h-16 flex flex-col items-center justify-center gap-1 bg-blue-100 dark:bg-blue-900/40 border border-blue-300 dark:border-blue-600/50 rounded-xl text-blue-800 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-800/60 transition-all shadow-sm hover:shadow disabled:opacity-40"
           >
@@ -481,6 +491,8 @@ export const CartSummary = () => {
           onLimitUpdated={(updatedCustomer) => setSelectedCustomer(updatedCustomer)}
         />
       )}
+      
+      <GlobalLoadingOverlay isOpen={isProcessing} message="Processing Transaction..." />
     </div>
   );
 };

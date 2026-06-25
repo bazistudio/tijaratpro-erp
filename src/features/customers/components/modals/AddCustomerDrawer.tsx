@@ -104,8 +104,26 @@ export const CustomerFormDrawer: React.FC<CustomerFormDrawerProps> = ({ isOpen, 
     } as any);
   };
 
+  const [isDirty, setIsDirty] = useState(false);
+
+  useEffect(() => {
+    setIsDirty(
+      formData.name !== (editingCustomer?.name || '') ||
+      formData.phone !== (editingCustomer?.phone || '') ||
+      formData.email !== (editingCustomer?.email || '') ||
+      formData.address !== (editingCustomer?.address || '')
+    );
+  }, [formData, editingCustomer]);
+
+  const handleClose = () => {
+    if (isDirty && !window.confirm("You have unsaved changes. Are you sure you want to close?")) {
+      return;
+    }
+    onClose();
+  };
+
   return (
-    <SlideOverDrawer isOpen={isOpen} onClose={onClose} title={editingCustomer ? "Edit Customer" : "Add New Customer"}>
+    <SlideOverDrawer isOpen={isOpen} onClose={handleClose} title={editingCustomer ? "Edit Customer" : "Add New Customer"}>
       {/* ERP Summary Card */}
       <div className="bg-gradient-to-br from-[#006970]/10 to-blue-50 dark:from-[#006970]/20 dark:to-blue-900/10 rounded-xl p-5 mb-6 border border-[#006970]/20 dark:border-[#006970]/30 shadow-sm flex items-start gap-4">
         <div className="p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm shrink-0 text-[#006970] dark:text-[#00B4BB]">
@@ -212,7 +230,7 @@ export const CustomerFormDrawer: React.FC<CustomerFormDrawerProps> = ({ isOpen, 
       <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200 dark:border-gray-800 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md flex justify-end gap-3 z-10">
         <button 
           type="button"
-          onClick={onClose}
+          onClick={handleClose}
           className="px-5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
         >
           Cancel

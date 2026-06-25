@@ -12,15 +12,21 @@ export interface CreateOrderPayload {
   transactionType?: string;
   taxRate?: number;
   discount?: number;
+  idempotencyKey?: string;
 }
 
 export const salesApi = {
   createOrder: async (payload: CreateOrderPayload) => {
+    const { idempotencyKey, ...data } = payload;
     const response = await axiosInstance.post<{
       success: boolean;
       order: any;
       message: string;
-    }>('/api/orders', payload);
+    }>('/api/orders', data, {
+      headers: idempotencyKey ? {
+        'idempotency-key': idempotencyKey
+      } : {}
+    });
     return response.data;
   },
 

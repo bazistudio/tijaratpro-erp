@@ -11,9 +11,9 @@ interface KPIGridProps {
 
 export const KPIGrid = ({ data, isLoading = false }: KPIGridProps) => {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 w-full">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6 w-full">
       {isLoading
-        ? Array.from({ length: 4 }).map((_, index) => (
+        ? Array.from({ length: 5 }).map((_, index) => (
             <KPICard key={`skeleton-${index}`} data={{} as any} isLoading={true} />
           ))
         : data.map((item, index) => (

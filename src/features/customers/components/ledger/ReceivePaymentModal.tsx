@@ -17,12 +17,34 @@ export const ReceivePaymentModal = ({ isOpen, onClose, customer, onPaymentSucces
 
   const queryClient = useQueryClient();
 
+  const { openPreview } = require('@/lib/printer').usePrintStore();
+  const { settings, shopHeader } = require('@/features/settings/printer/store/printer.store').usePrinterStore();
+  const { printFormatter } = require('@/features/settings/printer/utils/printFormatter');
+
   const paymentMutation = useMutation({
     mutationFn: ledgerApi.recordPayment,
-    onSuccess: () => {
+    onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ['customers'] });
       queryClient.invalidateQueries({ queryKey: ['ledger'] });
       setAmount('');
+      
+      // Attempt to Print Receipt automatically
+      if (settings && shopHeader && data?.data?.paymentId) {
+        // Construct a mock ledger object since the backend just returns IDs right now
+        // Ideally we fetch the full ledger object, or construct it from the inputs
+        const mockLedger = {
+          transactionId: data.data.paymentId,
+          createdAt: new Date().toISOString(),
+          customerId: customer,
+          type: 'payment',
+          amount: Number(amount),
+          debitAccount: method.toLowerCase() === 'bank transfer' ? 'bank' : method.toLowerCase(),
+          description: `Payment Received - ${method}`
+        };
+        const html = printFormatter.formatPaymentReceipt(mockLedger, settings, shopHeader);
+        openPreview({ html, documentType: 'PaymentReceipt', referenceId: data.data.paymentId, title: 'Payment Receipt' });
+      }
+
       onClose();
       if (onPaymentSuccess) {
         onPaymentSuccess();

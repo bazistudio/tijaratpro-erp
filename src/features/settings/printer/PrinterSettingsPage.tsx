@@ -4,11 +4,26 @@ import { usePrinterStore } from './store/printer.store';
 import { PrinterSelector } from './components/PrinterSelector';
 import { ShopHeaderCardEditor } from './components/ShopHeaderCardEditor';
 import { InvoiceTemplateEditor } from './components/InvoiceTemplateEditor';
-import { PrintPreview } from './components/PrintPreview';
+import { PrintPreview, mockInvoice } from './components/PrintPreview';
 import { Save } from 'lucide-react';
+import { usePrintStore } from '@/lib/printer/print.store';
+import { printFormatter } from './utils/printFormatter';
 
 export const PrinterSettingsPage: React.FC = () => {
-  const { fetchSettings, saveSettings, isLoading, settings } = usePrinterStore();
+  const { fetchSettings, saveSettings, isLoading, settings, shopHeader } = usePrinterStore();
+  const { openPreview } = usePrintStore();
+
+  const handlePrintSample = () => {
+    if (!settings || !shopHeader) return;
+    const previewInvoice = { ...mockInvoice, shop: shopHeader };
+    const htmlContent = printFormatter.format(previewInvoice, settings);
+    openPreview({
+      html: htmlContent,
+      documentType: 'Generic',
+      referenceId: 'sample',
+      title: 'Sample Receipt'
+    });
+  };
 
   useEffect(() => {
     fetchSettings();
@@ -58,7 +73,9 @@ export const PrinterSettingsPage: React.FC = () => {
           <PrintPreview />
           
           <div className="mt-4 flex gap-3">
-            <button className="flex-1 py-2 border border-neutral-300 dark:border-neutral-700 rounded-lg text-sm font-medium hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors">
+            <button 
+              onClick={handlePrintSample}
+              className="flex-1 py-2 border border-neutral-300 dark:border-neutral-700 rounded-lg text-sm font-medium hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors">
               Print Sample
             </button>
           </div>
