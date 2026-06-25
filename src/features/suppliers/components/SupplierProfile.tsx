@@ -2,12 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supplierApi } from '@/services/supplier.api';
 import { LedgerBook } from '@/features/ledger/components/LedgerBook';
-import { Phone, MapPin, FileText, ShoppingCart, DollarSign, Calendar, Printer, Edit, Plus, CreditCard, ArrowLeft, Building2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Phone, MapPin, FileText, ShoppingCart, DollarSign, Calendar, Printer, Edit, CreditCard, ArrowLeft, Building2, ChevronDown, ChevronUp, Download } from 'lucide-react';
 import { usePrintStore } from '@/lib/printer';
 import { downloadHtmlAsPdf } from '@/lib/printer/pdfExport';
 import { usePrinterStore } from '@/features/settings/printer/store/printer.store';
 import { printFormatter } from '@/features/settings/printer/utils/printFormatter';
 import { useLedger } from '@/features/ledger/hooks/useLedger';
+import { MakeSupplierPaymentModal } from './modals/MakeSupplierPaymentModal';
 
 interface SupplierProfileProps {
   id: string;
@@ -20,6 +21,7 @@ export const SupplierProfile: React.FC<SupplierProfileProps> = ({ id }) => {
   const { openPreview } = usePrintStore();
   const { settings, shopHeader, fetchSettings } = usePrinterStore();
   const [expandedPurchases, setExpandedPurchases] = useState<Record<string, boolean>>({});
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
   useEffect(() => {
     if (!settings || !shopHeader) {
@@ -27,8 +29,8 @@ export const SupplierProfile: React.FC<SupplierProfileProps> = ({ id }) => {
     }
   }, [settings, shopHeader, fetchSettings]);
 
-  const togglePurchase = (id: string) => {
-    setExpandedPurchases(prev => ({ ...prev, [id]: !prev[id] }));
+  const togglePurchase = (pid: string) => {
+    setExpandedPurchases(prev => ({ ...prev, [pid]: !prev[pid] }));
   };
 
   const handlePrintPurchase = (e: React.MouseEvent, p: any) => {
@@ -46,32 +48,35 @@ export const SupplierProfile: React.FC<SupplierProfileProps> = ({ id }) => {
     openPreview({ html, documentType: 'PurchaseInvoice', referenceId: p.purchaseNumber, title: 'Purchase Invoice' });
   };
 
-  const { rawTimeline } = useLedger(detail?.supplier ? {
+  const { rawTimeline, refetch: refetchLedger } = useLedger(detail?.supplier ? {
     id: detail.supplier.id,
     type: 'SUPPLIER',
     name: detail.supplier.name,
-    balance: detail.stats.payable // positive if they owe us, negative if we owe them. Wait, useLedger balance expects actual balance.
+    balance: detail.supplier.currentBalance || 0
   } : null);
 
+  const fetchDetail = async () => {
+    try {
+      const res = await supplierApi.getSupplierDetail(id);
+      setDetail(res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   useEffect(() => {
-    const fetchDetail = async () => {
-      try {
-        setLoading(true);
-        const res = await supplierApi.getSupplierDetail(id);
-        setDetail(res.data);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
+    const loadData = async () => {
+      setLoading(true);
+      await fetchDetail();
+      setLoading(false);
     };
-    fetchDetail();
+    loadData();
   }, [id]);
 
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full"></div>
+        <div className="animate-spin w-8 h-8 border-4 border-[#006970] border-t-transparent rounded-full"></div>
       </div>
     );
   }
@@ -81,8 +86,6 @@ export const SupplierProfile: React.FC<SupplierProfileProps> = ({ id }) => {
   }
 
   const { supplier, stats } = detail;
-  // For supplier, balance > 0 means they owe us (advance), balance < 0 means we owe them (payable)
-  // Let's use actual balance for LedgerBook
   const actualBalance = supplier.currentBalance || 0;
   const isAdvance = actualBalance > 0;
   const isPayable = actualBalance < 0;
@@ -111,128 +114,183 @@ export const SupplierProfile: React.FC<SupplierProfileProps> = ({ id }) => {
     downloadHtmlAsPdf(html, `Ledger_${supplier.name.replace(/\s+/g, '_')}`);
   };
 
+  const handleNewPurchase = () => {
+    router.push(`/dashboard/shop-admin/import?supplierId=${supplier.id}`);
+  };
+
   return (
-    <div className="space-y-6 max-w-7xl mx-auto -mt-[30px]">
+    <div className="space-y-6 max-w-7xl mx-auto -mt-[30px] pb-10">
       {/* Top Bar Navigation */}
       <div className="flex items-center gap-4">
         <button 
-          onClick={() => router.back()}
-          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+          onClick={() => router.push('/dashboard/shop-admin/suppliers')}
+          className="p-2 hover:bg-white dark:hover:bg-gray-800 rounded-full transition-colors bg-gray-50/50 shadow-sm"
         >
-          <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+          <ArrowLeft className="w-5 h-5 text-[#006970] dark:text-[#00B4BB]" />
         </button>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Supplier Profile</h1>
+        <h1 className="text-2xl font-black text-gray-900 dark:text-white tracking-tight">Supplier Profile</h1>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      {/* Wide Profile Header */}
+      <div className="bg-gradient-to-r from-[#006970] to-[#008990] dark:from-[#004d52] dark:to-[#006970] rounded-3xl p-6 md:p-8 text-white shadow-lg relative overflow-hidden">
+        <div className="absolute -right-20 -top-20 w-64 h-64 bg-white/5 rounded-full blur-3xl"></div>
+        <div className="absolute right-20 -bottom-20 w-64 h-64 bg-black/10 rounded-full blur-3xl"></div>
         
-        {/* Left Column: Details & Quick Actions */}
-        <div className="lg:col-span-1 space-y-6">
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm flex flex-col items-center text-center">
-            <div className="w-20 h-20 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center text-purple-600 dark:text-purple-400 text-3xl font-black mb-4">
-              {supplier.name.charAt(0).toUpperCase()}
+        <div className="relative z-10 flex flex-col md:flex-row justify-between gap-8 items-start md:items-center">
+          <div className="space-y-4">
+            <div>
+              <h2 className="text-3xl font-black tracking-tight">{supplier.name}</h2>
+              {supplier.companyName && (
+                <div className="flex items-center gap-2 mt-1 text-white/80 font-medium">
+                  <Building2 className="w-4 h-4" />
+                  <span>{supplier.companyName}</span>
+                </div>
+              )}
             </div>
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{supplier.name}</h2>
             
-            <div className="space-y-2 mt-4 text-left w-full text-sm">
-              <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
-                <Building2 className="w-4 h-4" />
-                <span>{supplier.companyName || 'N/A'}</span>
-              </div>
-              <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
-                <Phone className="w-4 h-4" />
+            <div className="flex flex-wrap gap-4 text-sm font-medium text-white/90">
+              <div className="flex items-center gap-2 bg-black/10 px-3 py-1.5 rounded-lg backdrop-blur-sm">
+                <Phone className="w-4 h-4 text-white/70" />
                 <span>{supplier.phone || 'N/A'}</span>
               </div>
-              <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
-                <MapPin className="w-4 h-4" />
-                <span>{supplier.address || 'N/A'}</span>
+              <div className="flex items-center gap-2 bg-black/10 px-3 py-1.5 rounded-lg backdrop-blur-sm">
+                <MapPin className="w-4 h-4 text-white/70" />
+                <span>{supplier.address || 'No Address Provided'}</span>
               </div>
-              <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
-                <Calendar className="w-4 h-4" />
+              <div className="flex items-center gap-2 bg-black/10 px-3 py-1.5 rounded-lg backdrop-blur-sm">
+                <Calendar className="w-4 h-4 text-white/70" />
                 <span>Last TX: {stats.lastTransactionDate ? new Date(stats.lastTransactionDate).toLocaleDateString() : 'N/A'}</span>
               </div>
             </div>
           </div>
 
-          {/* Quick Actions */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700 shadow-sm space-y-2">
-            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Quick Actions</h3>
-            <button className="w-full flex items-center gap-3 px-4 py-2 bg-purple-50 hover:bg-purple-100 dark:bg-purple-900/20 dark:hover:bg-purple-900/40 text-purple-700 dark:text-purple-400 font-semibold rounded-lg transition-colors">
-              <ShoppingCart className="w-4 h-4" /> New Purchase
-            </button>
-            <button className="w-full flex items-center gap-3 px-4 py-2 bg-orange-50 hover:bg-orange-100 dark:bg-orange-900/20 dark:hover:bg-orange-900/40 text-orange-700 dark:text-orange-400 font-semibold rounded-lg transition-colors">
-              <CreditCard className="w-4 h-4" /> Make Payment
+          <div className="flex flex-col sm:flex-row gap-3 shrink-0 w-full md:w-auto">
+            <button 
+              onClick={handleNewPurchase}
+              className="flex items-center justify-center gap-2 px-5 py-3 bg-white text-[#006970] hover:bg-gray-50 active:scale-95 transition-all font-bold rounded-xl shadow-sm"
+            >
+              <ShoppingCart className="w-5 h-5" /> New Purchase
             </button>
             <button 
-              onClick={handlePrintFullLedger}
-              className="w-full flex items-center gap-3 px-4 py-2 bg-gray-50 hover:bg-gray-100 active:scale-95 active:bg-blue-600 active:text-white dark:bg-gray-700/50 dark:hover:bg-gray-700 dark:active:bg-blue-600 transition-all font-semibold rounded-lg text-gray-700 dark:text-gray-300"
+              onClick={() => setIsPaymentModalOpen(true)}
+              className="flex items-center justify-center gap-2 px-5 py-3 bg-orange-500 hover:bg-orange-600 active:scale-95 transition-all font-bold rounded-xl text-white shadow-sm"
             >
-              <Printer className="w-4 h-4" /> Print Ledger
+              <CreditCard className="w-5 h-5" /> Make Payment
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 border border-gray-100 dark:border-gray-800 shadow-sm relative overflow-hidden group">
+          <div className="absolute right-0 top-0 w-24 h-24 bg-blue-500/5 dark:bg-blue-500/10 rounded-bl-full transition-transform group-hover:scale-110"></div>
+          <div className="relative">
+            <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-xl flex items-center justify-center mb-4">
+              <DollarSign className="w-6 h-6" />
+            </div>
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Total Purchases</p>
+            <p className="text-3xl font-black text-gray-900 dark:text-white tabular-nums tracking-tight">Rs {stats.totalPurchases.toLocaleString()}</p>
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 border border-gray-100 dark:border-gray-800 shadow-sm relative overflow-hidden group">
+          <div className={`absolute right-0 top-0 w-24 h-24 rounded-bl-full transition-transform group-hover:scale-110 ${isPayable ? 'bg-orange-500/5 dark:bg-orange-500/10' : 'bg-green-500/5 dark:bg-green-500/10'}`}></div>
+          <div className="relative">
+            <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${isPayable ? 'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400' : 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400'}`}>
+              <FileText className="w-6 h-6" />
+            </div>
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">{isPayable ? 'Total Payable' : 'Advance Given'}</p>
+            <p className={`text-3xl font-black tabular-nums tracking-tight ${isPayable ? 'text-orange-600 dark:text-orange-400' : 'text-green-600 dark:text-green-400'}`}>
+              Rs {Math.abs(actualBalance).toLocaleString()}
+            </p>
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 border border-gray-100 dark:border-gray-800 shadow-sm relative overflow-hidden group">
+          <div className="absolute right-0 top-0 w-24 h-24 bg-[#006970]/5 dark:bg-[#006970]/10 rounded-bl-full transition-transform group-hover:scale-110"></div>
+          <div className="relative">
+            <div className="w-12 h-12 bg-[#006970]/10 text-[#006970] dark:bg-[#006970]/20 dark:text-[#00B4BB] rounded-xl flex items-center justify-center mb-4">
+              <ShoppingCart className="w-6 h-6" />
+            </div>
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Purchase Invoices</p>
+            <p className="text-3xl font-black text-gray-900 dark:text-white tabular-nums tracking-tight">{stats.purchaseCount}</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        
+        {/* Left Column: Recent Purchases & Tools */}
+        <div className="lg:col-span-1 space-y-6">
+          {/* Quick Actions */}
+          <div className="bg-white dark:bg-gray-900 rounded-2xl p-5 border border-gray-100 dark:border-gray-800 shadow-sm space-y-2">
+            <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Export Tools</h3>
+            <button 
+              onClick={handlePrintFullLedger}
+              className="w-full flex items-center gap-3 px-4 py-3 bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700/80 active:scale-95 transition-all font-semibold rounded-xl text-gray-700 dark:text-gray-300"
+            >
+              <Printer className="w-5 h-5 text-gray-400" /> Print Ledger
             </button>
             <button 
               onClick={handleDownloadFullLedgerPDF}
-              className="w-full flex items-center gap-3 px-4 py-2 bg-gray-50 hover:bg-gray-100 active:scale-95 active:bg-blue-600 active:text-white dark:bg-gray-700/50 dark:hover:bg-gray-700 dark:active:bg-blue-600 transition-all font-semibold rounded-lg text-gray-700 dark:text-gray-300"
+              className="w-full flex items-center gap-3 px-4 py-3 bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700/80 active:scale-95 transition-all font-semibold rounded-xl text-gray-700 dark:text-gray-300"
             >
-              <Download className="w-4 h-4" /> Export Ledger PDF
-            </button>
-            <button className="w-full flex items-center gap-3 px-4 py-2 bg-gray-50 hover:bg-gray-100 dark:bg-gray-700/50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold rounded-lg transition-colors">
-              <Edit className="w-4 h-4" /> Edit Supplier
+              <Download className="w-5 h-5 text-gray-400" /> Export PDF
             </button>
           </div>
 
           {/* Recent Purchases Widget */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700 shadow-sm">
-            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Recent Purchases</h3>
+          <div className="bg-white dark:bg-gray-900 rounded-2xl p-5 border border-gray-100 dark:border-gray-800 shadow-sm">
+            <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Recent Purchases</h3>
             <div className="space-y-3">
               {stats.recentPurchases.length === 0 && (
-                <div className="text-sm text-gray-500 text-center py-4">No recent purchases</div>
+                <div className="text-sm text-gray-500 text-center py-6 bg-gray-50 dark:bg-gray-800/50 rounded-xl">No recent purchases</div>
               )}
               {stats.recentPurchases.length > 0 && stats.recentPurchases.map((p: any) => (
-                <div key={p._id || p.purchaseNumber} className="border-b border-gray-100 dark:border-gray-700 pb-2 last:border-0 last:pb-0">
+                <div key={p._id || p.purchaseNumber} className="border border-gray-100 dark:border-gray-800 rounded-xl overflow-hidden bg-white dark:bg-gray-800/20">
                   <div 
-                    className="flex justify-between items-center text-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 p-1 rounded transition-colors"
+                    className="flex justify-between items-center text-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/80 p-3 transition-colors"
                     onClick={() => togglePurchase(p._id || p.purchaseNumber)}
                   >
-                    <div className="flex items-center gap-2">
-                      <button className="text-gray-400 hover:text-blue-500">
+                    <div className="flex items-center gap-3">
+                      <button className="text-gray-400 hover:text-[#006970]">
                         {expandedPurchases[p._id || p.purchaseNumber] ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                       </button>
                       <div>
-                        <div className="font-semibold text-gray-900 dark:text-white">{p.purchaseNumber || p.transactionId}</div>
-                        <div className="text-xs text-gray-500">{new Date(p.createdAt || p.timestamp).toLocaleDateString()}</div>
+                        <div className="font-bold text-gray-900 dark:text-white tracking-tight">{p.purchaseNumber || p.transactionId}</div>
+                        <div className="text-xs text-gray-500 mt-0.5">{new Date(p.createdAt || p.timestamp).toLocaleDateString()}</div>
                       </div>
                     </div>
                     <div className="flex items-center gap-3 text-right">
                       <div>
-                        <div className="font-bold text-gray-900 dark:text-white">Rs {(p.totalAmount || p.amount)?.toLocaleString()}</div>
+                        <div className="font-black text-gray-900 dark:text-white tabular-nums">Rs {(p.totalAmount || p.amount)?.toLocaleString()}</div>
                         {p.status && (
-                          <div className={`text-[10px] font-bold px-2 py-0.5 rounded-full inline-block ${p.status === 'paid' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
+                          <div className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full inline-block mt-1 ${p.status === 'paid' ? 'bg-emerald-100 text-emerald-700' : 'bg-orange-100 text-orange-700'}`}>
                             {p.status}
                           </div>
                         )}
                       </div>
-                      <div className="flex items-center gap-1">
-                        <button 
-                          onClick={(e) => handlePrintPurchase(e, p)}
-                          className="p-1.5 text-neutral-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded transition-colors"
-                          title="Print/PDF"
-                        >
-                          <Printer className="w-4 h-4" />
-                        </button>
-                      </div>
+                      <button 
+                        onClick={(e) => handlePrintPurchase(e, p)}
+                        className="p-2 text-gray-400 hover:text-[#006970] hover:bg-[#006970]/10 rounded-lg transition-colors"
+                        title="Print/PDF"
+                      >
+                        <Printer className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
                   
                   {expandedPurchases[p._id || p.purchaseNumber] && p.items && (
-                    <div className="mt-2 pl-8 pr-2 py-2 bg-gray-50 dark:bg-gray-800/80 rounded-lg text-xs space-y-1">
-                      <div className="font-bold text-gray-500 mb-1 flex justify-between border-b border-gray-200 dark:border-gray-700 pb-1">
+                    <div className="px-3 pb-3 pt-1 bg-gray-50 dark:bg-gray-800/80 text-xs space-y-1.5 border-t border-gray-100 dark:border-gray-800">
+                      <div className="font-bold text-gray-400 uppercase tracking-widest flex justify-between pb-1">
                         <span>Item</span>
                         <span>Amount</span>
                       </div>
                       {p.items.map((item: any, idx: number) => (
-                        <div key={idx} className="flex justify-between text-gray-700 dark:text-gray-300">
+                        <div key={idx} className="flex justify-between text-gray-700 dark:text-gray-300 font-medium">
                           <span>{item.qty || item.quantity}x {item.productId?.name || 'Item'}</span>
-                          <span>Rs {((item.qty || item.quantity) * item.price).toLocaleString()}</span>
+                          <span className="tabular-nums">Rs {((item.qty || item.quantity) * item.price).toLocaleString()}</span>
                         </div>
                       ))}
                     </div>
@@ -243,54 +301,32 @@ export const SupplierProfile: React.FC<SupplierProfileProps> = ({ id }) => {
           </div>
         </div>
 
-        {/* Right Column: KPIs & Ledger */}
-        <div className="lg:col-span-3 space-y-6">
-          {/* KPI Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700 shadow-sm flex items-center gap-4">
-              <div className="p-3 bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-lg">
-                <DollarSign className="w-6 h-6" />
-              </div>
-              <div>
-                <p className="text-xs font-bold text-gray-500 uppercase">Total Purchases</p>
-                <p className="text-2xl font-black text-gray-900 dark:text-white">Rs {stats.totalPurchases.toLocaleString()}</p>
-              </div>
-            </div>
-
-            <div className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700 shadow-sm flex items-center gap-4">
-              <div className={`p-3 rounded-lg ${isPayable ? 'bg-orange-100 text-orange-600' : 'bg-green-100 text-green-600'}`}>
-                <FileText className="w-6 h-6" />
-              </div>
-              <div>
-                <p className="text-xs font-bold text-gray-500 uppercase">{isPayable ? 'Payable' : 'Advance'}</p>
-                <p className={`text-2xl font-black ${isPayable ? 'text-orange-600' : 'text-green-600'}`}>Rs {Math.abs(actualBalance).toLocaleString()}</p>
-              </div>
-            </div>
-
-            <div className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700 shadow-sm flex items-center gap-4">
-              <div className="p-3 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg">
-                <ShoppingCart className="w-6 h-6" />
-              </div>
-              <div>
-                <p className="text-xs font-bold text-gray-500 uppercase">Purchases</p>
-                <p className="text-2xl font-black text-gray-900 dark:text-white">{stats.purchaseCount}</p>
-              </div>
-            </div>
+        {/* Right Column: Ledger Component */}
+        <div className="lg:col-span-3">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden h-full">
+            <LedgerBook 
+              initialParty={{
+                id: supplier.id,
+                type: 'SUPPLIER',
+                name: supplier.name,
+                balance: actualBalance
+              }}
+              readonly={true}
+            />
           </div>
-
-          {/* LedgerBook Component (Readonly) */}
-          <LedgerBook 
-            initialParty={{
-              id: supplier.id,
-              type: 'SUPPLIER',
-              name: supplier.name,
-              balance: actualBalance
-            }}
-            readonly={true}
-          />
         </div>
 
       </div>
+
+      <MakeSupplierPaymentModal
+        isOpen={isPaymentModalOpen}
+        onClose={() => setIsPaymentModalOpen(false)}
+        supplier={supplier}
+        onPaymentSuccess={() => {
+          fetchDetail();
+          refetchLedger();
+        }}
+      />
     </div>
   );
 };
