@@ -1,5 +1,5 @@
 import { LedgerDashboard } from '../../../../features/ledger/components/LedgerDashboard';
 
-export default function LedgerPage() {
+export default function BusinessLedgerPage() {
   return <LedgerDashboard />;
 }

@@ -38,13 +38,6 @@ export const shopAdminNavigation: NavigationGroup[] = [
     ],
   },
   {
-    label: 'People',
-    items: [
-      { name: 'Customers', href: '/dashboard/shop-admin/customers', icon: Users },
-      { name: 'Suppliers', href: '/dashboard/shop-admin/suppliers', icon: Truck, permission: 'VIEW_PRODUCTS' },
-    ],
-  },
-  {
     label: 'Operations',
     items: [
       { name: 'Repairs', href: '/dashboard/shop-admin/repairs', icon: Wrench },
@@ -52,9 +45,12 @@ export const shopAdminNavigation: NavigationGroup[] = [
     ],
   },
   {
-    label: 'Accounting',
+    label: 'Ledger',
     items: [
-      { name: 'Ledger', href: '/dashboard/shop-admin/ledger', icon: BookOpen, permission: 'VIEW_LEDGER' },
+      { name: 'Customers', href: '/dashboard/shop-admin/customers', icon: Users },
+      { name: 'Suppliers', href: '/dashboard/shop-admin/suppliers', icon: Truck, permission: 'VIEW_PRODUCTS' },
+      { name: 'Parties', href: '/dashboard/shop-admin/parties', icon: Users, permission: 'VIEW_LEDGER' },
+      { name: 'Business Ledger', href: '/dashboard/shop-admin/business-ledger', icon: BookOpen, permission: 'VIEW_LEDGER' },
     ],
   },
   {
