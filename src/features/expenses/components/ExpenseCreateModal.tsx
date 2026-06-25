@@ -44,11 +44,11 @@ export const ExpenseCreateModal: React.FC<Props> = ({ isOpen, onClose }) => {
     onClose();
   };
 
-  if (!isOpen) return null;
-
   const { openPreview } = require('@/lib/printer').usePrintStore();
   const { settings, shopHeader } = require('@/features/settings/printer/store/printer.store').usePrinterStore();
   const { printFormatter } = require('@/features/settings/printer/utils/printFormatter');
+
+  if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
