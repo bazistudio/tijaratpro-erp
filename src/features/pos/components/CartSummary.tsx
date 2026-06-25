@@ -157,6 +157,13 @@ export const CartSummary = () => {
       toast.error("Cart is empty");
       return;
     }
+
+    if (selectedCustomer && selectedCustomer.id !== 'walk-in') {
+      // If customer is selected, treat it as a credit sale (0 cash paid) added to their account directly
+      processTransaction([], { id: selectedCustomer.id, name: selectedCustomer.name }, false);
+      return;
+    }
+
     // Bypass modal for pure cash sale without printing
     processTransaction([{ method: 'cash', amount: grandTotal > 0 ? grandTotal : 0 }], null, false);
   };
@@ -167,27 +174,14 @@ export const CartSummary = () => {
       return;
     }
     
-    if (!settings || !shopHeader) {
-      toast.error("Printer settings not loaded yet. Please wait.");
+    if (selectedCustomer && selectedCustomer.id !== 'walk-in') {
+      // Credit sale with printing
+      processTransaction([], { id: selectedCustomer.id, name: selectedCustomer.name }, true);
       return;
     }
 
-    const html = printFormatter.formatSaleInvoice({
-      orderNumber: activeSession.transactionId || `TXN-${Date.now()}`,
-      createdAt: new Date().toISOString(),
-      customerId: selectedCustomer ? { name: selectedCustomer.name, phone: selectedCustomer.mobile || selectedCustomer.phone } : { name: 'Walk-in Customer' },
-      items: activeSession.cart?.map((i: any) => ({ 
-        name: i.productName || 'Item', 
-        qty: i.quantity || 1, 
-        price: i.unitPrice || 0, 
-        total: (i.unitPrice || 0) * (i.quantity || 1) 
-      })) || [],
-      totalAmount: grandTotal,
-      paymentMethod: 'Cash',
-      status: 'pending'
-    }, settings, shopHeader);
-
-    openPreview({ html, documentType: 'SaleInvoice', referenceId: activeSession.transactionId || `TXN-${Date.now()}`, title: 'Sale Invoice' });
+    // Cash sale with printing
+    processTransaction([{ method: 'cash', amount: grandTotal > 0 ? grandTotal : 0 }], null, true);
   };
 
   const handleCreditSale = () => {
