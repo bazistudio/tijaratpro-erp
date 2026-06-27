@@ -25,13 +25,18 @@ export default function AuthHydrator() {
       const session = getSession();
 
       if (session && isSessionValid(session)) {
+        // Hydrate synchronously from local storage to prevent layout flash
+        if (session.user) {
+          setAuth(session.user, session);
+        }
+
         try {
           // Fetch fresh user data from backend via tp_token cookie
           const freshUser = await getMeUser();
-          setAuth(freshUser, session); // also sets isHydrated: true
+          setAuth(freshUser, session); // updates with fresh data
         } catch {
           // Token invalid or expired — backend returned 401
-          logout(); // also sets isHydrated: true
+          logout(); // clears state and redirects
         }
       } else {
         // No session or expired — mark hydrated so dashboard can redirect
