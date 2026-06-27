@@ -39,7 +39,20 @@ export default function LoginForm() {
         router.push("/dashboard");
       }
     } catch (err: any) {
-      setError(err.message || "Login failed. Please try again.");
+      const code = err.response?.data?.code;
+      if (code === 'ACCOUNT_PENDING') {
+        router.push("/auth/pending");
+        return;
+      }
+      if (code === 'ACCOUNT_REJECTED') {
+        router.push("/auth/rejected");
+        return;
+      }
+      if (code === 'ACCOUNT_SUSPENDED') {
+        router.push("/auth/suspended");
+        return;
+      }
+      setError(err.response?.data?.message || err.message || "Login failed. Please try again.");
     } finally {
       setIsLoading(false);
     }

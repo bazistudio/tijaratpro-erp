@@ -68,3 +68,27 @@ export const useDeleteTenant = () => {
     },
   });
 };
+
+export const useRejectTenant = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: adminApi.rejectTenant,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'pending-tenants'] });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'dashboard-stats'] });
+    },
+  });
+};
+
+export const useHardDeleteTenant = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: adminApi.hardDeleteTenant,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'pending-tenants'] });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'suspended-tenants'] });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'active-tenants'] });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'dashboard-stats'] });
+    },
+  });
+};

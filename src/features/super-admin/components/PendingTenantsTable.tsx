@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { usePendingTenants } from '../hooks/usePendingTenants';
-import { useApproveTenant, useSuspendTenant } from '../hooks/useAdminActions';
+import { useApproveTenant, useSuspendTenant, useRejectTenant, useHardDeleteTenant } from '../hooks/useAdminActions';
 import { ActionButtons } from './ActionButtons';
 import { TenantApprovalModal } from './TenantApprovalModal';
 import { SecurityVerificationModal } from './SecurityVerificationModal';
@@ -13,9 +13,13 @@ export const PendingTenantsTable = () => {
   const { data: tenants, isLoading, isError } = usePendingTenants();
   const approveTenant = useApproveTenant();
   const suspendTenant = useSuspendTenant();
+  const rejectTenant = useRejectTenant();
+  const deleteTenant = useHardDeleteTenant();
 
   const [approvalModalOpen, setApprovalModalOpen] = useState(false);
   const [suspendModalOpen, setSuspendModalOpen] = useState(false);
+  const [rejectModalOpen, setRejectModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
 
   const handleApproveClick = (tenant: Tenant) => {
@@ -26,6 +30,16 @@ export const PendingTenantsTable = () => {
   const handleSuspendClick = (tenant: Tenant) => {
     setSelectedTenant(tenant);
     setSuspendModalOpen(true);
+  };
+
+  const handleRejectClick = (tenant: Tenant) => {
+    setSelectedTenant(tenant);
+    setRejectModalOpen(true);
+  };
+
+  const handleDeleteClick = (tenant: Tenant) => {
+    setSelectedTenant(tenant);
+    setDeleteModalOpen(true);
   };
 
   const onConfirmApprove = (plan: string, password: string) => {
@@ -49,6 +63,34 @@ export const PendingTenantsTable = () => {
         {
           onSuccess: () => {
             setSuspendModalOpen(false);
+            setSelectedTenant(null);
+          }
+        }
+      );
+    }
+  };
+
+  const onConfirmReject = (password: string) => {
+    if (selectedTenant) {
+      rejectTenant.mutate(
+        { tenantId: selectedTenant._id, password },
+        {
+          onSuccess: () => {
+            setRejectModalOpen(false);
+            setSelectedTenant(null);
+          }
+        }
+      );
+    }
+  };
+
+  const onConfirmDelete = (password: string) => {
+    if (selectedTenant) {
+      deleteTenant.mutate(
+        { tenantId: selectedTenant._id, password },
+        {
+          onSuccess: () => {
+            setDeleteModalOpen(false);
             setSelectedTenant(null);
           }
         }
@@ -119,10 +161,12 @@ export const PendingTenantsTable = () => {
                 <td className="px-6 py-1.5 flex justify-end">
                   <ActionButtons
                     onApprove={() => handleApproveClick(tenant)}
-                    onSuspend={() => handleSuspendClick(tenant)}
+                    onReject={() => handleRejectClick(tenant)}
+                    onDeletePermanently={() => handleDeleteClick(tenant)}
                     isApproving={approveTenant.isPending && approveTenant.variables === tenant._id}
-                    isSuspending={suspendTenant.isPending && suspendTenant.variables === tenant._id}
-                    disabled={approveTenant.isPending || suspendTenant.isPending}
+                    isRejecting={rejectTenant.isPending && rejectTenant.variables?.tenantId === tenant._id}
+                    isDeleting={deleteTenant.isPending && deleteTenant.variables?.tenantId === tenant._id}
+                    disabled={approveTenant.isPending || suspendTenant.isPending || rejectTenant.isPending || deleteTenant.isPending}
                   />
                 </td>
               </tr>
@@ -153,6 +197,32 @@ export const PendingTenantsTable = () => {
         message={`Are you sure you want to suspend the request for ${selectedTenant?.name}?`}
         actionLabel="Suspend"
         isProcessing={suspendTenant.isPending}
+      />
+
+      <SecurityVerificationModal
+        isOpen={rejectModalOpen}
+        onClose={() => {
+          setRejectModalOpen(false);
+          setSelectedTenant(null);
+        }}
+        onConfirm={onConfirmReject}
+        title="Reject Tenant Request"
+        message={`Are you sure you want to reject the registration request for ${selectedTenant?.name}?`}
+        actionLabel="Reject"
+        isProcessing={rejectTenant.isPending}
+      />
+
+      <SecurityVerificationModal
+        isOpen={deleteModalOpen}
+        onClose={() => {
+          setDeleteModalOpen(false);
+          setSelectedTenant(null);
+        }}
+        onConfirm={onConfirmDelete}
+        title="Permanently Delete Tenant"
+        message={`WARNING: This will permanently delete ${selectedTenant?.name} and ALL associated data (users, products, sales, etc). This cannot be undone. Type your password to confirm.`}
+        actionLabel="Delete Permanently"
+        isProcessing={deleteTenant.isPending}
       />
     </div>
   );

@@ -97,5 +97,13 @@ export const adminApi = {
 
   deleteTenant: async ({ tenantId, password }: { tenantId: string; password?: string }): Promise<void> => {
     await axiosInstance.delete(`/api/admin/tenants/${tenantId}`, { data: { password } });
+  },
+
+  rejectTenant: async ({ tenantId, password, reason }: { tenantId: string; password?: string; reason?: string }): Promise<void> => {
+    await axiosInstance.patch(`/api/admin/tenants/${tenantId}/reject`, { password, reason });
+  },
+
+  hardDeleteTenant: async ({ tenantId, password }: { tenantId: string; password?: string }): Promise<void> => {
+    await axiosInstance.delete(`/api/admin/tenants/${tenantId}/hard-delete`, { data: { password } });
   }
 };
