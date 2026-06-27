@@ -14,7 +14,7 @@ export default function SignupPage() {
     email: "",
     mobile: "",
     password: "",
-    businessStructure: "shop", // "shop" or "organization"
+    businessStructure: "RETAIL",
   });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -191,8 +191,11 @@ export default function SignupPage() {
               onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFormData({ ...formData, businessStructure: e.target.value })}
               className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-shadow text-sm bg-white text-gray-900"
             >
-              <option value="shop">Single Shop</option>
-              <option value="organization">Multi-Branch Organization</option>
+              <option value="RETAIL">Single Shop</option>
+              <option value="WHOLESALE">Wholesale Business</option>
+              <option value="MEDICAL">Medical Store</option>
+              <option value="AUTO">Auto Parts</option>
+              <option value="SYSTEM">System/Platform</option>
             </select>
           </div>
 
