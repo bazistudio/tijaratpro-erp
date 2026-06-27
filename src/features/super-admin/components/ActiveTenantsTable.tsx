@@ -3,17 +3,19 @@
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { useActiveTenants } from '../hooks/useActiveTenants';
-import { useSuspendTenant } from '../hooks/useAdminActions';
+import { useSuspendTenant, useHardDeleteTenant } from '../hooks/useAdminActions';
 import { SecurityVerificationModal } from './SecurityVerificationModal';
 import { Tenant } from '../services/admin.api';
-import { Ban, Eye } from 'lucide-react';
+import { Ban, Eye, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 
 export const ActiveTenantsTable = () => {
   const { data: tenants, isLoading, isError } = useActiveTenants();
   const suspendTenant = useSuspendTenant();
+  const deleteTenant = useHardDeleteTenant();
 
   const [suspendModalOpen, setSuspendModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
 
   const handleSuspendClick = (tenant: Tenant) => {
@@ -28,6 +30,25 @@ export const ActiveTenantsTable = () => {
         {
           onSuccess: () => {
             setSuspendModalOpen(false);
+            setSelectedTenant(null);
+          }
+        }
+      );
+    }
+  };
+
+  const handleDeleteClick = (tenant: Tenant) => {
+    setSelectedTenant(tenant);
+    setDeleteModalOpen(true);
+  };
+
+  const onConfirmDelete = (password: string) => {
+    if (selectedTenant) {
+      deleteTenant.mutate(
+        { tenantId: selectedTenant._id, password },
+        {
+          onSuccess: () => {
+            setDeleteModalOpen(false);
             setSelectedTenant(null);
           }
         }
@@ -94,10 +115,19 @@ export const ActiveTenantsTable = () => {
                 <td className="px-6 py-1.5 flex justify-end gap-2">
                   <button
                     onClick={() => handleSuspendClick(tenant)}
-                    className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                    className="p-1.5 text-gray-500 hover:text-orange-600 hover:bg-orange-50 rounded transition-colors"
                     title="Suspend Tenant"
+                    disabled={suspendTenant.isPending || deleteTenant.isPending}
                   >
                     <Ban className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => handleDeleteClick(tenant)}
+                    className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                    title="Delete Permanently"
+                    disabled={suspendTenant.isPending || deleteTenant.isPending}
+                  >
+                    <Trash2 className="w-4 h-4" />
                   </button>
                 </td>
               </tr>
@@ -117,6 +147,19 @@ export const ActiveTenantsTable = () => {
         message={`Are you sure you want to suspend ${selectedTenant?.name}? This will instantly block all access.`}
         actionLabel="Suspend"
         isProcessing={suspendTenant.isPending}
+      />
+
+      <SecurityVerificationModal
+        isOpen={deleteModalOpen}
+        onClose={() => {
+          setDeleteModalOpen(false);
+          setSelectedTenant(null);
+        }}
+        onConfirm={onConfirmDelete}
+        title="Permanently Delete Tenant"
+        message={`WARNING: This will permanently delete active tenant ${selectedTenant?.name} and ALL associated data (users, products, sales, etc). This cannot be undone. Type your password to confirm.`}
+        actionLabel="Delete Permanently"
+        isProcessing={deleteTenant.isPending}
       />
     </div>
   );
