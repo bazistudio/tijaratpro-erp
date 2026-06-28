@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { X, ReceiptText, Clock, User, CreditCard, Banknote, AlertCircle, ChevronDown, ChevronUp, Printer, Search } from 'lucide-react';
+import { X, ReceiptText, Clock, User, CreditCard, Banknote, AlertCircle, ChevronDown, ChevronUp, Printer, Search, Copy } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { salesApi } from '@/services/sales.api';
 import { format, startOfWeek, startOfMonth } from 'date-fns';
@@ -8,6 +8,7 @@ import { usePrintStore } from '@/lib/printer';
 import { usePrinterStore } from '@/features/settings/printer/store/printer.store';
 import { printFormatter } from '@/features/settings/printer/utils/printFormatter';
 import { useTenantQueryKeys } from '@/lib/react-query/useTenantQueryKeys';
+import toast from 'react-hot-toast';
 
 interface DailySalesModalProps {
   isOpen: boolean;
@@ -25,7 +26,13 @@ export const DailySalesModal = ({ isOpen, onClose }: DailySalesModalProps) => {
   const searchInvoice = searchParams.get('invoice');
 
   const { openPreview } = usePrintStore();
-  const { settings, shopHeader } = usePrinterStore();
+  const { settings, shopHeader, fetchSettings } = usePrinterStore();
+
+  useEffect(() => {
+    if (isOpen && !settings) {
+      fetchSettings();
+    }
+  }, [isOpen, settings, fetchSettings]);
 
   const handleReprint = (order: any) => {
     if (!settings || !shopHeader) return;
@@ -82,7 +89,7 @@ export const DailySalesModal = ({ isOpen, onClose }: DailySalesModalProps) => {
   const orders = salesResponse?.data || [];
   
   // We no longer filter on frontend since backend handles global search
-  const totalSalesAmount = orders.reduce((sum: number, order: any) => sum + (order.totalAmount || 0), 0);
+  const totalSalesAmount = orders.reduce((sum: number, order: any) => sum + (order.grandTotal || order.totalAmount || 0), 0);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
@@ -169,7 +176,7 @@ export const DailySalesModal = ({ isOpen, onClose }: DailySalesModalProps) => {
                 <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
                   {orders.map((order: any) => {
                     const isCredit = order.paymentMethod === 'credit';
-                    const isCancelled = order.status === 'cancelled';
+                    const isCancelled = order.status === 'cancelled' || order.status === 'Cancelled';
                     
                     const isExpanded = expandedOrderId === order._id;
                     
@@ -179,8 +186,21 @@ export const DailySalesModal = ({ isOpen, onClose }: DailySalesModalProps) => {
                           onClick={() => setExpandedOrderId(isExpanded ? null : order._id)}
                           className="hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors cursor-pointer"
                         >
-                          <td className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">
-                            {order.orderNumber}
+                          <td className="px-4 py-3 text-sm">
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const inv = order.displayNumber || order.orderNumber;
+                                const invToCopy = inv.replace(/^ORD-/i, '');
+                                navigator.clipboard.writeText(invToCopy);
+                                toast.success(`Copied ${invToCopy} to clipboard`);
+                              }}
+                              className="font-medium text-gray-900 dark:text-white hover:text-[#006970] dark:hover:text-[#00B4BB] transition-colors cursor-copy group flex items-center gap-1.5"
+                              title="Click to copy"
+                            >
+                              {order.displayNumber || order.orderNumber}
+                              <Copy className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </button>
                           </td>
                           <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
                             <div className="flex items-center gap-1.5">
@@ -191,7 +211,7 @@ export const DailySalesModal = ({ isOpen, onClose }: DailySalesModalProps) => {
                           <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
                             <div className="flex items-center gap-1.5">
                               <User className="w-3.5 h-3.5 opacity-50" />
-                              {order.customerId?.name || 'Walk-in Customer'}
+                              {order.partyId?.companyName || order.partyId?.name || order.partyId?.contactPerson || order.customerId?.name || 'Walk-in Customer'}
                             </div>
                           </td>
                           <td className="px-4 py-3 text-sm">
@@ -207,7 +227,7 @@ export const DailySalesModal = ({ isOpen, onClose }: DailySalesModalProps) => {
                             </div>
                           </td>
                           <td className="px-4 py-3 text-sm font-bold text-gray-900 dark:text-white text-right">
-                            Rs. {order.totalAmount.toLocaleString()}
+                            Rs. {(order.grandTotal || order.totalAmount || 0).toLocaleString()}
                           </td>
                           <td className="px-4 py-3 text-sm text-center">
                             <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
@@ -249,10 +269,10 @@ export const DailySalesModal = ({ isOpen, onClose }: DailySalesModalProps) => {
                                   <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
                                     {order.items?.map((item: any, idx: number) => (
                                       <tr key={idx}>
-                                        <td className="px-4 py-2 text-gray-900 dark:text-gray-100">{item.name}</td>
+                                        <td className="px-4 py-2 text-gray-900 dark:text-gray-100">{item.productName || item.name}</td>
                                         <td className="px-4 py-2 text-center text-gray-700 dark:text-gray-300">{item.quantity}</td>
-                                        <td className="px-4 py-2 text-right text-gray-700 dark:text-gray-300">Rs. {item.price.toLocaleString()}</td>
-                                        <td className="px-4 py-2 text-right font-medium text-gray-900 dark:text-white">Rs. {(item.quantity * item.price).toLocaleString()}</td>
+                                        <td className="px-4 py-2 text-right text-gray-700 dark:text-gray-300">Rs. {(item.salePrice || item.price || 0).toLocaleString()}</td>
+                                        <td className="px-4 py-2 text-right font-medium text-gray-900 dark:text-white">Rs. {(item.quantity * (item.salePrice || item.price || 0)).toLocaleString()}</td>
                                       </tr>
                                     ))}
                                   </tbody>

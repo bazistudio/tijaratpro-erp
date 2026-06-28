@@ -158,13 +158,7 @@ export const CartSummary = () => {
       return;
     }
 
-    if (selectedCustomer && selectedCustomer.id !== 'walk-in') {
-      // If customer is selected, treat it as a credit sale (0 cash paid) added to their account directly
-      processTransaction([], { id: selectedCustomer.id, name: selectedCustomer.name }, false);
-      return;
-    }
-
-    // Bypass modal for pure cash sale without printing
+    // Process as a cash sale, even if a customer is selected
     processTransaction([{ method: 'cash', amount: grandTotal > 0 ? grandTotal : 0 }], null, false);
   };
 
@@ -174,13 +168,7 @@ export const CartSummary = () => {
       return;
     }
     
-    if (selectedCustomer && selectedCustomer.id !== 'walk-in') {
-      // Credit sale with printing
-      processTransaction([], { id: selectedCustomer.id, name: selectedCustomer.name }, true);
-      return;
-    }
-
-    // Cash sale with printing
+    // Cash sale with printing, keeping the customer assignment if present
     processTransaction([{ method: 'cash', amount: grandTotal > 0 ? grandTotal : 0 }], null, true);
   };
 

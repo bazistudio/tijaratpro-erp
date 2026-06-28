@@ -4,14 +4,19 @@ import { UnifiedInvoice, PrinterSettings, ShopHeader } from '../types/printer.ty
 export const printFormatter = {
   formatSaleInvoice: (order: any, settings: PrinterSettings, shop: ShopHeader): string => {
     const invoice: UnifiedInvoice = {
-      invoiceNo: order.orderNumber,
+      invoiceNo: order.displayNumber || order.orderNumber,
       date: new Date(order.createdAt).toLocaleString(),
-      customer: order.customerId ? { name: order.customerId.name || 'Walk-in', phone: order.customerId.phone } : undefined,
-      items: order.items.map((i: any) => ({ name: i.name, qty: i.quantity, price: i.price, total: i.quantity * i.price })),
-      subtotal: order.totalAmount,
-      discount: 0, // Implement if added to order
-      tax: 0,
-      total: order.totalAmount,
+      customer: order.partyId 
+        ? { name: order.partyId.companyName || order.partyId.contactPerson || 'Walk-in', phone: order.partyId.phone } 
+        : (order.customerId ? { name: order.customerId.name || 'Walk-in', phone: order.customerId.phone } : undefined),
+      items: order.items.map((i: any) => {
+        const price = i.salePrice || i.price || 0;
+        return { name: i.productName || i.name, qty: i.quantity, price, total: i.quantity * price };
+      }),
+      subtotal: order.subTotal || order.grandTotal || order.totalAmount || 0,
+      discount: order.discount || 0,
+      tax: order.taxAmount || 0,
+      total: order.grandTotal || order.totalAmount || 0,
       paymentMethod: order.paymentMethod,
       shop
     };

@@ -4,7 +4,7 @@ import { HistoryRowActions } from './HistoryRowActions';
 import Link from 'next/link';
 
 export const HistoryTable: React.FC = () => {
-  const { items, isLoading } = useHistoryStore();
+  const { items, isLoading, error } = useHistoryStore();
 
   const getTypeBadge = (type: string) => {
     switch (type) {
@@ -28,6 +28,15 @@ export const HistoryTable: React.FC = () => {
 
   if (isLoading) {
     return <div className="h-64 flex items-center justify-center text-gray-500">Loading history...</div>;
+  }
+
+  if (error) {
+    return (
+      <div className="h-64 flex flex-col items-center justify-center text-red-500 bg-red-50 rounded-xl">
+        <p className="font-semibold mb-2">Failed to load history</p>
+        <p className="text-sm text-red-400">{error}</p>
+      </div>
+    );
   }
 
   return (
