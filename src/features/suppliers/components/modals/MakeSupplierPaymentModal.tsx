@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { X, CreditCard, Banknote, Smartphone } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ledgerApi } from '@/services/ledger.api';
+import { useAuthStore } from '@/lib/auth/core/auth.store';
+import { invalidateQueries } from '@/lib/react-query/invalidate';
 
 interface MakeSupplierPaymentModalProps {
   isOpen: boolean;
@@ -15,6 +17,7 @@ export const MakeSupplierPaymentModal = ({ isOpen, onClose, supplier, onPaymentS
   const [method, setMethod] = useState('Cash');
 
   const queryClient = useQueryClient();
+  const { user } = useAuthStore();
 
   const { openPreview } = require('@/lib/printer').usePrintStore();
   const { settings, shopHeader } = require('@/features/settings/printer/store/printer.store').usePrinterStore();
@@ -23,8 +26,8 @@ export const MakeSupplierPaymentModal = ({ isOpen, onClose, supplier, onPaymentS
   const paymentMutation = useMutation({
     mutationFn: ledgerApi.recordPayment,
     onSuccess: (data: any) => {
-      queryClient.invalidateQueries({ queryKey: ['suppliers'] });
-      queryClient.invalidateQueries({ queryKey: ['ledger'] });
+      invalidateQueries.suppliers(queryClient, user);
+      invalidateQueries.ledger(queryClient, user, 'SUPPLIER', supplier.id);
       setAmount('');
       
       // Attempt to Print Receipt automatically

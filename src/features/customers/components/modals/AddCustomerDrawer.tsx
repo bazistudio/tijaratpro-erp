@@ -8,6 +8,8 @@ import { SlideOverDrawer } from '@/components/ui/SlideOverDrawer';
 import { FloatingLabelInput } from '@/components/ui/FloatingLabelInput';
 import { customerApi } from '@/services/customer.api';
 import { DBCustomer } from '@/types/db.types';
+import { useAuthStore } from '@/lib/auth/core/auth.store';
+import { invalidateQueries } from '@/lib/react-query/invalidate';
 
 interface CustomerFormDrawerProps {
   isOpen: boolean;
@@ -18,6 +20,7 @@ interface CustomerFormDrawerProps {
 
 export const CustomerFormDrawer: React.FC<CustomerFormDrawerProps> = ({ isOpen, onClose, customers, editingCustomer }) => {
   const queryClient = useQueryClient();
+  const { user } = useAuthStore();
   
   const [formData, setFormData] = useState({
     name: '',
@@ -74,7 +77,7 @@ export const CustomerFormDrawer: React.FC<CustomerFormDrawerProps> = ({ isOpen, 
         ? customerApi.updateCustomer(editingCustomer.id, data as any) 
         : customerApi.addCustomer(data as any),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['customers'] });
+      invalidateQueries.customers(queryClient, user);
       toast.success(`Customer ${editingCustomer ? 'updated' : 'added'} successfully!`);
       onClose();
     },

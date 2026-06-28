@@ -2,10 +2,12 @@ import React, { useMemo } from 'react';
 import { Users, CreditCard, TrendingUp, UserPlus, FileText } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { customerApi } from '@/services/customer.api';
+import { useTenantQueryKeys } from '@/lib/react-query/useTenantQueryKeys';
 
 export const AnalyticsTab = () => {
+  const keys = useTenantQueryKeys();
   const { data: customerResponse } = useQuery({
-    queryKey: ['customers'],
+    queryKey: keys.customers,
     queryFn: () => customerApi.getCustomers(),
     staleTime: 30000,
     retry: 1,

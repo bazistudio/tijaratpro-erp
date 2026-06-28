@@ -5,6 +5,7 @@ import { Search, UserCircle2, AlertTriangle, X } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { customerApi } from '@/services/customer.api';
 import { DBCustomer } from '@/types/db.types';
+import { useTenantQueryKeys } from '@/lib/react-query/useTenantQueryKeys';
 
 interface CustomerSelectorProps {
   onSelectCustomer: (customer: DBCustomer | null) => void;
@@ -17,9 +18,10 @@ export const CustomerSelector: React.FC<CustomerSelectorProps> = ({ onSelectCust
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const keys = useTenantQueryKeys();
 
   const { data: searchResponse, isLoading } = useQuery({
-    queryKey: ['customers', 'search', searchTerm],
+    queryKey: keys.customerSearch(searchTerm),
     queryFn: () => customerApi.searchCustomers(searchTerm),
     enabled: searchTerm.length > 0,
     staleTime: 60000,

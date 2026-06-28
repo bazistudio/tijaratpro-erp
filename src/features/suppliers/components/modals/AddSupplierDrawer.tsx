@@ -7,6 +7,9 @@ import toast from 'react-hot-toast';
 import { SlideOverDrawer } from '@/components/ui/SlideOverDrawer';
 import { FloatingLabelInput } from '@/components/ui/FloatingLabelInput';
 import { supplierApi } from '@/services/supplier.api';
+import { DBSupplier } from '@/types/db.types';
+import { useAuthStore } from '@/lib/auth/core/auth.store';
+import { invalidateQueries } from '@/lib/react-query/invalidate';
 
 interface SupplierFormDrawerProps {
   isOpen: boolean;
@@ -17,6 +20,7 @@ interface SupplierFormDrawerProps {
 
 export const SupplierFormDrawer: React.FC<SupplierFormDrawerProps> = ({ isOpen, onClose, suppliers, editingSupplier }) => {
   const queryClient = useQueryClient();
+  const { user } = useAuthStore();
   
   const [formData, setFormData] = useState({
     name: '',
@@ -70,7 +74,7 @@ export const SupplierFormDrawer: React.FC<SupplierFormDrawerProps> = ({ isOpen, 
         ? supplierApi.updateSupplier(editingSupplier.id || editingSupplier._id, data) 
         : supplierApi.addSupplier(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['suppliers'] });
+      invalidateQueries.suppliers(queryClient, user);
       toast.success(`Supplier ${editingSupplier ? 'updated' : 'added'} successfully!`);
       onClose();
     },

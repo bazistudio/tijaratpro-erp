@@ -7,6 +7,7 @@ import { useSearchParams } from 'next/navigation';
 import { usePrintStore } from '@/lib/printer';
 import { usePrinterStore } from '@/features/settings/printer/store/printer.store';
 import { printFormatter } from '@/features/settings/printer/utils/printFormatter';
+import { useTenantQueryKeys } from '@/lib/react-query/useTenantQueryKeys';
 
 interface DailySalesModalProps {
   isOpen: boolean;
@@ -18,6 +19,7 @@ export const DailySalesModal = ({ isOpen, onClose }: DailySalesModalProps) => {
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
+  const keys = useTenantQueryKeys();
   
   const searchParams = useSearchParams();
   const searchInvoice = searchParams.get('invoice');
@@ -59,7 +61,7 @@ export const DailySalesModal = ({ isOpen, onClose }: DailySalesModalProps) => {
   const { startDate, endDate } = getDates();
 
   const { data: salesResponse, isLoading, error } = useQuery({
-    queryKey: ['sales-modal', dateFilter, startDate, endDate, debouncedSearch],
+    queryKey: keys.sales(dateFilter, startDate, endDate, debouncedSearch),
     queryFn: () => {
       const cleanSearch = debouncedSearch.trim().toUpperCase().replace(/^ORD-/, '');
       const queryOrderNumber = cleanSearch ? `ORD-${cleanSearch}` : undefined;

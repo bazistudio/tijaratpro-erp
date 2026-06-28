@@ -5,12 +5,14 @@ import { useQuery } from '@tanstack/react-query';
 import { salesApi } from '@/services/sales.api';
 import { Search, Printer, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
 import { format } from 'date-fns';
+import { useTenantQueryKeys } from '@/lib/react-query/useTenantQueryKeys';
 
 export const TransactionTimeline = () => {
+  const keys = useTenantQueryKeys();
   const [searchTerm, setSearchTerm] = useState('');
   
   const { data: ordersResponse, isLoading } = useQuery({
-    queryKey: ['orders'],
+    queryKey: keys.orders,
     queryFn: () => salesApi.getOrders(),
     staleTime: 30000,
     retry: 1,

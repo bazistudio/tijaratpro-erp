@@ -7,16 +7,21 @@ import { customerApi } from '@/services/customer.api';
 import { useRouter } from 'next/navigation';
 import { CustomerFormDrawer } from './modals/AddCustomerDrawer';
 import toast from 'react-hot-toast';
+import { useTenantQueryKeys } from '@/lib/react-query/useTenantQueryKeys';
+import { invalidateQueries } from '@/lib/react-query/invalidate';
+import { useAuthStore } from '@/lib/auth/core/auth.store';
 
 export const CustomersTab = () => {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const keys = useTenantQueryKeys();
+  const { user } = useAuthStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<any>(null);
 
   const { data: customerResponse, isLoading } = useQuery({
-    queryKey: ['customers'],
+    queryKey: keys.customers,
     queryFn: () => customerApi.getCustomers(),
     staleTime: 30000,
     retry: 1,
@@ -48,7 +53,7 @@ export const CustomersTab = () => {
     if (window.confirm('Are you sure you want to delete this customer?')) {
       try {
         await customerApi.deleteCustomer(id);
-        queryClient.invalidateQueries({ queryKey: ['customers'] });
+        invalidateQueries.customers(queryClient, user);
         toast.success('Customer deleted successfully');
       } catch (error: any) {
         toast.error(error?.response?.data?.message || 'Failed to delete customer');

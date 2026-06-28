@@ -7,16 +7,21 @@ import { supplierApi } from '@/services/supplier.api';
 import { useRouter } from 'next/navigation';
 import { SupplierFormDrawer } from './modals/AddSupplierDrawer';
 import toast from 'react-hot-toast';
+import { useTenantQueryKeys } from '@/lib/react-query/useTenantQueryKeys';
+import { invalidateQueries } from '@/lib/react-query/invalidate';
+import { useAuthStore } from '@/lib/auth/core/auth.store';
 
 export const SuppliersTab = () => {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const keys = useTenantQueryKeys();
+  const { user } = useAuthStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingSupplier, setEditingSupplier] = useState<any>(null);
 
   const { data: supplierResponse, isLoading } = useQuery({
-    queryKey: ['suppliers'],
+    queryKey: keys.suppliers,
     queryFn: () => supplierApi.getSuppliers(),
     staleTime: 30000,
     retry: 1,
@@ -49,7 +54,7 @@ export const SuppliersTab = () => {
     if (window.confirm('Are you sure you want to delete this supplier?')) {
       try {
         await supplierApi.deleteSupplier(id);
-        queryClient.invalidateQueries({ queryKey: ['suppliers'] });
+        invalidateQueries.suppliers(queryClient, user);
         toast.success('Supplier deleted successfully');
       } catch (error: any) {
         toast.error(error?.response?.data?.message || 'Failed to delete supplier');

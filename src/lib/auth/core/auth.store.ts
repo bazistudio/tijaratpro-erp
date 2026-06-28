@@ -5,6 +5,7 @@ import { AuthUser } from "@/types/auth/auth";
 import { AuthSession } from "@/types/auth/session";
 import { setSession, clearSession } from "@/lib/auth/core/auth.session";
 import axiosInstance from "@/lib/api/axios";
+import { getQueryClient } from "@/components/providers/ReactQueryProvider";
 
 interface AuthState {
   user: AuthUser | null;
@@ -47,6 +48,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   // -------------------------
   logout: () => {
     clearSession();
+    getQueryClient().clear();
     set({ user: null, session: null, isAuthenticated: false, isHydrated: true });
     // isHydrated: true — hydration is done, we confirmed there's no valid session
   },
@@ -59,6 +61,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       await axiosInstance.post("/api/auth/logout");
     } catch { /* ignore — clear client state regardless */ }
     clearSession();
+    getQueryClient().clear();
     set({ user: null, session: null, isAuthenticated: false });
     window.location.href = "/auth/login";
   },

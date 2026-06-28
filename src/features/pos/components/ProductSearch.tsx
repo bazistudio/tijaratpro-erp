@@ -149,7 +149,7 @@ export const ProductSearch = () => {
 
   const handleAdd = (product: any) => {
     const dbProduct = {
-      id: product.id,
+      id: product.id || product._id,
       sku: product.sku,
       barcode: product.barcode || '',
       name: product.name,
