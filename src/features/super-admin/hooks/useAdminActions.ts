@@ -23,6 +23,17 @@ export const useSuspendUser = () => {
   });
 };
 
+export const useRejectUser = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: adminApi.rejectUser,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'pending-users'] });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'dashboard-stats'] });
+    },
+  });
+};
+
 export const useApproveTenant = () => {
   const queryClient = useQueryClient();
   return useMutation({

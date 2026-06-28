@@ -83,6 +83,10 @@ export const adminApi = {
     await axiosInstance.patch(`/api/admin/users/${userId}/suspend`, { password });
   },
 
+  rejectUser: async ({ userId, password, reason }: { userId: string; password?: string; reason?: string }): Promise<void> => {
+    await axiosInstance.patch(`/api/admin/users/${userId}/reject`, { password, reason });
+  },
+
   approveTenant: async ({ tenantId, password, subscriptionPlan }: { tenantId: string; password?: string; subscriptionPlan?: string }): Promise<void> => {
     await axiosInstance.patch(`/api/admin/tenants/${tenantId}/approve`, { password, subscriptionPlan });
   },

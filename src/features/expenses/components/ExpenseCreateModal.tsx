@@ -69,15 +69,15 @@ export const ExpenseCreateModal: React.FC<Props> = ({ isOpen, onClose }) => {
 
     await addExpense(expensePayload as any);
     
-    // Print logic
-    if (settings && shopHeader) {
-      const mockExpense = {
-        _id: idempotencyKey,
-        ...expensePayload
-      };
-      const html = printFormatter.formatExpenseVoucher(mockExpense, settings, shopHeader);
-      openPreview({ html, documentType: 'ExpenseVoucher', referenceId: idempotencyKey, title: 'Expense Voucher' });
-    }
+    // Auto-printing has been disabled based on user preference
+    // if (settings && shopHeader) {
+    //   const mockExpense = {
+    //     _id: idempotencyKey,
+    //     ...expensePayload
+    //   };
+    //   const html = printFormatter.formatExpenseVoucher(mockExpense, settings, shopHeader);
+    //   openPreview({ html, documentType: 'ExpenseVoucher', referenceId: idempotencyKey, title: 'Expense Voucher' });
+    // }
 
     onClose();
   };

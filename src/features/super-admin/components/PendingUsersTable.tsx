@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { usePendingUsers } from '../hooks/usePendingUsers';
-import { useApproveUser, useSuspendUser } from '../hooks/useAdminActions';
+import { useApproveUser, useSuspendUser, useRejectUser } from '../hooks/useAdminActions';
 import { ActionButtons } from './ActionButtons';
 import { SecurityVerificationModal } from './SecurityVerificationModal';
 import { PendingAdmin } from '../services/admin.api';
@@ -12,9 +12,11 @@ export const PendingUsersTable = () => {
   const { data: users, isLoading, isError } = usePendingUsers();
   const approveUser = useApproveUser();
   const suspendUser = useSuspendUser();
+  const rejectUser = useRejectUser();
 
   const [approvalModalOpen, setApprovalModalOpen] = useState(false);
   const [suspendModalOpen, setSuspendModalOpen] = useState(false);
+  const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<PendingAdmin | null>(null);
 
   const handleApproveClick = (user: PendingAdmin) => {
@@ -25,6 +27,11 @@ export const PendingUsersTable = () => {
   const handleSuspendClick = (user: PendingAdmin) => {
     setSelectedUser(user);
     setSuspendModalOpen(true);
+  };
+
+  const handleRejectClick = (user: PendingAdmin) => {
+    setSelectedUser(user);
+    setRejectModalOpen(true);
   };
 
   const onConfirmApprove = (password: string) => {
@@ -48,6 +55,20 @@ export const PendingUsersTable = () => {
         {
           onSuccess: () => {
             setSuspendModalOpen(false);
+            setSelectedUser(null);
+          }
+        }
+      );
+    }
+  };
+
+  const onConfirmReject = (password: string) => {
+    if (selectedUser) {
+      rejectUser.mutate(
+        { userId: selectedUser._id, password, reason: 'Rejected by Super Admin' },
+        {
+          onSuccess: () => {
+            setRejectModalOpen(false);
             setSelectedUser(null);
           }
         }
@@ -125,9 +146,11 @@ export const PendingUsersTable = () => {
                   <ActionButtons
                     onApprove={() => handleApproveClick(user)}
                     onSuspend={() => handleSuspendClick(user)}
-                    isApproving={approveUser.isPending && approveUser.variables === user._id}
-                    isSuspending={suspendUser.isPending && suspendUser.variables === user._id}
-                    disabled={approveUser.isPending || suspendUser.isPending}
+                    onReject={() => handleRejectClick(user)}
+                    isApproving={approveUser.isPending && approveUser.variables?.userId === user._id}
+                    isSuspending={suspendUser.isPending && suspendUser.variables?.userId === user._id}
+                    isRejecting={rejectUser.isPending && rejectUser.variables?.userId === user._id}
+                    disabled={approveUser.isPending || suspendUser.isPending || rejectUser.isPending}
                   />
                 </td>
               </tr>
@@ -160,6 +183,19 @@ export const PendingUsersTable = () => {
         message={`Are you sure you want to suspend the request for ${selectedUser?.name}?`}
         actionLabel="Suspend"
         isProcessing={suspendUser.isPending}
+      />
+
+      <SecurityVerificationModal
+        isOpen={rejectModalOpen}
+        onClose={() => {
+          setRejectModalOpen(false);
+          setSelectedUser(null);
+        }}
+        onConfirm={onConfirmReject}
+        title="Reject Shop Admin Request"
+        message={`Are you sure you want to permanently reject the request for ${selectedUser?.name}?`}
+        actionLabel="Reject Admin"
+        isProcessing={rejectUser.isPending}
       />
     </div>
   );
