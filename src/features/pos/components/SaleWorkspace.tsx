@@ -30,38 +30,29 @@ export const SaleWorkspace = () => {
       <div className="flex-1 flex overflow-hidden">
 
         {/* MAIN PANEL (Cart) */}
-        <div className="flex-1 w-full flex flex-col bg-gray-50 dark:bg-gray-800/50 overflow-hidden relative h-full">
+        <div className="flex-1 w-full flex flex-col bg-gray-50 dark:bg-gray-800/50 overflow-hidden h-full">
           
-          {/* Status Message Banner */}
-          {lastActionMessage && (
-            <div className="absolute top-0 left-0 right-0 z-10 animate-in slide-in-from-top-2 fade-in duration-300">
-              <div className="bg-emerald-500/10 border-b border-emerald-500/20 px-4 py-2 text-center text-sm font-semibold text-emerald-600 dark:text-emerald-400 backdrop-blur-sm shadow-sm">
-                {lastActionMessage}
-              </div>
-            </div>
-          )}
-
-          <div className={`px-2 pt-2 pb-[106px] flex-1 flex flex-col lg:flex-row gap-2 overflow-hidden ${lastActionMessage ? 'pt-12' : 'transition-all duration-300'}`}>
+          <div className="p-2 flex-1 grid grid-cols-12 gap-2 overflow-hidden">
             
-            {/* Left Column: Extra Actions (25%) */}
-            <div className="w-full lg:w-[25%] shrink-0 flex flex-col overflow-hidden h-full">
+            {/* Left Column: Extra Actions (Products) */}
+            <div className="col-span-3 md:col-span-2 lg:col-span-3 flex flex-col overflow-hidden h-full">
               <PosExtraActions />
             </div>
 
-            {/* Center Column: Cart Items (45%) */}
-            <div className="w-full lg:w-[45%] flex-1 min-w-0 flex flex-col overflow-hidden h-full">
+            {/* Center Column: Cart Items */}
+            <div className="col-span-6 md:col-span-6 lg:col-span-6 flex flex-col overflow-hidden h-full">
               <CartTable />
             </div>
             
-            {/* Right Column: Cart Summary (30%) */}
-            <div className="w-full lg:w-[30%] shrink-0 flex flex-col overflow-hidden h-full">
+            {/* Right Column: Cart Summary */}
+            <div className="col-span-3 md:col-span-4 lg:col-span-3 flex flex-col overflow-hidden h-full">
               <CartSummary />
             </div>
 
           </div>
           
           {/* Global POS Action Buttons Bottom Bar Portal Target */}
-          <div id="pos-action-bar-portal" className="fixed bottom-0 left-0 lg:left-64 right-0 z-50 bg-white dark:bg-gray-900"></div>
+          <div id="pos-action-bar-portal" className="w-full shrink-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 z-40 relative"></div>
         </div>
 
       </div>

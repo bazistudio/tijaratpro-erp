@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { MobileSidebar } from '@/components/layout/MobileSidebar';
 import { Topbar } from '@/components/layout/Topbar';
@@ -14,6 +15,7 @@ interface ShopAdminDashboardLayoutProps {
 
 export const ShopAdminDashboardLayout = ({ children }: ShopAdminDashboardLayoutProps) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const pathname = usePathname();
   
   // Initialize Real-Time Sync Engine for the entire dashboard
   useSyncEngine();
@@ -35,7 +37,7 @@ export const ShopAdminDashboardLayout = ({ children }: ShopAdminDashboardLayoutP
         <Topbar setMobileMenuOpen={setMobileMenuOpen} />
 
         {/* Dashboard Content Area */}
-        <DashboardShell>
+        <DashboardShell variant={pathname?.includes('/pos') ? 'pos' : 'default'}>
           {children}
         </DashboardShell>
       </div>

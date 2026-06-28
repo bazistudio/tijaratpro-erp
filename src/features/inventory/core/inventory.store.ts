@@ -159,3 +159,10 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
     }
   }
 }));
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('inventory-updated', () => {
+    console.log('[DEBUG] Inventory updated event received, forcing sync...');
+    useInventoryStore.getState().forceSync().catch(console.error);
+  });
+}

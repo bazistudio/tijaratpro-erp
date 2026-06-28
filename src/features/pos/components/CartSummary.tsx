@@ -294,17 +294,17 @@ export const CartSummary = () => {
   };
 
   return (
-    <div className="flex flex-col gap-2 h-full flex-1 w-full">
-      <div className="border border-gray-200/60 dark:border-gray-700/60 rounded-xl p-3 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl shadow-sm flex-1 flex flex-col overflow-hidden">
+    <div className="flex flex-col gap-2 h-full w-full ml-auto max-w-[320px] pl-2">
+      <div className="border border-gray-200/60 dark:border-gray-700/60 rounded-xl p-2 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl shadow-sm flex-1 flex flex-col overflow-hidden">
         
         {activeSession.mode === 'replace' && (
-          <div className="flex justify-between items-center mb-3 text-sm">
-            <span className="text-gray-500 dark:text-gray-400 font-medium tracking-wide uppercase text-[10px]">Returned Value</span>
+          <div className="flex justify-between items-center mb-2 text-xs">
+            <span className="text-gray-500 dark:text-gray-400 font-medium tracking-wide uppercase text-[9px]">Returned Value</span>
             <span className="font-black text-orange-500 tabular-nums">- Rs {returnTotal.toLocaleString()}</span>
           </div>
         )}
 
-        <div className="mb-4">
+        <div className="mb-2">
           <CustomerSelector 
             selectedCustomer={selectedCustomer} 
             onSelectCustomer={(customer) => {
@@ -325,21 +325,21 @@ export const CartSummary = () => {
 
         {/* Customer Ledger Details */}
         {selectedCustomer && (
-          <div className="flex flex-col gap-2 p-3 bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800/30 rounded-xl mb-4">
-            <div className="flex justify-between items-center text-xs">
+          <div className="flex flex-col gap-1 p-2 bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800/30 rounded-lg mb-2">
+            <div className="flex justify-between items-center text-[10px]">
               <span className="font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Previous Balance</span>
               <span className={`font-black tabular-nums ${selectedCustomer.currentBalance > 0 ? 'text-red-500' : 'text-emerald-600 dark:text-emerald-400'}`}>
                 Rs {selectedCustomer.currentBalance.toLocaleString()}
               </span>
             </div>
-            <div className="flex justify-between items-center text-xs">
+            <div className="flex justify-between items-center text-[10px]">
               <span className="font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Credit Limit</span>
               <span className="font-black text-gray-700 dark:text-gray-300 tabular-nums">
                 Rs {selectedCustomer.creditLimit.toLocaleString()}
               </span>
             </div>
             {selectedCustomer.currentBalance > selectedCustomer.creditLimit && (
-              <div className="mt-1 text-[10px] font-black text-red-500 uppercase tracking-widest bg-red-100 dark:bg-red-900/30 px-2 py-1 rounded text-center">
+              <div className="mt-0.5 text-[9px] font-black text-red-500 uppercase tracking-widest bg-red-100 dark:bg-red-900/30 px-1 py-0.5 rounded text-center">
                 Credit Limit Exceeded
               </div>
             )}
@@ -348,24 +348,24 @@ export const CartSummary = () => {
 
         <div className="flex-1"></div>
 
-        <div className="flex justify-between items-center mb-3 mt-auto pt-2 border-t border-gray-200 dark:border-gray-800 border-dashed">
-          <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">New Items Subtotal</span>
-          <span className="text-sm font-black text-gray-900 dark:text-gray-100 tabular-nums">Rs {subtotal.toLocaleString()}</span>
+        <div className="flex justify-between items-center mb-2 mt-auto pt-1 border-t border-gray-200 dark:border-gray-800 border-dashed">
+          <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">New Items Subtotal</span>
+          <span className="text-xs font-black text-gray-900 dark:text-gray-100 tabular-nums">Rs {subtotal.toLocaleString()}</span>
         </div>
 
-        <div className="flex justify-between items-center mb-4 pb-4 border-b border-gray-200 dark:border-gray-800 border-dashed">
-          <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Invoice Discount</span>
+        <div className="flex justify-between items-center mb-3 pb-3 border-b border-gray-200 dark:border-gray-800 border-dashed">
+          <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Invoice Discount</span>
           <div className="flex items-center gap-1 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-gray-50 dark:bg-gray-800">
             <input 
               type="number"
               value={activeSession.invoiceDiscountValue || ''}
               placeholder="0"
               onChange={(e) => setInvoiceDiscount(activeSession.invoiceDiscountType, parseFloat(e.target.value) || 0)}
-              className="w-20 text-sm font-black text-center py-1.5 bg-transparent focus:outline-none focus:bg-white dark:focus:bg-gray-700 no-spinners transition-colors"
+              className="w-14 text-xs font-black text-center py-1 bg-transparent focus:outline-none focus:bg-white dark:focus:bg-gray-700 no-spinners transition-colors"
             />
             <button 
               onClick={() => setInvoiceDiscount(activeSession.invoiceDiscountType === 'percentage' ? 'fixed' : 'percentage', activeSession.invoiceDiscountValue)}
-              className="px-3 py-1.5 text-xs font-black bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+              className="px-2 py-1 text-[10px] font-black bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
             >
               {activeSession.invoiceDiscountType === 'percentage' ? '%' : 'Rs'}
             </button>
@@ -373,16 +373,16 @@ export const CartSummary = () => {
         </div>
 
         {invoiceDiscountAmount > 0 && (
-          <div className="flex justify-between items-center mb-4 text-sm font-black text-red-500 tabular-nums">
-            <span className="text-xs uppercase tracking-widest">Bill Discount Applied</span>
+          <div className="flex justify-between items-center mb-3 text-xs font-black text-red-500 tabular-nums">
+            <span className="text-[10px] uppercase tracking-widest">Bill Discount Applied</span>
             <span>- Rs {invoiceDiscountAmount.toLocaleString()}</span>
           </div>
         )}
 
-        <div className="flex justify-between items-end mt-2">
-          <span className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">{grandTotal < 0 ? 'Refund Due' : 'Total Due'}</span>
-          <span className={`text-3xl lg:text-4xl font-black tabular-nums tracking-tight ${grandTotal < 0 ? 'text-red-500' : 'text-[#006970] dark:text-[#00B4BB]'}`}>
-            <span className="text-lg mr-1 text-gray-400 dark:text-gray-500 font-bold">Rs</span>
+        <div className="flex justify-between items-end mt-1">
+          <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">{grandTotal < 0 ? 'Refund Due' : 'Total Due'}</span>
+          <span className={`text-xl lg:text-2xl font-black tabular-nums tracking-tight ${grandTotal < 0 ? 'text-red-500' : 'text-[#006970] dark:text-[#00B4BB]'}`}>
+            <span className="text-sm mr-1 text-gray-400 dark:text-gray-500 font-bold">Rs</span>
             {Math.abs(grandTotal).toLocaleString()}
           </span>
         </div>
@@ -390,45 +390,45 @@ export const CartSummary = () => {
 
       {/* POS Action Buttons Panel rendered to Bottom Bar */}
       {mounted && document.getElementById('pos-action-bar-portal') ? createPortal(
-        <div className="grid grid-cols-4 gap-4 p-4 border-t border-gray-200 dark:border-gray-800 shadow-[0_-10px_30px_-15px_rgba(0,0,0,0.1)] dark:shadow-[0_-10px_30px_-15px_rgba(0,0,0,0.5)]">
+        <div className="grid grid-cols-4 gap-2 p-2 border-t border-gray-200 dark:border-gray-800 shadow-[0_-10px_30px_-15px_rgba(0,0,0,0.1)] dark:shadow-[0_-10px_30px_-15px_rgba(0,0,0,0.5)]">
           <button 
             onClick={handleClearCart}
             disabled={isCartEmpty || isProcessing}
             title="Clear Cart (Ctrl+Delete)"
-            className="h-16 flex flex-col items-center justify-center gap-1 bg-red-100 dark:bg-red-900/40 border border-red-300 dark:border-red-600/50 rounded-xl text-red-800 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-800/60 transition-all disabled:opacity-40 shadow-sm hover:shadow"
+            className="h-12 flex flex-col items-center justify-center gap-0.5 bg-red-100 dark:bg-red-900/40 border border-red-300 dark:border-red-600/50 rounded-lg text-red-800 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-800/60 transition-all disabled:opacity-40 shadow-sm hover:shadow"
           >
-            <Trash2 className="h-5 w-5" />
-            <span className="text-[10px] font-black uppercase tracking-widest mt-0.5">Clear</span>
+            <Trash2 className="h-4 w-4" />
+            <span className="text-[9px] font-black uppercase tracking-widest">Clear</span>
           </button>
           
           <button 
             onClick={handlePayAndPrint}
             disabled={isCartEmpty || isProcessing}
             title="Pay & Print (Ctrl+P)"
-            className="h-16 flex flex-col items-center justify-center gap-1 bg-gradient-to-br from-[#006970] to-[#008990] dark:from-[#008990] dark:to-[#00A4AB] rounded-xl text-white hover:opacity-90 transition-all shadow-md hover:shadow-lg disabled:opacity-50"
+            className="h-12 flex flex-col items-center justify-center gap-0.5 bg-gradient-to-br from-[#006970] to-[#008990] dark:from-[#008990] dark:to-[#00A4AB] rounded-lg text-white hover:opacity-90 transition-all shadow-md hover:shadow-lg disabled:opacity-50"
           >
-            <Printer className="h-5 w-5" />
-            <span className="text-[10px] font-black uppercase tracking-widest mt-0.5">Print</span>
+            <Printer className="h-4 w-4" />
+            <span className="text-[9px] font-black uppercase tracking-widest">Print</span>
           </button>
           
           <button 
             onClick={handleCashSale}
             disabled={isCartEmpty || isProcessing}
             title="Quick Cash Sale (Ctrl+S)"
-            className="h-16 flex flex-col items-center justify-center gap-1 bg-teal-100 dark:bg-teal-900/40 border border-teal-300 dark:border-teal-600/50 rounded-xl text-teal-800 dark:text-teal-300 hover:bg-teal-200 dark:hover:bg-teal-800/60 transition-all shadow-sm hover:shadow disabled:opacity-40"
+            className="h-12 flex flex-col items-center justify-center gap-0.5 bg-teal-100 dark:bg-teal-900/40 border border-teal-300 dark:border-teal-600/50 rounded-lg text-teal-800 dark:text-teal-300 hover:bg-teal-200 dark:hover:bg-teal-800/60 transition-all shadow-sm hover:shadow disabled:opacity-40"
           >
-            <Banknote className="h-5 w-5" />
-            <span className="text-[10px] font-black uppercase tracking-widest mt-0.5">Sale</span>
+            <Banknote className="h-4 w-4" />
+            <span className="text-[9px] font-black uppercase tracking-widest">Sale</span>
           </button>
           
           <button 
             onClick={handleCreditSale}
             disabled={isCartEmpty || isProcessing}
             title="Credit Ledger (Ctrl+L)"
-            className="h-16 flex flex-col items-center justify-center gap-1 bg-blue-100 dark:bg-blue-900/40 border border-blue-300 dark:border-blue-600/50 rounded-xl text-blue-800 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-800/60 transition-all shadow-sm hover:shadow disabled:opacity-40"
+            className="h-12 flex flex-col items-center justify-center gap-0.5 bg-blue-100 dark:bg-blue-900/40 border border-blue-300 dark:border-blue-600/50 rounded-lg text-blue-800 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-800/60 transition-all shadow-sm hover:shadow disabled:opacity-40"
           >
-            <UserCircle2 className="h-5 w-5" />
-            <span className="text-[10px] font-black uppercase tracking-widest mt-0.5">Credit</span>
+            <UserCircle2 className="h-4 w-4" />
+            <span className="text-[9px] font-black uppercase tracking-widest">Credit</span>
           </button>
           
         </div>,

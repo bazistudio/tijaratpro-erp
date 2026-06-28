@@ -11,7 +11,7 @@ export const ProductSearch = () => {
   const [results, setResults] = useState<any[]>([]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
-  
+
   const activeSession = usePosStore(state => state.getActiveSession());
   const addToCart = usePosStore(state => state.addToCart);
   const { products, fetchProducts } = useInventoryStore();
@@ -19,10 +19,10 @@ export const ProductSearch = () => {
   useEffect(() => {
     fetchProducts();
   }, [fetchProducts]);
-  
+
   const isReplaceMode = activeSession?.mode === 'replace';
   const [targetBucket, setTargetBucket] = useState<'new' | 'return'>('new');
-  
+
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const resultsListRef = useRef<HTMLDivElement>(null);
@@ -58,14 +58,14 @@ export const ProductSearch = () => {
       setIsDropdownOpen(false);
       return;
     }
-    
+
     const lowerTerm = debouncedTerm.toLowerCase();
-    const filtered = products.filter(p => 
-      p.name.toLowerCase().includes(lowerTerm) || 
-      p.sku.toLowerCase().includes(lowerTerm) || 
+    const filtered = products.filter(p =>
+      p.name.toLowerCase().includes(lowerTerm) ||
+      p.sku.toLowerCase().includes(lowerTerm) ||
       (p.barcode || '').includes(lowerTerm)
     ).slice(0, 20); // Cap at 20 results
-    
+
     setResults(filtered);
     setSelectedIndex(0);
     setIsDropdownOpen(true);
@@ -113,7 +113,7 @@ export const ProductSearch = () => {
       setSelectedIndex(prev => (prev > 0 ? prev - 1 : prev));
     } else if (e.key === 'Enter') {
       e.preventDefault();
-      
+
       // If dropdown is open and we have results matching the debounce, select it
       if (isDropdownOpen && results.length > 0) {
         const product = results[selectedIndex];
@@ -122,17 +122,17 @@ export const ProductSearch = () => {
           return;
         }
       }
-      
+
       // Fallback: If they hit enter before debounce or for exact matches
       const searchTarget = searchTerm.trim().toLowerCase();
       if (!searchTarget) return;
 
-      const exactMatch = products.find(p => 
-        (p.barcode || '').toLowerCase() === searchTarget || 
+      const exactMatch = products.find(p =>
+        (p.barcode || '').toLowerCase() === searchTarget ||
         (p.sku || '').toLowerCase() === searchTarget ||
         p.name.toLowerCase() === searchTarget
       );
-      
+
       if (exactMatch && (exactMatch.stock > 0 || targetBucket === 'return')) {
         handleAdd(exactMatch);
       } else if (results.length > 0) {
@@ -186,38 +186,37 @@ export const ProductSearch = () => {
             if (results.length > 0) setIsDropdownOpen(true);
           }}
           onKeyDown={handleKeyDown}
-          placeholder="Search Product by name / barcode / SKU .........."
-          className={`block w-full pl-10 pr-3 py-3 border-2 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-0 font-medium shadow-sm transition-colors ${
-            targetBucket === 'return' ? 'border-orange-400 focus:border-orange-500' : 'border-gray-200 dark:border-gray-700 focus:border-[#006970]'
-          }`}
+          placeholder="Scan or search products..."
+          className={`block w-full pl-10 pr-3 py-1.5 text-sm border rounded-md bg-gray-50 focus:bg-white dark:bg-gray-800/50 dark:focus:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-0 transition-all ${targetBucket === 'return' ? 'border-orange-200 focus:border-orange-500 focus:ring-orange-500/20' : 'border-gray-200 dark:border-gray-700 focus:border-[#006970] focus:ring-[#006970]/20'
+            }`}
         />
       </div>
 
       {/* Dropdown Results */}
       {isDropdownOpen && debouncedTerm.trim() && (
-        <div className="absolute top-[52px] left-0 right-0 mt-1 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg shadow-xl overflow-hidden z-50 flex flex-col max-h-[60vh]">
-          
-          <div className="flex justify-between items-center p-2 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700 shrink-0">
-            <div className="flex gap-3 text-xs text-gray-500 dark:text-gray-400 ml-2">
-              <span><kbd className="bg-gray-200 dark:bg-gray-700 px-1 py-0.5 rounded mr-1">↓↑</kbd> Navigate</span>
-              <span><kbd className="bg-gray-200 dark:bg-gray-700 px-1 py-0.5 rounded mr-1">↵</kbd> Select</span>
-              <span><kbd className="bg-gray-200 dark:bg-gray-700 px-1 py-0.5 rounded mr-1">ESC</kbd> Close</span>
+        <div className="absolute top-[40px] left-0 mt-1 w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg shadow-2xl overflow-hidden z-[100] flex flex-col max-h-[60vh]">
+
+          <div className="flex justify-between items-center p-1.5 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700 shrink-0">
+            <div className="flex gap-2 text-[10px] text-gray-500 dark:text-gray-400 ml-1">
+              <span><kbd className="bg-gray-200 dark:bg-gray-700 px-1 rounded mr-0.5">↓↑</kbd> Navigate</span>
+              <span><kbd className="bg-gray-200 dark:bg-gray-700 px-1 rounded mr-0.5">↵</kbd> Select</span>
+              <span><kbd className="bg-gray-200 dark:bg-gray-700 px-1 rounded mr-0.5">ESC</kbd> Close</span>
             </div>
 
             {isReplaceMode && (
-              <div className="flex bg-gray-200 dark:bg-gray-700 p-0.5 rounded-lg">
+              <div className="flex bg-gray-200 dark:bg-gray-700 p-0.5 rounded-md">
                 <button
                   onClick={() => setTargetBucket('return')}
-                  className={`flex items-center gap-1 px-2 py-1 text-[10px] font-bold rounded-md transition-all ${targetBucket === 'return' ? 'bg-orange-500 text-white shadow-sm' : 'text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-white'}`}
+                  className={`flex items-center gap-1 px-1.5 py-0.5 text-[9px] font-bold rounded transition-all ${targetBucket === 'return' ? 'bg-orange-500 text-white shadow-sm' : 'text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-white'}`}
                 >
-                  <ArrowDownToLine className="h-3 w-3" />
+                  <ArrowDownToLine className="h-2.5 w-2.5" />
                   RETURN
                 </button>
                 <button
                   onClick={() => setTargetBucket('new')}
-                  className={`flex items-center gap-1 px-2 py-1 text-[10px] font-bold rounded-md transition-all ${targetBucket === 'new' ? 'bg-[#006970] text-white shadow-sm' : 'text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-white'}`}
+                  className={`flex items-center gap-1 px-1.5 py-0.5 text-[9px] font-bold rounded transition-all ${targetBucket === 'new' ? 'bg-[#006970] text-white shadow-sm' : 'text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-white'}`}
                 >
-                  <ArrowUpFromLine className="h-3 w-3" />
+                  <ArrowUpFromLine className="h-2.5 w-2.5" />
                   NEW
                 </button>
               </div>
@@ -229,37 +228,45 @@ export const ProductSearch = () => {
                 const isSelected = index === selectedIndex;
                 const canAdd = product.stock > 0 || targetBucket === 'return';
                 return (
-                  <div 
-                    key={product.id} 
+                  <div
+                    key={product.id}
                     onClick={() => {
                       if (canAdd) handleAdd(product);
                     }}
-                    className={`grid grid-cols-12 gap-4 px-4 py-3 border-b items-center transition-colors cursor-pointer ${
-                      isSelected 
-                        ? 'bg-[#006970]/10 dark:bg-[#00B4BB]/20 border-[#006970] dark:border-[#00B4BB] border-l-4 border-r-0 border-y-0 shadow-inner' 
+                    className={`flex flex-col gap-1 px-3 py-2 border-b transition-colors cursor-pointer ${isSelected
+                        ? 'bg-[#006970]/10 dark:bg-[#00B4BB]/20 border-[#006970] dark:border-[#00B4BB] border-l-2 border-r-0 border-y-0 shadow-inner'
                         : 'border-gray-100 dark:border-gray-800'
-                    } ${canAdd ? 'hover:bg-gray-50 dark:hover:bg-gray-800/50' : 'opacity-60 cursor-not-allowed'}`}
+                      } ${canAdd ? 'hover:bg-gray-50 dark:hover:bg-gray-800/50' : 'opacity-60 cursor-not-allowed'}`}
                   >
-                    <div className="col-span-2 text-sm text-gray-500 dark:text-gray-400 font-mono">{product.sku}</div>
-                    <div className="col-span-6 text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{product.name}</div>
-                    <div className={`col-span-1 text-sm text-center font-bold ${canAdd ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                      {product.stock}
+                    <div className="flex justify-between items-start gap-2">
+                      <span className="text-[11px] sm:text-xs font-semibold text-gray-900 dark:text-gray-100 leading-tight">
+                        {product.name}
+                      </span>
+                      <span className="text-[11px] sm:text-xs font-black text-right text-gray-900 dark:text-gray-100 tabular-nums shrink-0">
+                        Rs {(product.price ?? product.salePrice ?? 0).toLocaleString()}
+                      </span>
                     </div>
-                    <div className="col-span-2 text-sm font-bold text-right text-gray-900 dark:text-gray-100 tabular-nums">
-                      Rs {(product.price ?? product.salePrice ?? 0).toLocaleString()}
-                    </div>
-                    <div className="col-span-1 text-right">
-                      <button 
+                    
+                    <div className="flex justify-between items-center gap-2 mt-0.5">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] text-gray-500 dark:text-gray-400 font-mono">
+                          {product.sku}
+                        </span>
+                        <span className={`text-[9px] px-1.5 py-0.5 rounded font-black uppercase tracking-wider ${canAdd ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'}`}>
+                          {product.stock} Left
+                        </span>
+                      </div>
+                      
+                      <button
                         disabled={!canAdd}
                         onClick={(e) => {
                           e.stopPropagation();
                           handleAdd(product);
                         }}
-                        className={`px-2 py-1 rounded text-xs font-bold transition-colors disabled:opacity-50 disabled:bg-transparent disabled:text-gray-400 ${
-                          targetBucket === 'return' 
-                            ? 'bg-orange-100 text-orange-700 hover:bg-orange-500 hover:text-white dark:bg-orange-900/30 dark:text-orange-400' 
-                            : 'bg-gray-100 text-gray-600 hover:bg-[#006970] hover:text-white dark:bg-gray-800 dark:text-gray-300'
-                        }`}
+                        className={`px-2 py-0.5 rounded text-[9px] font-bold transition-colors disabled:opacity-50 disabled:bg-transparent disabled:text-gray-400 ${targetBucket === 'return'
+                            ? 'bg-orange-100 text-orange-700 hover:bg-orange-500 hover:text-white dark:bg-orange-900/30 dark:text-orange-400'
+                            : 'bg-gray-200 text-gray-700 hover:bg-[#006970] hover:text-white dark:bg-gray-700 dark:text-gray-200'
+                          }`}
                       >
                         ADD
                       </button>
@@ -269,7 +276,7 @@ export const ProductSearch = () => {
               })}
             </div>
           ) : (
-            <div className="p-4 text-center text-gray-500 dark:text-gray-400">
+            <div className="p-3 text-xs text-center text-gray-500 dark:text-gray-400">
               No products found for "{debouncedTerm}"
             </div>
           )}

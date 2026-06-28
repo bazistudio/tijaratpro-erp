@@ -6,7 +6,7 @@ import { salesApi } from '@/services/sales.api';
 import { customerApi } from '@/services/customer.api';
 import { shopApi } from '@/services/shop.api';
 import { ledgerApi } from '@/services/ledger.api';
-import { useInventoryStore } from '@/features/inventory/core/inventory.store';
+import { platformAdapter } from '@/lib/platformAdapter';
 import { InvoiceDocument } from '../services/document/document.service';
 
 export interface CartItem {
@@ -495,7 +495,6 @@ export const usePosStore = create<PosStore>()(
           };
 
           let result;
-          const isDesktop = typeof window !== 'undefined' && (window as any).electron;
 
           try {
             // ALWAYS prioritize the cloud API to ensure stock is reduced and sale is created centrally
@@ -505,8 +504,8 @@ export const usePosStore = create<PosStore>()(
             console.warn("Cloud API failed, checking for offline fallback...", errorMessage);
             toast.error("Backend Sync Failed: " + errorMessage);
             
-            if (isDesktop) {
-              console.log("Using Electron SQLite Offline Fallback");
+            if (platformAdapter.isDesktop()) {
+              console.log("Using Offline Fallback");
               // Calculate grandTotal for offline storage since it's not on the session object
               const subtotal = session.cart.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
               let discountAmt = 0;
@@ -528,9 +527,9 @@ export const usePosStore = create<PosStore>()(
                 discount: payload.discount,
               };
               
-              const mutateResult = await (window as any).electron.db.mutate('orders', 'CREATE', sqlitePayload);
-              if (mutateResult.success) {
-                result = { success: true, order: { ...sqlitePayload, _id: saleId } };
+              const mutateResult = await platformAdapter.saveOfflineOrder(sqlitePayload);
+              if (mutateResult.success && mutateResult.order) {
+                result = { success: true, order: mutateResult.order };
               } else {
                 throw new Error("Failed to save to local offline queue. Order lost.");
               }
@@ -550,12 +549,8 @@ export const usePosStore = create<PosStore>()(
           }));
           get().clearCart();
           
-          // Re-fetch inventory globally so the POS search reflects the newly reduced stock instantly
-          try {
-            useInventoryStore.getState().forceSync();
-          } catch(e) {
-            console.error("Failed to sync inventory after sale", e);
-          }
+          // Re-fetch inventory globally using decoupled event
+          platformAdapter.emitEvent('inventory-updated');
 
           return result;
         } catch (error: any) {
@@ -611,9 +606,7 @@ export const usePosStore = create<PosStore>()(
           }));
           get().clearCart();
           
-          try {
-            useInventoryStore.getState().forceSync();
-          } catch(e) {}
+          platformAdapter.emitEvent('inventory-updated');
 
           toast.success("Walk-in Return processed successfully. Cash reduced.");
           return result;
@@ -742,9 +735,7 @@ export const usePosStore = create<PosStore>()(
           }));
           get().clearCart();
           
-          try {
-            useInventoryStore.getState().forceSync();
-          } catch(e) {}
+          platformAdapter.emitEvent('inventory-updated');
 
           return result;
         } catch (error: any) {

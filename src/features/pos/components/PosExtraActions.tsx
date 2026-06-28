@@ -26,7 +26,7 @@ export const PosExtraActions = () => {
   return (
     <div className="flex flex-col flex-1 h-full w-full overflow-hidden">
       <div className="border border-gray-200/60 dark:border-gray-700/60 rounded-xl p-2 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl shadow-sm flex-1 flex flex-col overflow-hidden w-full">
-        <div className="grid grid-cols-2 grid-rows-5 gap-2 flex-1 min-h-0 h-full w-full">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 flex-1 min-h-0 h-full w-full">
           {extraActions.map((action, idx) => {
             const Icon = action.icon;
             return (
