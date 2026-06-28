@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { PdfUploader } from '../components/PdfUploader';
 import { ImportPreviewTable } from '../components/ImportPreviewTable';
 import { ImportActions } from '../components/ImportActions';
+import { ManualImportTab } from '../components/ManualImportTab';
 import { importApi } from '@/services/import.api';
 import { parseInvoiceData, normalizeImportPayload, validateParsedData } from '../utils/importHelpers';
 import { ImportState, PriceData, PurchaseOptions, ParsedInvoice } from '../types/import.types';
@@ -271,11 +272,7 @@ export const PdfImportPage = () => {
       )}
 
       {activeTab === 'manual' && (
-        <div className="py-20 text-center border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-2xl bg-gray-50 dark:bg-gray-800/50">
-          <Keyboard className="w-10 h-10 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white">Manual Import</h3>
-          <p className="text-gray-500 mt-2">This feature is coming soon.</p>
-        </div>
+        <ManualImportTab />
       )}
 
       {activeTab === 'history' && (

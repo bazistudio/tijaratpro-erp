@@ -1,5 +1,5 @@
-import { ComingSoonPage } from '@/components/common/ComingSoonPage';
+import { RepairDashboard } from '@/features/repairs/components/RepairDashboard';
 
 export default function RepairsPage() {
-  return <ComingSoonPage title="Repairs" />;
+  return <RepairDashboard />;
 }

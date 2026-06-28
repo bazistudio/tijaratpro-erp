@@ -26,7 +26,7 @@ export const TransactionTimeline = () => {
     createdAt: new Date(order.createdAt).getTime(),
     transactionType: 'sale', // Default to sale
     customer: order.customerId ? { name: order.customerId.name } : null,
-    grandTotal: order.totalAmount,
+    grandTotal: order.grandTotal ?? order.totalAmount ?? 0,
     status: order.status
   })).filter(t => 
     t.transactionId.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -89,7 +89,7 @@ export const TransactionTimeline = () => {
                   {txn.customer?.name || 'Walk-In Customer'}
                 </td>
                 <td className="px-4 py-1.5 whitespace-nowrap text-right font-bold tabular-nums">
-                  ₨ {txn.grandTotal.toLocaleString()}
+                  ₨ {(txn.grandTotal || 0).toLocaleString()}
                 </td>
                 <td className="px-4 py-1.5 whitespace-nowrap text-center">
                   {txn.status === 'locked' ? (

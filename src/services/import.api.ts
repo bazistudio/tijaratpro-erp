@@ -29,5 +29,14 @@ export const importApi = {
       message: string;
     }>('/api/import/commit', payload);
     return response.data;
+  },
+
+  manualImport: async (payload: any) => {
+    const response = await axiosInstance.post<{
+      success: boolean;
+      data: any;
+      message: string;
+    }>('/api/inventory/manual-import', payload);
+    return response.data;
   }
 };
