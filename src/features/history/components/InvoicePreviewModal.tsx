@@ -70,12 +70,8 @@ export const InvoicePreviewModal: React.FC<Props> = ({ item, onClose }) => {
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
                   <tr>
-                    <td className="px-4 py-4 text-gray-600 dark:text-gray-400">Mock Item 1</td>
-                    <td className="px-4 py-4 text-right font-medium text-gray-900 dark:text-white">Rs {(item.amount * 0.6).toLocaleString()}</td>
-                  </tr>
-                  <tr>
-                    <td className="px-4 py-4 text-gray-600 dark:text-gray-400">Mock Item 2</td>
-                    <td className="px-4 py-4 text-right font-medium text-gray-900 dark:text-white">Rs {(item.amount * 0.4).toLocaleString()}</td>
+                    <td className="px-4 py-4 text-gray-600 dark:text-gray-400 capitalize">{item.type.toLowerCase().replace('_', ' ')} Amount</td>
+                    <td className="px-4 py-4 text-right font-medium text-gray-900 dark:text-white">Rs {item.amount.toLocaleString()}</td>
                   </tr>
                 </tbody>
               </table>
