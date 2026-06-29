@@ -390,11 +390,10 @@ export const CartSummary = () => {
             <span className="text-sm mr-1 text-gray-400 dark:text-gray-500 font-bold mb-0.5">Rs</span>
             {isEditingTotal ? (
               <input 
-                autoFocus
+                ref={(input) => input && input.select()}
                 type="number"
                 value={editedTotal}
                 onChange={(e) => setEditedTotal(e.target.value)}
-                onFocus={(e) => e.target.select()}
                 onBlur={() => {
                   setIsEditingTotal(false);
                   if (editedTotal !== '') {
