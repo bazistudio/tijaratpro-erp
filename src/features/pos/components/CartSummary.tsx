@@ -53,6 +53,13 @@ export const CartSummary = () => {
   // Editable Total Due States
   const [isEditingTotal, setIsEditingTotal] = useState(false);
   const [editedTotal, setEditedTotal] = useState('');
+  const totalDueInputRef = React.useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isEditingTotal && totalDueInputRef.current) {
+      totalDueInputRef.current.select();
+    }
+  }, [isEditingTotal]);
 
   const searchParams = useSearchParams();
   const preSelectedCustomerId = searchParams.get('customerId');
@@ -390,7 +397,7 @@ export const CartSummary = () => {
             <span className="text-sm mr-1 text-gray-400 dark:text-gray-500 font-bold mb-0.5">Rs</span>
             {isEditingTotal ? (
               <input 
-                ref={(input) => input && input.select()}
+                ref={totalDueInputRef}
                 type="number"
                 value={editedTotal}
                 onChange={(e) => setEditedTotal(e.target.value)}
