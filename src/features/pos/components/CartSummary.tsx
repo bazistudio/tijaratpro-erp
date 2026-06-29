@@ -49,6 +49,10 @@ export const CartSummary = () => {
   } | null>(null);
   
   const [isProcessing, setIsProcessing] = useState(false);
+  
+  // Editable Total Due States
+  const [isEditingTotal, setIsEditingTotal] = useState(false);
+  const [editedTotal, setEditedTotal] = useState('');
 
   const searchParams = useSearchParams();
   const preSelectedCustomerId = searchParams.get('customerId');
@@ -381,10 +385,44 @@ export const CartSummary = () => {
 
         <div className="flex justify-between items-end mt-1">
           <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">{grandTotal < 0 ? 'Refund Due' : 'Total Due'}</span>
-          <span className={`text-xl lg:text-2xl font-black tabular-nums tracking-tight ${grandTotal < 0 ? 'text-red-500' : 'text-[#006970] dark:text-[#00B4BB]'}`}>
-            <span className="text-sm mr-1 text-gray-400 dark:text-gray-500 font-bold">Rs</span>
-            {Math.abs(grandTotal).toLocaleString()}
-          </span>
+          
+          <div className={`flex items-center ${grandTotal < 0 ? 'text-red-500' : 'text-[#006970] dark:text-[#00B4BB]'}`}>
+            <span className="text-sm mr-1 text-gray-400 dark:text-gray-500 font-bold mb-0.5">Rs</span>
+            {isEditingTotal ? (
+              <input 
+                autoFocus
+                type="number"
+                value={editedTotal}
+                onChange={(e) => setEditedTotal(e.target.value)}
+                onFocus={(e) => e.target.select()}
+                onBlur={() => {
+                  setIsEditingTotal(false);
+                  if (editedTotal !== '') {
+                    const newTotal = parseFloat(editedTotal) || 0;
+                    const discount = Math.abs(preDiscountTotal) - newTotal;
+                    setInvoiceDiscount('fixed', discount > 0 ? discount : 0);
+                  }
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.currentTarget.blur();
+                  }
+                }}
+                className="text-xl lg:text-2xl font-black tabular-nums tracking-tight bg-transparent focus:outline-none w-28 text-right no-spinners border-b border-[#006970]/50"
+              />
+            ) : (
+              <span 
+                className="text-xl lg:text-2xl font-black tabular-nums tracking-tight cursor-pointer hover:opacity-80 transition-opacity border-b-2 border-dashed border-transparent hover:border-[#006970]/50 pb-0.5"
+                onClick={() => {
+                  setEditedTotal(Math.abs(grandTotal).toString());
+                  setIsEditingTotal(true);
+                }}
+                title="Click to edit total due (auto-calculates discount)"
+              >
+                {Math.abs(grandTotal).toLocaleString()}
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
