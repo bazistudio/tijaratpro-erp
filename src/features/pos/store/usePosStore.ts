@@ -413,7 +413,10 @@ export const usePosStore = create<PosStore>()(
               mode: 'sale',
               transactionType: 'sale',
               transactionId: `TXN-${Date.now()}`, // Reset TXN id for next sale
-              linkedInvoiceId: undefined
+              linkedInvoiceId: undefined,
+              invoiceDiscountType: 'fixed',
+              invoiceDiscountValue: 0,
+              customer: { id: 'walk-in', name: 'Walk-In Customer' }
             };
           })
         });
