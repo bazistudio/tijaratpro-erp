@@ -55,6 +55,14 @@ export const ProductListWidget = () => {
           </button>
           
           <Link
+            href="/dashboard/shop-admin/stock"
+            className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800 rounded-lg transition-colors"
+          >
+            <Package className="h-3.5 w-3.5" />
+            Receive Stock
+          </Link>
+          
+          <Link
             href="/dashboard/shop-admin/products/new"
             className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-white bg-[#006970] hover:bg-[#005a60] rounded-lg transition-colors"
           >
