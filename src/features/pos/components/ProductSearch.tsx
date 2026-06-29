@@ -22,6 +22,7 @@ export const ProductSearch = () => {
 
   const isReplaceMode = activeSession?.mode === 'replace';
   const [targetBucket, setTargetBucket] = useState<'new' | 'return'>('new');
+  const [heldProductId, setHeldProductId] = useState<string | null>(null);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -242,8 +243,22 @@ export const ProductSearch = () => {
                       <span className="text-[11px] sm:text-xs font-semibold text-gray-900 dark:text-gray-100 leading-tight">
                         {product.name}
                       </span>
-                      <span className="text-[11px] sm:text-xs font-black text-right text-gray-900 dark:text-gray-100 tabular-nums shrink-0">
-                        Rs {(product.price ?? product.salePrice ?? 0).toLocaleString()}
+                      <span 
+                        className={`text-[11px] sm:text-xs font-black text-right tabular-nums shrink-0 select-none cursor-help transition-colors px-1 rounded ${heldProductId === product.id ? 'text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20' : 'text-gray-900 dark:text-gray-100'}`}
+                        onPointerDown={(e) => {
+                          e.stopPropagation();
+                          setHeldProductId(product.id);
+                        }}
+                        onPointerUp={(e) => {
+                          e.stopPropagation();
+                          setHeldProductId(null);
+                        }}
+                        onPointerLeave={() => setHeldProductId(null)}
+                        onPointerCancel={() => setHeldProductId(null)}
+                        onClick={(e) => e.stopPropagation()}
+                        title="Hold to view purchase price"
+                      >
+                        Rs {(heldProductId === product.id ? (product.purchasePrice ?? product.costPrice ?? 0) : (product.price ?? product.salePrice ?? 0)).toLocaleString()}
                       </span>
                     </div>
                     
