@@ -22,6 +22,7 @@ export const SearchInput = ({ placeholder = "Search products, customers, invoice
   const [isFocused, setIsFocused] = useState(false);
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [heldProductId, setHeldProductId] = useState<string | null>(null);
 
   const { results, isLoading, error, debouncedQuery } = useGlobalSearch(query, category, isFocused, 300);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -347,8 +348,22 @@ export const SearchInput = ({ placeholder = "Search products, customers, invoice
                           <p className="text-xs text-gray-500">{product.sku || product.barcode}</p>
                         </div>
                         <div className="flex flex-col items-end gap-1">
-                          <span className="text-sm font-bold text-[#006970] dark:text-[#008990]">
-                            Rs {product.price ?? product.salePrice ?? 0}
+                          <span 
+                            className={`text-sm font-bold select-none cursor-help px-1 rounded transition-colors ${heldProductId === product._id ? 'text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20' : 'text-[#006970] dark:text-[#008990]'}`}
+                            onPointerDown={(e) => {
+                              e.stopPropagation();
+                              setHeldProductId(product._id);
+                            }}
+                            onPointerUp={(e) => {
+                              e.stopPropagation();
+                              setHeldProductId(null);
+                            }}
+                            onPointerLeave={() => setHeldProductId(null)}
+                            onPointerCancel={() => setHeldProductId(null)}
+                            onClick={(e) => e.stopPropagation()}
+                            title="Hold to view purchase price"
+                          >
+                            Rs {heldProductId === product._id ? (product.purchasePrice ?? product.costPrice ?? 0) : (product.price ?? product.salePrice ?? 0)}
                           </span>
                           <span className="text-xs font-semibold bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 px-2 py-1 rounded">
                             Qty: {product.quantity}
