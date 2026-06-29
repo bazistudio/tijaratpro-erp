@@ -254,6 +254,12 @@ export const SearchInput = ({ placeholder = "Search products, customers, invoice
             onChange={handleChange}
             onFocus={() => setIsFocused(true)}
             onKeyDown={handleInputKeyDown}
+            onDoubleClick={() => {
+              setCategory('quick');
+              setQuery('');
+              setIsCategoryOpen(false);
+            }}
+            title="Double click to reset search category"
           />
         </div>
         
