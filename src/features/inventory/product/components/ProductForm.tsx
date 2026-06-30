@@ -7,6 +7,7 @@ import * as z from 'zod';
 import { useRouter } from 'next/navigation';
 import { Package, UploadCloud, ArrowLeft, Loader2, Tag, Hash, FileText, ChevronDown, ChevronUp, Edit2, Trash2, CheckCircle, AlertTriangle, X } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { MasterDataDropdown } from '@/components/common/MasterDataDropdown';
 
 import { 
   selectCategories, 
@@ -22,14 +23,17 @@ import {
 // Zod schema for form validation
 const productSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
-  category: z.string().optional(),
+  categoryId: z.string().optional(),
+  itemTypeId: z.string().optional(),
+  brandId: z.string().optional(),
+  baseUnitId: z.string().optional(),
+  supplierId: z.string().optional(),
   price: z.number().min(0, "Price cannot be negative"),
   purchasePrice: z.number().min(0).optional(),
   quantity: z.number().min(0, "Quantity cannot be negative"),
   lowStockThreshold: z.number().min(0).optional(),
   sku: z.string().optional(),
   barcode: z.string().optional(),
-  brand: z.string().optional(),
   description: z.string().optional(),
 });
 
@@ -38,9 +42,6 @@ type ProductFormValues = z.infer<typeof productSchema>;
 export const ProductForm = () => {
   const router = useRouter();
   
-  const categories = selectCategories();
-  const isCategoriesLoading = selectIsCategoriesLoading();
-  const fetchCategories = selectFetchCategories();
   const createProduct = selectCreateProduct();
   const updateProduct = selectUpdateProduct();
   const deleteProduct = selectDeleteProduct();
@@ -52,7 +53,6 @@ export const ProductForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   
-  const [showAdvanced, setShowAdvanced] = useState(false);
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
   const [isNewSession, setIsNewSession] = useState(false);
@@ -63,6 +63,7 @@ export const ProductForm = () => {
     setValue,
     reset,
     setFocus,
+    watch,
     formState: { errors, isDirty },
   } = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),
@@ -85,9 +86,8 @@ export const ProductForm = () => {
   }, [isDirty, isSubmitting]);
 
   useEffect(() => {
-    fetchCategories();
     fetchProducts();
-  }, [fetchCategories, fetchProducts]);
+  }, [fetchProducts]);
 
   const recentProducts = useMemo(() => {
     if (isNewSession) return [];
@@ -118,14 +118,17 @@ export const ProductForm = () => {
   const handleEdit = (product: any) => {
     setEditingProductId(product._id || product.id);
     setValue('name', product.name);
-    setValue('category', product.category || '');
+    setValue('categoryId', product.categoryId || product.category || '');
+    setValue('brandId', product.brandId || product.brand || '');
+    setValue('itemTypeId', product.itemTypeId || product.itemType || '');
+    setValue('baseUnitId', product.baseUnitId || product.unit || '');
+    setValue('supplierId', product.supplierId || product.supplier || '');
     setValue('price', product.price);
     setValue('purchasePrice', product.purchasePrice || 0);
     setValue('quantity', product.stock !== undefined ? product.stock : product.quantity);
     setValue('lowStockThreshold', product.minStockThreshold !== undefined ? product.minStockThreshold : (product.lowStockThreshold || 5));
     setValue('sku', product.sku || '');
     setValue('barcode', product.barcode || '');
-    setValue('brand', product.brand || '');
     setValue('description', product.description || '');
     
     setImageFile(null);
@@ -155,8 +158,8 @@ export const ProductForm = () => {
   const cancelEdit = () => {
     setEditingProductId(null);
     reset({
-      name: '', category: '', price: 0, purchasePrice: 0, quantity: 0, 
-      lowStockThreshold: 5, sku: '', barcode: '', brand: '', description: ''
+      name: '', categoryId: '', brandId: '', itemTypeId: '', baseUnitId: '', supplierId: '', price: 0, purchasePrice: 0, quantity: 0, 
+      lowStockThreshold: 5, sku: '', barcode: '', description: ''
     });
     setImageFile(null);
     setImagePreview(null);
@@ -167,11 +170,7 @@ export const ProductForm = () => {
       setIsSubmitting(true);
       setSubmitError(null);
       
-      // Provide a fallback for category if missing, to satisfy backend constraints if they exist
       const payload: any = { ...data };
-      if (!payload.category) {
-        payload.category = categories.length > 0 ? categories[0].id : '';
-      }
 
       if (editingProductId) {
         await updateProduct(editingProductId, payload, imageFile || undefined);
@@ -226,9 +225,9 @@ export const ProductForm = () => {
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-10">
             
-            {/* Column 1: Basic Identifiers */}
+            {/* Column 1: Basic Identifiers & Master Data */}
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Product Name *</label>
@@ -245,31 +244,70 @@ export const ProductForm = () => {
                 {errors.name && <p className="mt-1 text-xs text-red-500">{errors.name.message}</p>}
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">SKU</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                    <Hash className="h-4 w-4" />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">SKU</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                      <Hash className="h-4 w-4" />
+                    </div>
+                    <input
+                      {...register("sku")}
+                      placeholder="Auto-generated if empty"
+                      className="pl-10 block w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 py-2.5 px-3 text-sm focus:border-[#006970] focus:ring-[#006970] dark:text-white transition-colors"
+                    />
                   </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Barcode</label>
                   <input
-                    {...register("sku")}
-                    placeholder="Auto-generated if empty"
-                    className="pl-10 block w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 py-2.5 px-3 text-sm focus:border-[#006970] focus:ring-[#006970] dark:text-white transition-colors"
+                    {...register("barcode")}
+                    placeholder="Optional barcode scan"
+                    className="block w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 py-2.5 px-3 text-sm focus:border-[#006970] focus:ring-[#006970] dark:text-white transition-colors"
                   />
                 </div>
               </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Barcode</label>
-                <input
-                  {...register("barcode")}
-                  placeholder="Optional barcode scan"
-                  className="block w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 py-2.5 px-3 text-sm focus:border-[#006970] focus:ring-[#006970] dark:text-white transition-colors"
+
+              <div className="pt-2 grid grid-cols-2 gap-4">
+                <MasterDataDropdown
+                  label="Category"
+                  endpoint="/api/categories"
+                  value={watch("categoryId") || ""}
+                  onChange={(val) => setValue("categoryId", val, { shouldDirty: true })}
+                />
+                <MasterDataDropdown
+                  label="Brand"
+                  endpoint="/api/brands"
+                  value={watch("brandId") || ""}
+                  onChange={(val) => setValue("brandId", val, { shouldDirty: true })}
                 />
               </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <MasterDataDropdown
+                  label="Item Type"
+                  endpoint="/api/item-types"
+                  value={watch("itemTypeId") || ""}
+                  onChange={(val) => setValue("itemTypeId", val, { shouldDirty: true })}
+                />
+                <MasterDataDropdown
+                  label="Unit *"
+                  endpoint="/api/units"
+                  value={watch("baseUnitId") || ""}
+                  onChange={(val) => setValue("baseUnitId", val, { shouldDirty: true })}
+                />
+              </div>
+              
+              <MasterDataDropdown
+                label="Supplier"
+                endpoint="/api/suppliers"
+                value={watch("supplierId") || ""}
+                onChange={(val) => setValue("supplierId", val, { shouldDirty: true })}
+              />
             </div>
 
-            {/* Column 2: Pricing & Stock */}
+            {/* Column 2: Pricing & Stock & Image */}
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -295,7 +333,7 @@ export const ProductForm = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Stock *</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Opening Stock *</label>
                   <input
                     type="number"
                     {...register("quantity", { valueAsNumber: true })}
@@ -314,24 +352,10 @@ export const ProductForm = () => {
                   />
                 </div>
               </div>
-              
-              <div className="pt-2">
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full bg-[#006970] hover:bg-[#005a60] text-white py-3 rounded-xl font-medium transition-colors flex justify-center items-center gap-2 disabled:opacity-70"
-                >
-                  {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : null}
-                  {isSubmitting ? 'Saving...' : editingProductId ? 'Update Product' : 'Save & Add Product'}
-                </button>
-              </div>
-            </div>
 
-            {/* Column 3: Image & Toggle Advanced */}
-            <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Product Image</label>
-                <div className="flex justify-center rounded-xl border border-dashed border-gray-300 dark:border-gray-700 p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors h-32 relative">
+                <div className="flex justify-center rounded-xl border border-dashed border-gray-300 dark:border-gray-700 p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors h-24 relative">
                   {imagePreview ? (
                      <div className="relative w-full h-full flex justify-center items-center">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -352,7 +376,7 @@ export const ProductForm = () => {
                     <div className="text-center self-center flex flex-col items-center">
                       <UploadCloud className="h-6 w-6 text-gray-400 mb-1" />
                       <label htmlFor="file-upload" className="cursor-pointer text-sm font-semibold text-[#006970] hover:text-[#005a60]">
-                        Upload <input id="file-upload" type="file" className="sr-only" accept="image/*" onChange={handleImageChange} />
+                        Upload Image <input id="file-upload" type="file" className="sr-only" accept="image/*" onChange={handleImageChange} />
                       </label>
                     </div>
                   )}
@@ -361,60 +385,16 @@ export const ProductForm = () => {
               
               <div className="pt-2">
                 <button
-                  type="button"
-                  onClick={() => setShowAdvanced(!showAdvanced)}
-                  className="w-full flex items-center justify-center gap-2 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl transition-colors border border-transparent hover:border-gray-200 dark:hover:border-gray-700"
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full bg-[#006970] hover:bg-[#005a60] text-white py-3.5 rounded-xl font-medium transition-colors flex justify-center items-center gap-2 disabled:opacity-70 shadow-sm"
                 >
-                  {showAdvanced ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                  {showAdvanced ? 'Hide Advanced Options' : 'Show Advanced Options'}
+                  {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : null}
+                  {isSubmitting ? 'Saving...' : editingProductId ? 'Update Product' : 'Save & Add Product'}
                 </button>
               </div>
             </div>
           </div>
-          
-          {submitError && (
-            <div className="mt-4 p-3 bg-red-50 text-red-600 rounded-xl text-sm border border-red-100">
-              {submitError}
-            </div>
-          )}
-
-          {/* Advanced Fields Collapse */}
-          {showAdvanced && (
-            <div className="mt-6 pt-6 border-t border-gray-100 dark:border-gray-800 grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in slide-in-from-top-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</label>
-                <select
-                  {...register("category")}
-                  className="block w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 py-2.5 px-3 text-sm focus:border-[#006970] focus:ring-[#006970] dark:text-white transition-colors"
-                  disabled={isCategoriesLoading}
-                >
-                  <option value="">No Category</option>
-                  {categories.map((cat) => (
-                    <option key={cat.id} value={cat.id}>{cat.name}</option>
-                  ))}
-                </select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Brand</label>
-                <input
-                  {...register("brand")}
-                  placeholder="e.g. Samsung"
-                  className="block w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 py-2.5 px-3 text-sm focus:border-[#006970] focus:ring-[#006970] dark:text-white transition-colors"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
-                <textarea
-                  {...register("description")}
-                  rows={2}
-                  className="block w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 py-2.5 px-3 text-sm focus:border-[#006970] focus:ring-[#006970] dark:text-white transition-colors resize-none"
-                  placeholder="Product details..."
-                />
-              </div>
-            </div>
-          )}
         </form>
       </div>
 

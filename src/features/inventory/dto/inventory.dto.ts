@@ -47,7 +47,12 @@ export interface CreateProductDTO {
   name: string;
   price: number;
   quantity: number;
-  category: string;
+  category?: string;
+  categoryId?: string;
+  itemTypeId?: string;
+  brandId?: string;
+  baseUnitId?: string;
+  supplierId?: string;
   purchasePrice?: number;
   sku?: string;
   barcode?: string;
@@ -64,6 +69,11 @@ export interface UpdateProductDTO {
   sku?: string;
   barcode?: string;
   category?: string;
+  categoryId?: string;
+  itemTypeId?: string;
+  brandId?: string;
+  baseUnitId?: string;
+  supplierId?: string;
   brand?: string;
   description?: string;
   lowStockThreshold?: number;

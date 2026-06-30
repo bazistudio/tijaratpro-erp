@@ -61,12 +61,21 @@ export const productService = {
     formData.append('name', productData.name);
     formData.append('price', productData.price.toString());
     formData.append('quantity', productData.quantity.toString());
-    formData.append('category', productData.category);
+    
+    // Master data IDs
+    if (productData.categoryId) formData.append('categoryId', productData.categoryId);
+    if (productData.brandId) formData.append('brandId', productData.brandId);
+    if (productData.itemTypeId) formData.append('itemTypeId', productData.itemTypeId);
+    if (productData.baseUnitId) formData.append('baseUnitId', productData.baseUnitId);
+    if (productData.supplierId) formData.append('supplierId', productData.supplierId);
+    
+    // Legacy fallback for backward compatibility
+    if (productData.category) formData.append('category', productData.category);
+
     formData.append('sku', skuToUse);
     
     if (productData.purchasePrice !== undefined) formData.append('purchasePrice', productData.purchasePrice.toString());
     if (productData.barcode) formData.append('barcode', productData.barcode);
-    if (productData.brand) formData.append('brand', productData.brand);
     if (productData.description) formData.append('description', productData.description);
     if (productData.lowStockThreshold !== undefined) formData.append('lowStockThreshold', productData.lowStockThreshold.toString());
 
