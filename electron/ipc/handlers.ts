@@ -5,72 +5,87 @@ import { createBackup, getBackupStatus } from '../services/backupEngine';
 import { restoreDatabase } from '../services/restoreEngine';
 import { configStore } from '../services/config';
 import { validatePayload } from './validation';
+import { logger } from '../logger';
+
+function handleIpc(channel: string, handler: (...args: any[]) => any) {
+  ipcMain.handle(channel, async (event, ...args) => {
+    try {
+      return await handler(event, ...args);
+    } catch (error: any) {
+      logger.error(`[IPC Error] Channel: ${channel}`, {
+        message: error.message,
+        stack: error.stack,
+        timestamp: new Date().toISOString()
+      });
+      throw error;
+    }
+  });
+}
 
 export function setupIpcHandlers() {
-  ipcMain.handle('db:mutate', (_event, entityType: string, operation: 'CREATE'|'UPDATE'|'DELETE', payload: any) => {
+  handleIpc('db:mutate', (_event, entityType: string, operation: 'CREATE'|'UPDATE'|'DELETE', payload: any) => {
     let validatedPayload;
     try {
       validatedPayload = validatePayload(entityType, operation, payload);
     } catch (err: any) {
-      console.error('[IPC Security] Payload validation failed for db:mutate', err.errors || err);
+      // Log validation failures properly too (already caught and handled below if we throw, but we want a specific error structure)
       throw new Error(`[IPC Security] Invalid payload for ${entityType} ${operation}`);
     }
 
     try {
       return mutateEntity(entityType, operation, validatedPayload);
     } catch (err: any) {
-      console.error(`[DB Error] Mutation failed for ${entityType} ${operation}:`, err);
       throw new Error(`Database mutation failed: ${err.message}`);
     }
   });
 
-  ipcMain.handle('db:query', (_event, entityType: string, id: string) => {
+  handleIpc('db:query', (_event, entityType: string, id: string) => {
     return queryEntity(entityType, id);
   });
 
-  ipcMain.handle('db:queryAll', (_event, entityType: string) => {
+  handleIpc('db:queryAll', (_event, entityType: string) => {
     return queryAll(entityType);
   });
 
 
   // Auth / SafeStorage
-  ipcMain.handle('auth:setToken', (_event, key: string, token: string) => {
+  handleIpc('auth:setToken', (_event, key: string, token: string) => {
     setToken(key, token);
   });
 
-  ipcMain.handle('auth:getToken', (_event, key: string) => {
+  handleIpc('auth:getToken', (_event, key: string) => {
     return getToken(key);
   });
 
-  ipcMain.handle('auth:clearToken', (_event, key: string) => {
+  handleIpc('auth:clearToken', (_event, key: string) => {
     clearToken(key);
   });
 
   // Backup Engine
-  ipcMain.handle('db:backup', async () => {
+  handleIpc('db:backup', async () => {
     return createBackup();
   });
 
-  ipcMain.handle('db:restore', async (_event, backupFilePath: string) => {
+  handleIpc('db:restore', async (_event, backupFilePath: string) => {
     return restoreDatabase(backupFilePath);
   });
 
-  ipcMain.handle('db:get-backup-status', () => {
+  handleIpc('db:get-backup-status', () => {
     return getBackupStatus();
   });
 
-  ipcMain.handle('db:set-backup-path', (_event, backupPath: string) => {
+  handleIpc('db:set-backup-path', (_event, backupPath: string) => {
     (configStore as any).set('backupPath', backupPath);
     return { success: true };
   });
 
   // Desktop Shell Controls
-  ipcMain.handle('app:minimize', () => {
+  handleIpc('app:minimize', () => {
     const win = BrowserWindow.getFocusedWindow();
     if (win) win.minimize();
   });
 
-  ipcMain.handle('app:maximize', () => {
+  handleIpc('app:maximize', () => {
     const win = BrowserWindow.getFocusedWindow();
     if (win) {
       if (win.isMaximized()) {
@@ -81,12 +96,12 @@ export function setupIpcHandlers() {
     }
   });
 
-  ipcMain.handle('app:close', () => {
+  handleIpc('app:close', () => {
     const win = BrowserWindow.getFocusedWindow();
     if (win) win.close();
   });
 
-  ipcMain.handle('app:getSystemInfo', () => {
+  handleIpc('app:getSystemInfo', () => {
     return {
       appVersion: app.getVersion(),
       electronVersion: process.versions.electron,

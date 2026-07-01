@@ -30,206 +30,6 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 ));
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
-// electron/updater.ts
-var updater_exports = {};
-__export(updater_exports, {
-  setupUpdater: () => setupUpdater
-});
-function setupUpdater(mainWindow2) {
-  import_electron_updater.autoUpdater.autoDownload = true;
-  import_electron_updater.autoUpdater.autoInstallOnAppQuit = true;
-  import_electron_updater.autoUpdater.on("checking-for-update", () => {
-    mainWindow2.webContents.send("updater:status", "Checking for updates...");
-  });
-  import_electron_updater.autoUpdater.on("update-available", (info) => {
-    mainWindow2.webContents.send("updater:available", info);
-  });
-  import_electron_updater.autoUpdater.on("update-not-available", () => {
-    mainWindow2.webContents.send("updater:status", "App is up to date.");
-  });
-  import_electron_updater.autoUpdater.on("error", (err) => {
-    mainWindow2.webContents.send("updater:error", err.message);
-  });
-  import_electron_updater.autoUpdater.on("download-progress", (progressObj) => {
-    mainWindow2.webContents.send("updater:progress", progressObj);
-  });
-  import_electron_updater.autoUpdater.on("update-downloaded", (info) => {
-    mainWindow2.webContents.send("updater:downloaded", info);
-  });
-  import_electron9.ipcMain.handle("updater:check", () => {
-    return import_electron_updater.autoUpdater.checkForUpdatesAndNotify();
-  });
-  import_electron9.ipcMain.handle("updater:install", () => {
-    import_electron_updater.autoUpdater.quitAndInstall();
-  });
-}
-var import_electron_updater, import_electron9;
-var init_updater = __esm({
-  "electron/updater.ts"() {
-    "use strict";
-    import_electron_updater = require("electron-updater");
-    import_electron9 = require("electron");
-  }
-});
-
-// electron/main.ts
-var import_electron10 = require("electron");
-var import_path6 = __toESM(require("path"));
-
-// electron/window.ts
-var import_electron = require("electron");
-var import_path = __toESM(require("path"));
-function getInitialWindowState() {
-  const { width: sw, height: sh } = import_electron.screen.getPrimaryDisplay().workAreaSize;
-  return {
-    width: Math.round(sw * 0.85),
-    height: Math.round(sh * 0.9),
-    isMaximized: false
-  };
-}
-function createWindow() {
-  const state = getInitialWindowState();
-  const win = new import_electron.BrowserWindow({
-    // ── Size & position ──────────────────────────────────────────────────
-    width: state.width,
-    height: state.height,
-    minWidth: 1024,
-    minHeight: 680,
-    center: true,
-    // ── Appearance ───────────────────────────────────────────────────────
-    title: "Tijarat Pro \u2013 Admin",
-    backgroundColor: "#0a0a0a",
-    // matches your dark theme bg
-    show: false,
-    // avoid flicker; show after ready
-    frame: false,
-    // fully frameless on Windows/Linux
-    titleBarStyle: "hidden",
-    // clean, frameless-style look
-    trafficLightPosition: { x: 16, y: 16 },
-    // macOS traffic lights inset
-    // ── Security ─────────────────────────────────────────────────────────
-    webPreferences: {
-      // Point to the compiled preload script
-      preload: import_path.default.join(__dirname, "preload.js"),
-      // Security hardening
-      contextIsolation: true,
-      // renderer cannot access Node APIs
-      nodeIntegration: false,
-      // no Node in renderer
-      sandbox: true,
-      // OS-level sandbox
-      webSecurity: true,
-      allowRunningInsecureContent: false,
-      // Disable features the admin panel doesn't need
-      spellcheck: false
-    }
-  });
-  win.once("ready-to-show", () => {
-    if (state.isMaximized) {
-      win.maximize();
-    } else {
-      win.show();
-    }
-  });
-  const saveState = () => {
-    if (!win.isDestroyed()) {
-      state.isMaximized = win.isMaximized();
-      if (!state.isMaximized) {
-        const bounds = win.getBounds();
-        state.width = bounds.width;
-        state.height = bounds.height;
-        state.x = bounds.x;
-        state.y = bounds.y;
-      }
-    }
-  };
-  win.on("resize", saveState);
-  win.on("move", saveState);
-  win.on("close", saveState);
-  return win;
-}
-
-// electron/security.ts
-var import_electron2 = require("electron");
-var isDev = !import_electron2.app.isPackaged;
-var CSP = isDev ? [
-  "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-  "font-src 'self' https://fonts.gstatic.com",
-  "img-src 'self' data: blob: https:",
-  "connect-src 'self' http://localhost:* https://localhost:* ws://localhost:* wss://localhost:* https:",
-  "media-src 'self'",
-  "object-src 'none'",
-  "frame-src 'self'"
-].join("; ") : [
-  "default-src 'self'",
-  "script-src 'self'",
-  // Removed unsafe-inline and unsafe-eval
-  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-  "font-src 'self' https://fonts.gstatic.com",
-  "img-src 'self' data: blob: https:",
-  "connect-src 'self' https:",
-  // Removed localhost
-  "media-src 'self'",
-  "object-src 'none'",
-  "frame-src 'none'"
-  // No iframes in prod
-].join("; ");
-var ALLOWED_PERMISSIONS = /* @__PURE__ */ new Set([
-  "clipboard-read",
-  "clipboard-write",
-  "notifications"
-]);
-function setupSecurity() {
-  import_electron2.app.on("web-contents-created", (_event, contents) => {
-    contents.on("will-navigate", (event, navigationUrl) => {
-      const allowed = navigationUrl.startsWith("http://localhost:3000") || navigationUrl.startsWith("file://");
-      if (!allowed) {
-        console.warn(`[security] Blocked navigation to: ${navigationUrl}`);
-        event.preventDefault();
-        import_electron2.shell.openExternal(navigationUrl);
-      }
-    });
-    contents.setWindowOpenHandler(({ url }) => {
-      console.warn(`[security] Blocked window.open for: ${url}`);
-      import_electron2.shell.openExternal(url);
-      return { action: "deny" };
-    });
-  });
-  import_electron2.app.whenReady().then(() => {
-    const ses = import_electron2.session.defaultSession;
-    ses.webRequest.onHeadersReceived((details, callback) => {
-      if (isDev) {
-        callback({ responseHeaders: details.responseHeaders });
-        return;
-      }
-      callback({
-        responseHeaders: {
-          ...details.responseHeaders,
-          "Content-Security-Policy": [CSP]
-        }
-      });
-    });
-    ses.setPermissionRequestHandler((_webContents, permission, callback) => {
-      const granted = ALLOWED_PERMISSIONS.has(permission);
-      if (!granted) {
-        console.warn(`[security] Permission denied: ${permission}`);
-      }
-      callback(granted);
-    });
-    ses.setPermissionCheckHandler((_webContents, permission) => {
-      return ALLOWED_PERMISSIONS.has(permission);
-    });
-  });
-}
-
-// electron/db/index.ts
-var import_better_sqlite3 = __toESM(require("better-sqlite3"));
-var import_path2 = __toESM(require("path"));
-var import_electron3 = require("electron");
-
 // electron/db/schema.ts
 function initializeSchema(db2) {
   db2.exec(`
@@ -312,215 +112,638 @@ function initializeSchema(db2) {
     );
   `);
 }
+var init_schema = __esm({
+  "electron/db/schema.ts"() {
+    "use strict";
+  }
+});
+
+// electron/logger.ts
+var import_electron_log, import_electron3, import_path2, import_fs, isDev2, logPath, logger;
+var init_logger = __esm({
+  "electron/logger.ts"() {
+    "use strict";
+    import_electron_log = __toESM(require("electron-log"));
+    import_electron3 = require("electron");
+    import_path2 = __toESM(require("path"));
+    import_fs = __toESM(require("fs"));
+    isDev2 = !import_electron3.app.isPackaged;
+    import_electron_log.default.transports.file.level = isDev2 ? "debug" : "info";
+    import_electron_log.default.transports.console.level = isDev2 ? "debug" : false;
+    import_electron_log.default.transports.file.maxSize = 1048576;
+    logPath = import_path2.default.join(import_electron3.app.getPath("userData"), "logs", "main.log");
+    try {
+      import_fs.default.mkdirSync(import_path2.default.dirname(logPath), { recursive: true });
+    } catch (e) {
+    }
+    import_electron_log.default.transports.file.resolvePathFn = () => logPath;
+    logger = import_electron_log.default;
+  }
+});
 
 // electron/db/index.ts
-var _db = null;
 function getDb() {
   if (!_db) {
     throw new Error("[DB] Database not initialized. Call initDb() first inside app.whenReady().");
   }
   return _db;
 }
-var db = new Proxy({}, {
-  get(_target, prop) {
-    return getDb()[prop];
+function closeDb() {
+  if (_db && !dbClosed) {
+    try {
+      _db.close();
+      _db = null;
+      dbClosed = true;
+    } catch (err) {
+      logger.error("Failed to close database safely:", err);
+    }
   }
-});
+}
 function initDb() {
   if (_db) return;
-  const dbPath = import_path2.default.join(import_electron3.app.getPath("userData"), "tijarat_local.db");
+  const dbPath = import_path3.default.join(import_electron4.app.getPath("userData"), "tijarat_local.db");
+  if (import_fs2.default.existsSync(dbPath)) {
+    try {
+      const backupDir = import_path3.default.join(import_electron4.app.getPath("userData"), "backups");
+      if (!import_fs2.default.existsSync(backupDir)) {
+        import_fs2.default.mkdirSync(backupDir, { recursive: true });
+      }
+      const timestamp = (/* @__PURE__ */ new Date()).toISOString().replace(/[:.]/g, "-");
+      const backupPath = import_path3.default.join(backupDir, `tijarat_local_${timestamp}.db.backup`);
+      import_fs2.default.copyFileSync(dbPath, backupPath);
+      logger.info(`Database backup created at ${backupPath}`);
+      const backups = import_fs2.default.readdirSync(backupDir).filter((f) => f.startsWith("tijarat_local_") && f.endsWith(".db.backup")).sort();
+      if (backups.length > 5) {
+        for (let i = 0; i < backups.length - 5; i++) {
+          import_fs2.default.unlinkSync(import_path3.default.join(backupDir, backups[i]));
+        }
+      }
+    } catch (err) {
+      logger.error("Failed to create database backup:", err);
+    }
+  }
   _db = new import_better_sqlite3.default(dbPath, {
     // Remove verbose in production — swap with syncLogger
   });
+  dbClosed = false;
   _db.pragma("journal_mode = WAL");
   _db.pragma("foreign_keys = ON");
   initializeSchema(_db);
 }
-
-// electron/ipc/handlers.ts
-var import_electron8 = require("electron");
+var import_better_sqlite3, import_path3, import_fs2, import_electron4, _db, dbClosed, db;
+var init_db = __esm({
+  "electron/db/index.ts"() {
+    "use strict";
+    import_better_sqlite3 = __toESM(require("better-sqlite3"));
+    import_path3 = __toESM(require("path"));
+    import_fs2 = __toESM(require("fs"));
+    import_electron4 = require("electron");
+    init_schema();
+    init_logger();
+    _db = null;
+    dbClosed = false;
+    db = new Proxy({}, {
+      get(_target, prop) {
+        return getDb()[prop];
+      }
+    });
+  }
+});
 
 // electron/cache/memoryCache.ts
-var MemoryCache = class {
-  constructor() {
-    this.cache = /* @__PURE__ */ new Map();
+var MemoryCache, memoryCache;
+var init_memoryCache = __esm({
+  "electron/cache/memoryCache.ts"() {
+    "use strict";
+    MemoryCache = class {
+      constructor() {
+        this.cache = /* @__PURE__ */ new Map();
+      }
+      // Generate composite keys like "users:123"
+      getKey(entityType, id) {
+        return `${entityType}:${id}`;
+      }
+      get(entityType, id) {
+        return this.cache.get(this.getKey(entityType, id));
+      }
+      set(entityType, id, data) {
+        const key = this.getKey(entityType, id);
+        const existing = this.cache.get(key);
+        if (!existing || data.version >= existing.version) {
+          this.cache.set(key, data);
+        }
+      }
+      delete(entityType, id) {
+        this.cache.delete(this.getKey(entityType, id));
+      }
+      clear() {
+        this.cache.clear();
+      }
+    };
+    memoryCache = new MemoryCache();
   }
-  // Generate composite keys like "users:123"
-  getKey(entityType, id) {
-    return `${entityType}:${id}`;
-  }
-  get(entityType, id) {
-    return this.cache.get(this.getKey(entityType, id));
-  }
-  set(entityType, id, data) {
-    const key = this.getKey(entityType, id);
-    const existing = this.cache.get(key);
-    if (!existing || data.version >= existing.version) {
-      this.cache.set(key, data);
-    }
-  }
-  delete(entityType, id) {
-    this.cache.delete(this.getKey(entityType, id));
-  }
-  clear() {
-    this.cache.clear();
-  }
-};
-var memoryCache = new MemoryCache();
-
-// electron/db/queries.ts
-var import_uuid = require("uuid");
+});
 
 // electron/services/api.ts
-var import_axios = __toESM(require("axios"));
-var API_BASE_URL = process.env.API_BASE_URL || "http://localhost:4000/api";
-var apiClient = import_axios.default.create({
-  baseURL: API_BASE_URL,
-  timeout: 5e3
-});
-var api = {
-  // Resolves conflicts by checking server.updatedAt > local.updatedAt
-  syncEntity: async (entityType, operation, payload) => {
-    const endpoint = `/${entityType}`;
-    try {
-      let response;
-      if (operation === "CREATE") {
-        response = await apiClient.post(endpoint, payload);
-      } else if (operation === "UPDATE") {
-        response = await apiClient.put(`${endpoint}/${payload.id}`, payload);
-      } else if (operation === "DELETE") {
-        response = await apiClient.delete(`${endpoint}/${payload.id}`);
+var import_axios, API_BASE_URL, apiClient, api;
+var init_api = __esm({
+  "electron/services/api.ts"() {
+    "use strict";
+    import_axios = __toESM(require("axios"));
+    API_BASE_URL = process.env.API_BASE_URL || "http://localhost:4000/api";
+    apiClient = import_axios.default.create({
+      baseURL: API_BASE_URL,
+      timeout: 5e3
+    });
+    api = {
+      // Resolves conflicts by checking server.updatedAt > local.updatedAt
+      syncEntity: async (entityType, operation, payload) => {
+        const endpoint = `/${entityType}`;
+        try {
+          let response;
+          if (operation === "CREATE") {
+            response = await apiClient.post(endpoint, payload);
+          } else if (operation === "UPDATE") {
+            response = await apiClient.put(`${endpoint}/${payload.id}`, payload);
+          } else if (operation === "DELETE") {
+            response = await apiClient.delete(`${endpoint}/${payload.id}`);
+          }
+          return { success: true, data: response?.data };
+        } catch (error) {
+          if (error.response && error.response.status === 409) {
+            return { success: false, conflict: true, serverData: error.response.data.serverEntity };
+          }
+          throw error;
+        }
       }
-      return { success: true, data: response?.data };
-    } catch (error) {
-      if (error.response && error.response.status === 409) {
-        return { success: false, conflict: true, serverData: error.response.data.serverEntity };
-      }
-      throw error;
-    }
+    };
   }
-};
+});
 
 // electron/services/logger.ts
-var import_fs = __toESM(require("fs"));
-var import_path3 = __toESM(require("path"));
-var import_electron4 = require("electron");
-var syncLogPath = null;
 function getLogPath() {
   if (!syncLogPath) {
-    const logDir = import_path3.default.join(import_electron4.app.getPath("userData"), "logs");
-    if (!import_fs.default.existsSync(logDir)) {
-      import_fs.default.mkdirSync(logDir, { recursive: true });
+    const logDir = import_path4.default.join(import_electron5.app.getPath("userData"), "logs");
+    if (!import_fs3.default.existsSync(logDir)) {
+      import_fs3.default.mkdirSync(logDir, { recursive: true });
     }
-    syncLogPath = import_path3.default.join(logDir, "sync.log");
+    syncLogPath = import_path4.default.join(logDir, "sync.log");
   }
   return syncLogPath;
 }
-var syncLogger = {
-  info: (message, meta = {}) => {
-    const entry = `[INFO] ${(/* @__PURE__ */ new Date()).toISOString()} - ${message} - ${JSON.stringify(meta)}
+var import_fs3, import_path4, import_electron5, syncLogPath, syncLogger;
+var init_logger2 = __esm({
+  "electron/services/logger.ts"() {
+    "use strict";
+    import_fs3 = __toESM(require("fs"));
+    import_path4 = __toESM(require("path"));
+    import_electron5 = require("electron");
+    syncLogPath = null;
+    syncLogger = {
+      info: (message, meta = {}) => {
+        const entry = `[INFO] ${(/* @__PURE__ */ new Date()).toISOString()} - ${message} - ${JSON.stringify(meta)}
 `;
-    import_fs.default.appendFileSync(getLogPath(), entry);
-  },
-  error: (message, error) => {
-    const entry = `[ERROR] ${(/* @__PURE__ */ new Date()).toISOString()} - ${message} - ${error?.message || error}
+        import_fs3.default.appendFileSync(getLogPath(), entry);
+      },
+      error: (message, error) => {
+        const entry = `[ERROR] ${(/* @__PURE__ */ new Date()).toISOString()} - ${message} - ${error?.message || error}
 `;
-    import_fs.default.appendFileSync(getLogPath(), entry);
+        import_fs3.default.appendFileSync(getLogPath(), entry);
+      }
+    };
   }
-};
+});
 
 // electron/services/syncEngine.ts
-var SyncEngine = class {
-  constructor() {
-    this.isOnline = true;
-    this.isSyncing = false;
-    this.timer = null;
-  }
-  // Called explicitly from main.ts after app.whenReady() and initDb()
-  start() {
-    this.startPolling();
-  }
-  setOnlineStatus(status) {
-    this.isOnline = status;
-    if (this.isOnline) {
-      this.triggerSync();
-    }
-  }
-  startPolling() {
-    this.timer = setInterval(() => {
-      this.triggerSync();
-    }, 3e4);
-  }
-  // Event-driven trigger
-  async triggerSync() {
-    if (!this.isOnline) return;
-    if (this.isSyncing) {
-      syncLogger.info("Sync already running, skipping trigger.");
-      return;
-    }
-    this.isSyncing = true;
-    try {
-      await this.processQueue();
-    } catch (error) {
-      syncLogger.error("Sync failed", error);
-    } finally {
-      this.isSyncing = false;
-    }
-  }
-  async processQueue() {
-    const queueStmt = db.prepare(`SELECT * FROM sync_queue ORDER BY timestamp ASC LIMIT 50`);
-    const pendingItems = queueStmt.all();
-    if (pendingItems.length === 0) return;
-    for (const item of pendingItems) {
-      const payload = JSON.parse(item.payload);
-      try {
-        const result = await api.syncEntity(item.entity_type, item.operation, payload);
-        if (result.success && result.data) {
-          const canonicalData = result.data;
-          if (item.operation !== "DELETE") {
-            const updates = Object.keys(canonicalData).filter((k) => k !== "id").map((k) => `${k} = @${k}`).join(", ");
-            const stmt = db.prepare(`UPDATE ${item.entity_type} SET ${updates} WHERE id = @id`);
-            stmt.run(canonicalData);
-            memoryCache.set(item.entity_type, canonicalData.id, canonicalData);
-          }
-          this.markSynced(item.id);
-        } else if (result.conflict && result.serverData) {
-          this.resolveConflict(item.entity_type, payload, result.serverData);
-          this.markSynced(item.id);
+var SyncEngine, syncEngine;
+var init_syncEngine = __esm({
+  "electron/services/syncEngine.ts"() {
+    "use strict";
+    init_db();
+    init_api();
+    init_logger2();
+    init_memoryCache();
+    SyncEngine = class {
+      constructor() {
+        this.isOnline = true;
+        this.isSyncing = false;
+        this.timer = null;
+      }
+      // Called explicitly from main.ts after app.whenReady() and initDb()
+      start() {
+        this.startPolling();
+      }
+      stop() {
+        if (this.timer) {
+          clearInterval(this.timer);
+          this.timer = null;
         }
-      } catch (error) {
-        syncLogger.error(`Failed to sync item ${item.id}`, error);
-        this.markFailed(item.id);
+      }
+      setOnlineStatus(status) {
+        this.isOnline = status;
+        if (this.isOnline) {
+          this.triggerSync();
+        }
+      }
+      startPolling() {
+        this.timer = setInterval(() => {
+          this.triggerSync();
+        }, 3e4);
+      }
+      // Event-driven trigger
+      async triggerSync() {
+        if (!this.isOnline) return;
+        if (this.isSyncing) {
+          syncLogger.info("Sync already running, skipping trigger.");
+          return;
+        }
+        this.isSyncing = true;
+        try {
+          await this.processQueue();
+        } catch (error) {
+          syncLogger.error("Sync failed", error);
+        } finally {
+          this.isSyncing = false;
+        }
+      }
+      async processQueue() {
+        const queueStmt = db.prepare(`SELECT * FROM sync_queue ORDER BY timestamp ASC LIMIT 50`);
+        const pendingItems = queueStmt.all();
+        if (pendingItems.length === 0) return;
+        for (const item of pendingItems) {
+          const payload = JSON.parse(item.payload);
+          try {
+            const result = await api.syncEntity(item.entity_type, item.operation, payload);
+            if (result.success && result.data) {
+              const canonicalData = result.data;
+              if (item.operation !== "DELETE") {
+                const updates = Object.keys(canonicalData).filter((k) => k !== "id").map((k) => `${k} = @${k}`).join(", ");
+                const stmt = db.prepare(`UPDATE ${item.entity_type} SET ${updates} WHERE id = @id`);
+                stmt.run(canonicalData);
+                memoryCache.set(item.entity_type, canonicalData.id, canonicalData);
+              }
+              this.markSynced(item.id);
+            } else if (result.conflict && result.serverData) {
+              this.resolveConflict(item.entity_type, payload, result.serverData);
+              this.markSynced(item.id);
+            }
+          } catch (error) {
+            syncLogger.error(`Failed to sync item ${item.id}`, error);
+            this.markFailed(item.id);
+          }
+        }
+      }
+      markSynced(id) {
+        const transaction = db.transaction(() => {
+          db.prepare(`DELETE FROM sync_queue WHERE id = ?`).run(id);
+          db.prepare(`UPDATE operation_log SET status = 'synced' WHERE id = ?`).run(id);
+        });
+        transaction();
+        syncLogger.info(`Successfully synced item`, { id });
+      }
+      markFailed(id) {
+        db.prepare(`UPDATE operation_log SET status = 'failed' WHERE id = ?`).run(id);
+      }
+      resolveConflict(entityType, localData, serverData) {
+        const serverWins = serverData.version > localData.version || serverData.version === localData.version && serverData.updatedAt > localData.updatedAt;
+        if (serverWins) {
+          syncLogger.info("Conflict resolved: Server wins", { entityType, id: localData.id });
+          const updates = Object.keys(serverData).filter((k) => k !== "id").map((k) => `${k} = @${k}`).join(", ");
+          const stmt = db.prepare(`UPDATE ${entityType} SET ${updates} WHERE id = @id`);
+          stmt.run(serverData);
+          memoryCache.set(entityType, serverData.id, serverData);
+        } else {
+          syncLogger.info("Conflict resolved: Local wins", { entityType, id: localData.id });
+        }
+      }
+    };
+    syncEngine = new SyncEngine();
+  }
+});
+
+// electron/updater.ts
+var updater_exports = {};
+__export(updater_exports, {
+  setupUpdater: () => setupUpdater
+});
+function setupUpdater(mainWindow2) {
+  import_electron_updater.autoUpdater.autoDownload = true;
+  import_electron_updater.autoUpdater.autoInstallOnAppQuit = true;
+  import_electron_updater.autoUpdater.on("checking-for-update", () => {
+    logger.info("Checking for updates...");
+    mainWindow2.webContents.send("updater:status", "Checking for updates...");
+  });
+  import_electron_updater.autoUpdater.on("update-available", (info) => {
+    logger.info(`Update available: ${info.version}`);
+    mainWindow2.webContents.send("updater:available", info);
+  });
+  import_electron_updater.autoUpdater.on("update-not-available", () => {
+    logger.info("App is up to date.");
+    mainWindow2.webContents.send("updater:status", "App is up to date.");
+  });
+  import_electron_updater.autoUpdater.on("error", (err) => {
+    logger.error(`
+--- Update Error ---
+Current version: ${import_electron12.app.getVersion()}
+Error: ${err.message}
+Stack Trace:
+${err.stack || "None"}
+--------------------
+`);
+    mainWindow2.webContents.send("updater:error", err.message);
+  });
+  import_electron_updater.autoUpdater.on("download-progress", (progressObj) => {
+    const percent = Math.round(progressObj.percent);
+    logger.info(`Downloading update... ${percent}%`);
+    mainWindow2.webContents.send("updater:progress", progressObj);
+  });
+  import_electron_updater.autoUpdater.on("update-downloaded", (info) => {
+    logger.info(`Update downloaded: ${info.version}`);
+    mainWindow2.webContents.send("updater:downloaded", info);
+    const response = import_electron12.dialog.showMessageBoxSync(mainWindow2, {
+      type: "info",
+      title: "Update Ready",
+      message: `Version ${info.version} has been downloaded and is ready to install.`,
+      detail: "Would you like to restart the application and apply the update now?",
+      buttons: ["Restart & Install Now", "Install on Next Launch"],
+      defaultId: 0,
+      cancelId: 1
+    });
+    if (response === 0) {
+      import_electron12.app.removeAllListeners("window-all-closed");
+      const windows = import_electron12.BrowserWindow.getAllWindows();
+      windows.forEach((win) => win.close());
+      try {
+        syncEngine.stop();
+        closeDb();
+      } catch (err) {
+      }
+      import_electron_updater.autoUpdater.quitAndInstall(false, true);
+    }
+  });
+  if (!import_electron12.ipcMain.listenerCount("updater:check")) {
+    import_electron12.ipcMain.handle("updater:check", () => {
+      return import_electron_updater.autoUpdater.checkForUpdatesAndNotify();
+    });
+  }
+  if (!import_electron12.ipcMain.listenerCount("updater:install")) {
+    import_electron12.ipcMain.handle("updater:install", () => {
+      try {
+        syncEngine.stop();
+        closeDb();
+      } catch (err) {
+      }
+      import_electron_updater.autoUpdater.quitAndInstall(false, true);
+    });
+  }
+}
+var import_electron_updater, import_electron12;
+var init_updater = __esm({
+  "electron/updater.ts"() {
+    "use strict";
+    import_electron_updater = require("electron-updater");
+    import_electron12 = require("electron");
+    init_logger();
+    init_syncEngine();
+    init_db();
+  }
+});
+
+// electron/main.ts
+var import_electron13 = require("electron");
+var import_path9 = __toESM(require("path"));
+
+// electron/window.ts
+var import_electron = require("electron");
+var import_path = __toESM(require("path"));
+var import_electron_store = __toESM(require("electron-store"));
+var store = new import_electron_store.default({
+  name: "window-state",
+  defaults: {
+    width: 1024,
+    height: 768,
+    isMaximized: false,
+    isFullScreen: false
+  }
+});
+function getInitialWindowState() {
+  const savedState = store.store;
+  const minWidth = 1024;
+  const minHeight = 680;
+  let { width, height, x, y, isMaximized, isFullScreen } = savedState;
+  if (!width || width < minWidth) width = minWidth;
+  if (!height || height < minHeight) height = minHeight;
+  if (x !== void 0 && y !== void 0) {
+    const displays = import_electron.screen.getAllDisplays();
+    const isVisible = displays.some((display) => {
+      const bounds = display.bounds;
+      return x + width > bounds.x + 100 && x < bounds.x + bounds.width - 100 && y + height > bounds.y + 100 && y < bounds.y + bounds.height - 100;
+    });
+    if (!isVisible) {
+      const { width: sw, height: sh } = import_electron.screen.getPrimaryDisplay().workAreaSize;
+      width = Math.round(sw * 0.85);
+      height = Math.round(sh * 0.9);
+      x = void 0;
+      y = void 0;
+    }
+  } else {
+    const { width: sw, height: sh } = import_electron.screen.getPrimaryDisplay().workAreaSize;
+    width = Math.round(sw * 0.85);
+    height = Math.round(sh * 0.9);
+  }
+  return { width, height, x, y, isMaximized, isFullScreen };
+}
+function createWindow() {
+  const state = getInitialWindowState();
+  const win = new import_electron.BrowserWindow({
+    // ── Size & position ──────────────────────────────────────────────────
+    width: state.width,
+    height: state.height,
+    x: state.x,
+    y: state.y,
+    minWidth: 1024,
+    minHeight: 680,
+    center: state.x === void 0 && state.y === void 0,
+    // ── Appearance ───────────────────────────────────────────────────────
+    title: "Tijarat Pro \u2013 Admin",
+    backgroundColor: "#0a0a0a",
+    // matches your dark theme bg
+    show: false,
+    // avoid flicker; show after ready
+    frame: false,
+    // fully frameless on Windows/Linux
+    titleBarStyle: "hidden",
+    // clean, frameless-style look
+    trafficLightPosition: { x: 16, y: 16 },
+    // macOS traffic lights inset
+    icon: import_path.default.join(__dirname, "../build/icon.png"),
+    autoHideMenuBar: true,
+    // ── Security ─────────────────────────────────────────────────────────
+    webPreferences: {
+      // Point to the compiled preload script
+      preload: import_path.default.join(__dirname, "preload.js"),
+      // Security hardening
+      contextIsolation: true,
+      // renderer cannot access Node APIs
+      nodeIntegration: false,
+      // no Node in renderer
+      sandbox: true,
+      // OS-level sandbox
+      webSecurity: true,
+      allowRunningInsecureContent: false,
+      devTools: !import_electron.app.isPackaged,
+      // Disable features the admin panel doesn't need
+      spellcheck: false
+    }
+  });
+  win.once("ready-to-show", () => {
+    win.show();
+    if (state.isFullScreen) {
+      win.setFullScreen(true);
+    } else if (state.isMaximized) {
+      win.maximize();
+    }
+  });
+  let saveTimeout = null;
+  const saveState = () => {
+    if (saveTimeout) clearTimeout(saveTimeout);
+    saveTimeout = setTimeout(() => {
+      if (!win.isDestroyed()) {
+        const isFullScreen = win.isFullScreen();
+        const isMaximized = win.isMaximized();
+        if (isFullScreen) {
+          store.set("isFullScreen", true);
+        } else if (isMaximized) {
+          store.set("isMaximized", true);
+          store.set("isFullScreen", false);
+        } else {
+          const bounds = win.getBounds();
+          store.set("isMaximized", false);
+          store.set("isFullScreen", false);
+          store.set("width", bounds.width);
+          store.set("height", bounds.height);
+          store.set("x", bounds.x);
+          store.set("y", bounds.y);
+        }
+      }
+    }, 500);
+  };
+  win.on("resize", saveState);
+  win.on("move", saveState);
+  win.on("maximize", saveState);
+  win.on("unmaximize", saveState);
+  win.on("enter-full-screen", saveState);
+  win.on("leave-full-screen", saveState);
+  win.on("close", () => {
+    if (saveTimeout) clearTimeout(saveTimeout);
+    if (!win.isDestroyed()) {
+      const isFullScreen = win.isFullScreen();
+      const isMaximized = win.isMaximized();
+      if (isFullScreen) {
+        store.set("isFullScreen", true);
+      } else if (isMaximized) {
+        store.set("isMaximized", true);
+        store.set("isFullScreen", false);
+      } else {
+        const bounds = win.getBounds();
+        store.set("isMaximized", false);
+        store.set("isFullScreen", false);
+        store.set("width", bounds.width);
+        store.set("height", bounds.height);
+        store.set("x", bounds.x);
+        store.set("y", bounds.y);
       }
     }
-  }
-  markSynced(id) {
-    const transaction = db.transaction(() => {
-      db.prepare(`DELETE FROM sync_queue WHERE id = ?`).run(id);
-      db.prepare(`UPDATE operation_log SET status = 'synced' WHERE id = ?`).run(id);
+  });
+  return win;
+}
+
+// electron/security.ts
+var import_electron2 = require("electron");
+var isDev = !import_electron2.app.isPackaged;
+var CSP = isDev ? [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "font-src 'self' https://fonts.gstatic.com",
+  "img-src 'self' data: blob: https:",
+  "connect-src 'self' http://localhost:* https://localhost:* ws://localhost:* wss://localhost:* https:",
+  "media-src 'self'",
+  "object-src 'none'",
+  "frame-src 'self'"
+].join("; ") : [
+  "default-src 'self'",
+  "script-src 'self'",
+  // Removed unsafe-inline and unsafe-eval
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "font-src 'self' https://fonts.gstatic.com",
+  "img-src 'self' data: blob: https:",
+  "connect-src 'self' https:",
+  // Removed localhost
+  "media-src 'self'",
+  "object-src 'none'",
+  "frame-src 'none'"
+  // No iframes in prod
+].join("; ");
+var ALLOWED_PERMISSIONS = /* @__PURE__ */ new Set([
+  "clipboard-read",
+  "clipboard-write",
+  "notifications"
+]);
+function setupSecurity() {
+  import_electron2.app.on("web-contents-created", (_event, contents) => {
+    contents.on("will-navigate", (event, navigationUrl) => {
+      const allowed = navigationUrl.startsWith("http://localhost:3000") || navigationUrl.startsWith("file://");
+      if (!allowed) {
+        console.warn(`[security] Blocked navigation to: ${navigationUrl}`);
+        event.preventDefault();
+        import_electron2.shell.openExternal(navigationUrl);
+      }
     });
-    transaction();
-    syncLogger.info(`Successfully synced item`, { id });
-  }
-  markFailed(id) {
-    db.prepare(`UPDATE operation_log SET status = 'failed' WHERE id = ?`).run(id);
-  }
-  resolveConflict(entityType, localData, serverData) {
-    const serverWins = serverData.version > localData.version || serverData.version === localData.version && serverData.updatedAt > localData.updatedAt;
-    if (serverWins) {
-      syncLogger.info("Conflict resolved: Server wins", { entityType, id: localData.id });
-      const updates = Object.keys(serverData).filter((k) => k !== "id").map((k) => `${k} = @${k}`).join(", ");
-      const stmt = db.prepare(`UPDATE ${entityType} SET ${updates} WHERE id = @id`);
-      stmt.run(serverData);
-      memoryCache.set(entityType, serverData.id, serverData);
-    } else {
-      syncLogger.info("Conflict resolved: Local wins", { entityType, id: localData.id });
-    }
-  }
-};
-var syncEngine = new SyncEngine();
+    contents.setWindowOpenHandler(({ url }) => {
+      console.warn(`[security] Blocked window.open for: ${url}`);
+      import_electron2.shell.openExternal(url);
+      return { action: "deny" };
+    });
+  });
+  import_electron2.app.whenReady().then(() => {
+    const ses = import_electron2.session.defaultSession;
+    ses.webRequest.onHeadersReceived((details, callback) => {
+      if (isDev) {
+        callback({ responseHeaders: details.responseHeaders });
+        return;
+      }
+      callback({
+        responseHeaders: {
+          ...details.responseHeaders,
+          "Content-Security-Policy": [CSP]
+        }
+      });
+    });
+    ses.setPermissionRequestHandler((_webContents, permission, callback) => {
+      const granted = ALLOWED_PERMISSIONS.has(permission);
+      if (!granted) {
+        console.warn(`[security] Permission denied: ${permission}`);
+      }
+      callback(granted);
+    });
+    ses.setPermissionCheckHandler((_webContents, permission) => {
+      return ALLOWED_PERMISSIONS.has(permission);
+    });
+  });
+}
+
+// electron/main.ts
+init_db();
+
+// electron/ipc/handlers.ts
+var import_electron9 = require("electron");
 
 // electron/db/queries.ts
+init_db();
+init_memoryCache();
+var import_uuid = require("uuid");
+init_syncEngine();
 function mutateEntity(entityType, operation, payload) {
   const timestamp = Date.now();
   const opId = (0, import_uuid.v7)();
@@ -607,25 +830,25 @@ function queryAll(entityType) {
 }
 
 // electron/auth/storage.ts
-var import_electron5 = require("electron");
-var import_electron_store = __toESM(require("electron-store"));
-var store = new import_electron_store.default({
+var import_electron6 = require("electron");
+var import_electron_store2 = __toESM(require("electron-store"));
+var store2 = new import_electron_store2.default({
   name: "auth-tokens"
 });
 function setToken(key, token) {
-  if (import_electron5.safeStorage.isEncryptionAvailable()) {
-    const encrypted = import_electron5.safeStorage.encryptString(token);
-    store.set(key, encrypted.toString("base64"));
+  if (import_electron6.safeStorage.isEncryptionAvailable()) {
+    const encrypted = import_electron6.safeStorage.encryptString(token);
+    store2.set(key, encrypted.toString("base64"));
   } else {
-    store.set(key, Buffer.from(token, "utf-8").toString("base64"));
+    store2.set(key, Buffer.from(token, "utf-8").toString("base64"));
   }
 }
 function getToken(key) {
-  const data = store.get(key);
+  const data = store2.get(key);
   if (!data) return null;
   try {
-    if (import_electron5.safeStorage.isEncryptionAvailable()) {
-      return import_electron5.safeStorage.decryptString(Buffer.from(data, "base64"));
+    if (import_electron6.safeStorage.isEncryptionAvailable()) {
+      return import_electron6.safeStorage.decryptString(Buffer.from(data, "base64"));
     } else {
       return Buffer.from(data, "base64").toString("utf-8");
     }
@@ -635,48 +858,49 @@ function getToken(key) {
   }
 }
 function clearToken(key) {
-  store.delete(key);
+  store2.delete(key);
 }
 
 // electron/services/backupEngine.ts
-var import_fs2 = __toESM(require("fs"));
-var import_path4 = __toESM(require("path"));
+var import_fs4 = __toESM(require("fs"));
+var import_path5 = __toESM(require("path"));
 var import_zlib = __toESM(require("zlib"));
 var import_promises = require("stream/promises");
+init_db();
 
 // electron/services/config.ts
-var import_electron_store2 = __toESM(require("electron-store"));
+var import_electron_store3 = __toESM(require("electron-store"));
 var defaultConfig = {
   backupPath: "",
   lastBackupDate: "",
   autoBackupEnabled: true
 };
-var configStore = new import_electron_store2.default({
+var configStore = new import_electron_store3.default({
   name: "tijarat-config",
   defaults: defaultConfig
 });
 
 // electron/services/backupEngine.ts
-var import_electron6 = require("electron");
+var import_electron7 = require("electron");
 async function createBackup() {
   try {
     const backupPath = configStore.get("backupPath");
     if (!backupPath) {
       return { success: false, message: "Backup path not configured" };
     }
-    if (!import_fs2.default.existsSync(backupPath)) {
-      import_fs2.default.mkdirSync(backupPath, { recursive: true });
+    if (!import_fs4.default.existsSync(backupPath)) {
+      import_fs4.default.mkdirSync(backupPath, { recursive: true });
     }
     const dateStr = (/* @__PURE__ */ new Date()).toISOString().replace(/[:.]/g, "-");
     const backupFileName = `tijarat_backup_${dateStr}.db.gz`;
-    const destinationFile = import_path4.default.join(backupPath, backupFileName);
-    const tempDbPath = import_path4.default.join(import_electron6.app.getPath("temp"), `temp_backup_${dateStr}.db`);
+    const destinationFile = import_path5.default.join(backupPath, backupFileName);
+    const tempDbPath = import_path5.default.join(import_electron7.app.getPath("temp"), `temp_backup_${dateStr}.db`);
     await db.backup(tempDbPath);
-    const source = import_fs2.default.createReadStream(tempDbPath);
-    const destination = import_fs2.default.createWriteStream(destinationFile);
+    const source = import_fs4.default.createReadStream(tempDbPath);
+    const destination = import_fs4.default.createWriteStream(destinationFile);
     const gzip = import_zlib.default.createGzip();
     await (0, import_promises.pipeline)(source, gzip, destination);
-    import_fs2.default.unlinkSync(tempDbPath);
+    import_fs4.default.unlinkSync(tempDbPath);
     const todayStr = (/* @__PURE__ */ new Date()).toISOString().split("T")[0];
     configStore.set("lastBackupDate", todayStr);
     cleanupOldBackups(backupPath);
@@ -688,11 +912,11 @@ async function createBackup() {
 }
 function cleanupOldBackups(backupPath) {
   try {
-    const files = import_fs2.default.readdirSync(backupPath).filter((f) => f.startsWith("tijarat_backup_") && f.endsWith(".db.gz")).map((f) => ({ name: f, time: import_fs2.default.statSync(import_path4.default.join(backupPath, f)).mtime.getTime() })).sort((a, b) => b.time - a.time);
+    const files = import_fs4.default.readdirSync(backupPath).filter((f) => f.startsWith("tijarat_backup_") && f.endsWith(".db.gz")).map((f) => ({ name: f, time: import_fs4.default.statSync(import_path5.default.join(backupPath, f)).mtime.getTime() })).sort((a, b) => b.time - a.time);
     if (files.length > 30) {
       const toDelete = files.slice(30);
       for (const file of toDelete) {
-        import_fs2.default.unlinkSync(import_path4.default.join(backupPath, file.name));
+        import_fs4.default.unlinkSync(import_path5.default.join(backupPath, file.name));
       }
     }
   } catch (err) {
@@ -708,27 +932,28 @@ function getBackupStatus() {
 }
 
 // electron/services/restoreEngine.ts
-var import_fs3 = __toESM(require("fs"));
-var import_path5 = __toESM(require("path"));
+var import_fs5 = __toESM(require("fs"));
+var import_path6 = __toESM(require("path"));
 var import_zlib2 = __toESM(require("zlib"));
 var import_promises2 = require("stream/promises");
-var import_electron7 = require("electron");
+var import_electron8 = require("electron");
+init_db();
 async function restoreDatabase(backupFilePath) {
   try {
-    if (!import_fs3.default.existsSync(backupFilePath)) {
+    if (!import_fs5.default.existsSync(backupFilePath)) {
       return { success: false, message: "Backup file does not exist" };
     }
-    const userDataPath = import_electron7.app.getPath("userData");
-    const currentDbPath = import_path5.default.join(userDataPath, "tijarat_local.db");
-    const preRestorePath = import_path5.default.join(userDataPath, "tijarat_local.db.pre-restore");
-    const extractedTempPath = import_path5.default.join(import_electron7.app.getPath("temp"), `restore_temp_${Date.now()}.db`);
-    const source = import_fs3.default.createReadStream(backupFilePath);
-    const destination = import_fs3.default.createWriteStream(extractedTempPath);
+    const userDataPath = import_electron8.app.getPath("userData");
+    const currentDbPath = import_path6.default.join(userDataPath, "tijarat_local.db");
+    const preRestorePath = import_path6.default.join(userDataPath, "tijarat_local.db.pre-restore");
+    const extractedTempPath = import_path6.default.join(import_electron8.app.getPath("temp"), `restore_temp_${Date.now()}.db`);
+    const source = import_fs5.default.createReadStream(backupFilePath);
+    const destination = import_fs5.default.createWriteStream(extractedTempPath);
     const gunzip = import_zlib2.default.createGunzip();
     await (0, import_promises2.pipeline)(source, gunzip, destination);
-    const stat = import_fs3.default.statSync(extractedTempPath);
+    const stat = import_fs5.default.statSync(extractedTempPath);
     if (stat.size === 0) {
-      import_fs3.default.unlinkSync(extractedTempPath);
+      import_fs5.default.unlinkSync(extractedTempPath);
       throw new Error("Extracted database is empty or corrupted.");
     }
     try {
@@ -736,24 +961,24 @@ async function restoreDatabase(backupFilePath) {
     } catch (e) {
       console.warn("Error closing DB during restore:", e);
     }
-    if (import_fs3.default.existsSync(currentDbPath)) {
-      if (import_fs3.default.existsSync(preRestorePath)) {
-        import_fs3.default.unlinkSync(preRestorePath);
+    if (import_fs5.default.existsSync(currentDbPath)) {
+      if (import_fs5.default.existsSync(preRestorePath)) {
+        import_fs5.default.unlinkSync(preRestorePath);
       }
-      import_fs3.default.renameSync(currentDbPath, preRestorePath);
+      import_fs5.default.renameSync(currentDbPath, preRestorePath);
     }
     try {
-      import_fs3.default.copyFileSync(extractedTempPath, currentDbPath);
-      import_fs3.default.unlinkSync(extractedTempPath);
+      import_fs5.default.copyFileSync(extractedTempPath, currentDbPath);
+      import_fs5.default.unlinkSync(extractedTempPath);
       setTimeout(() => {
-        import_electron7.app.relaunch();
-        import_electron7.app.exit(0);
+        import_electron8.app.relaunch();
+        import_electron8.app.exit(0);
       }, 1e3);
       return { success: true, message: "Restore successful. Restarting application..." };
     } catch (restoreError) {
       console.error("Failed to copy restored DB, attempting rollback...", restoreError);
-      if (import_fs3.default.existsSync(preRestorePath)) {
-        import_fs3.default.renameSync(preRestorePath, currentDbPath);
+      if (import_fs5.default.existsSync(preRestorePath)) {
+        import_fs5.default.renameSync(preRestorePath, currentDbPath);
       }
       return { success: false, message: "Restore failed, rolled back to previous state. " + restoreError.message };
     }
@@ -817,56 +1042,69 @@ function validatePayload(entityType, operation, payload) {
 }
 
 // electron/ipc/handlers.ts
+init_logger();
+function handleIpc(channel, handler) {
+  import_electron9.ipcMain.handle(channel, async (event, ...args) => {
+    try {
+      return await handler(event, ...args);
+    } catch (error) {
+      logger.error(`[IPC Error] Channel: ${channel}`, {
+        message: error.message,
+        stack: error.stack,
+        timestamp: (/* @__PURE__ */ new Date()).toISOString()
+      });
+      throw error;
+    }
+  });
+}
 function setupIpcHandlers() {
-  import_electron8.ipcMain.handle("db:mutate", (_event, entityType, operation, payload) => {
+  handleIpc("db:mutate", (_event, entityType, operation, payload) => {
     let validatedPayload;
     try {
       validatedPayload = validatePayload(entityType, operation, payload);
     } catch (err) {
-      console.error("[IPC Security] Payload validation failed for db:mutate", err.errors || err);
       throw new Error(`[IPC Security] Invalid payload for ${entityType} ${operation}`);
     }
     try {
       return mutateEntity(entityType, operation, validatedPayload);
     } catch (err) {
-      console.error(`[DB Error] Mutation failed for ${entityType} ${operation}:`, err);
       throw new Error(`Database mutation failed: ${err.message}`);
     }
   });
-  import_electron8.ipcMain.handle("db:query", (_event, entityType, id) => {
+  handleIpc("db:query", (_event, entityType, id) => {
     return queryEntity(entityType, id);
   });
-  import_electron8.ipcMain.handle("db:queryAll", (_event, entityType) => {
+  handleIpc("db:queryAll", (_event, entityType) => {
     return queryAll(entityType);
   });
-  import_electron8.ipcMain.handle("auth:setToken", (_event, key, token) => {
+  handleIpc("auth:setToken", (_event, key, token) => {
     setToken(key, token);
   });
-  import_electron8.ipcMain.handle("auth:getToken", (_event, key) => {
+  handleIpc("auth:getToken", (_event, key) => {
     return getToken(key);
   });
-  import_electron8.ipcMain.handle("auth:clearToken", (_event, key) => {
+  handleIpc("auth:clearToken", (_event, key) => {
     clearToken(key);
   });
-  import_electron8.ipcMain.handle("db:backup", async () => {
+  handleIpc("db:backup", async () => {
     return createBackup();
   });
-  import_electron8.ipcMain.handle("db:restore", async (_event, backupFilePath) => {
+  handleIpc("db:restore", async (_event, backupFilePath) => {
     return restoreDatabase(backupFilePath);
   });
-  import_electron8.ipcMain.handle("db:get-backup-status", () => {
+  handleIpc("db:get-backup-status", () => {
     return getBackupStatus();
   });
-  import_electron8.ipcMain.handle("db:set-backup-path", (_event, backupPath) => {
+  handleIpc("db:set-backup-path", (_event, backupPath) => {
     configStore.set("backupPath", backupPath);
     return { success: true };
   });
-  import_electron8.ipcMain.handle("app:minimize", () => {
-    const win = import_electron8.BrowserWindow.getFocusedWindow();
+  handleIpc("app:minimize", () => {
+    const win = import_electron9.BrowserWindow.getFocusedWindow();
     if (win) win.minimize();
   });
-  import_electron8.ipcMain.handle("app:maximize", () => {
-    const win = import_electron8.BrowserWindow.getFocusedWindow();
+  handleIpc("app:maximize", () => {
+    const win = import_electron9.BrowserWindow.getFocusedWindow();
     if (win) {
       if (win.isMaximized()) {
         win.unmaximize();
@@ -875,13 +1113,13 @@ function setupIpcHandlers() {
       }
     }
   });
-  import_electron8.ipcMain.handle("app:close", () => {
-    const win = import_electron8.BrowserWindow.getFocusedWindow();
+  handleIpc("app:close", () => {
+    const win = import_electron9.BrowserWindow.getFocusedWindow();
     if (win) win.close();
   });
-  import_electron8.ipcMain.handle("app:getSystemInfo", () => {
+  handleIpc("app:getSystemInfo", () => {
     return {
-      appVersion: import_electron8.app.getVersion(),
+      appVersion: import_electron9.app.getVersion(),
       electronVersion: process.versions.electron,
       nodeVersion: process.versions.node,
       platform: process.platform,
@@ -892,30 +1130,305 @@ function setupIpcHandlers() {
 }
 
 // electron/main.ts
-var isDev2 = !import_electron10.app.isPackaged;
+init_syncEngine();
+
+// electron/crashHandler.ts
+var import_electron10 = require("electron");
+var import_path7 = __toESM(require("path"));
+var import_electron_store4 = __toESM(require("electron-store"));
+init_logger();
+init_db();
+var crashStore = new import_electron_store4.default({ name: "crash-state", defaults: { startupCrashes: 0, gpuCrashes: 0 } });
+var isDev3 = !import_electron10.app.isPackaged;
+var shuttingDown = false;
+var appReadyForUse = false;
+function setAppReadyForUse(ready) {
+  appReadyForUse = ready;
+}
+function setupCrashHandler() {
+  process.on("uncaughtException", (error) => {
+    logger.error("Uncaught Exception:", error);
+    gracefulShutdown("Uncaught Exception", error);
+  });
+  process.on("unhandledRejection", (reason, promise) => {
+    logger.error("Unhandled Rejection at:", promise, "reason:", reason);
+    gracefulShutdown("Unhandled Rejection", reason);
+  });
+  import_electron10.app.on("render-process-gone", (event, webContents, details) => {
+    logger.error(`Render process gone. Reason: ${details.reason}, Exit code: ${details.exitCode}`);
+    if (details.reason === "crashed" || details.reason === "oom") {
+      gracefulShutdown(`Renderer Process Crashed (${details.reason})`);
+    }
+  });
+  import_electron10.app.on("child-process-gone", (event, details) => {
+    logger.error(`Child process gone. Type: ${details.type}, Reason: ${details.reason}, Name: ${details.name}`);
+    if (details.type === "GPU" && details.reason === "crashed") {
+      logger.error("GPU process crashed! This might indicate a graphics driver issue.");
+      const gpuCrashes = crashStore.get("gpuCrashes") + 1;
+      crashStore.set("gpuCrashes", gpuCrashes);
+    }
+  });
+}
+function gracefulShutdown(reason, error) {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  logger.info(`Initiating graceful shutdown due to: ${reason}`);
+  try {
+    logger.info("Closing database connections safely...");
+    closeDb();
+  } catch (err) {
+    logger.error("Error while closing database during shutdown:", err);
+  }
+  if (!isDev3) {
+    const isStartup = !appReadyForUse;
+    if (isStartup) {
+      const crashes = crashStore.get("startupCrashes") + 1;
+      crashStore.set("startupCrashes", crashes);
+      if (crashes >= 3) {
+        logger.warn("Safe Mode activated due to repeated startup crashes.");
+      }
+    }
+    const logPath2 = import_path7.default.join(import_electron10.app.getPath("userData"), "logs", "main.log");
+    const response = import_electron10.dialog.showMessageBoxSync({
+      type: "error",
+      title: "Unexpected Error",
+      message: "TijaratPro encountered an unexpected error.",
+      detail: "The application needs to close safely.\n\nPlease restart the application.\n\nIf the issue continues, contact support and send the log file.",
+      buttons: ["Restart App", "Copy Error Details", "Open Logs Folder", "View Logs", "Exit"],
+      defaultId: 0,
+      cancelId: 4,
+      noLink: true
+    });
+    if (response === 1) {
+      const details = [
+        `App Version: ${import_electron10.app.getVersion()}`,
+        `Electron Version: ${process.versions.electron}`,
+        `Node Version: ${process.versions.node}`,
+        `OS: ${process.platform} ${process.arch}`,
+        `Timestamp: ${(/* @__PURE__ */ new Date()).toISOString()}`,
+        `Log Path: ${logPath2}`,
+        `
+Reason: ${reason}`
+      ];
+      if (error) {
+        if (error.name) details.push(`Error Name: ${error.name}`);
+        if (error.message) details.push(`Message: ${error.message}`);
+        if (error.stack) details.push(`Stack Trace:
+${error.stack}`);
+        else {
+          try {
+            details.push(`Error Obj: ${JSON.stringify(error, null, 2)}`);
+          } catch {
+            details.push(`Error Obj: ${String(error)}`);
+          }
+        }
+      }
+      import_electron10.clipboard.writeText(details.join("\n"));
+    } else if (response === 2) {
+      import_electron10.shell.showItemInFolder(logPath2);
+    } else if (response === 3) {
+      import_electron10.shell.openPath(logPath2);
+    }
+    if (response === 0) {
+      import_electron10.app.relaunch();
+      import_electron10.app.exit(0);
+    }
+  }
+  logger.info("Closing browser windows...");
+  const windows = import_electron10.BrowserWindow.getAllWindows();
+  windows.forEach((win) => {
+    if (!win.isDestroyed()) {
+      win.destroy();
+    }
+  });
+  try {
+    if (logger.transports?.file?.getFile()?.clear) {
+    }
+  } catch (err) {
+  }
+  logger.info("Exiting application...");
+  import_electron10.app.exit(0);
+}
+
+// electron/main.ts
+init_logger();
+
+// electron/splash.ts
+var import_electron11 = require("electron");
+var import_path8 = __toESM(require("path"));
+var splashHtml = `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { 
+      background-color: #0a0a0a; 
+      color: #fff; 
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      justify-content: center; 
+      height: 100vh; 
+      margin: 0; 
+      user-select: none; 
+      overflow: hidden; 
+      -webkit-app-region: drag;
+    }
+    h1 { font-size: 24px; font-weight: 600; margin-bottom: 8px; letter-spacing: 0.5px; }
+    p { font-size: 14px; color: #888; margin-top: 16px; transition: opacity 0.2s; }
+    .spinner { 
+      width: 36px; height: 36px; 
+      border: 3px solid rgba(255,255,255,0.1); 
+      border-radius: 50%; 
+      border-top-color: #0070f3; 
+      animation: spin 1s ease-in-out infinite; 
+      margin-bottom: 20px; 
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="spinner"></div>
+  <h1>Tijarat Pro</h1>
+  <p id="status">Starting...</p>
+</body>
+</html>
+`;
+function createSplashWindow() {
+  const win = new import_electron11.BrowserWindow({
+    width: 400,
+    height: 300,
+    frame: false,
+    transparent: false,
+    backgroundColor: "#0a0a0a",
+    alwaysOnTop: true,
+    show: false,
+    center: true,
+    resizable: false,
+    icon: import_path8.default.join(__dirname, "../build/icon.png"),
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true
+    }
+  });
+  const dataUri = "data:text/html;charset=utf-8," + encodeURIComponent(splashHtml);
+  win.loadURL(dataUri);
+  win.once("ready-to-show", () => {
+    win.show();
+  });
+  return win;
+}
+function updateSplashStatus(win, status) {
+  if (win && !win.isDestroyed()) {
+    win.webContents.executeJavaScript(`
+      document.getElementById('status').innerText = ${JSON.stringify(status)};
+    `).catch(() => {
+    });
+  }
+}
+
+// electron/main.ts
+var import_electron_store5 = __toESM(require("electron-store"));
+var isDev4 = !import_electron13.app.isPackaged;
 var NEXT_DEV_URL = "http://localhost:3000";
 var mainWindow = null;
 if (process.defaultApp) {
   if (process.argv.length >= 2) {
-    import_electron10.app.setAsDefaultProtocolClient("tijaratpro", process.execPath, [import_path6.default.resolve(process.argv[1])]);
+    import_electron13.app.setAsDefaultProtocolClient("tijaratpro", process.execPath, [import_path9.default.resolve(process.argv[1])]);
   }
 } else {
-  import_electron10.app.setAsDefaultProtocolClient("tijaratpro");
+  import_electron13.app.setAsDefaultProtocolClient("tijaratpro");
 }
-import_electron10.app.on("open-url", (event, url) => {
+var gotTheLock = import_electron13.app.requestSingleInstanceLock();
+if (!gotTheLock) {
+  logger.info("Another instance is already running. Quitting this instance.");
+  import_electron13.app.quit();
+} else {
+  import_electron13.app.on("second-instance", (event, commandLine, workingDirectory) => {
+    logger.info("Second instance launched. Focusing existing window.");
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.focus();
+    }
+  });
+}
+import_electron13.app.on("open-url", (event, url) => {
   event.preventDefault();
   if (mainWindow) {
     if (mainWindow.isMinimized()) mainWindow.restore();
     mainWindow.focus();
   }
 });
-import_electron10.app.whenReady().then(async () => {
+var crashStore2 = new import_electron_store5.default({ name: "crash-state", defaults: { startupCrashes: 0, gpuCrashes: 0 } });
+if (crashStore2.get("gpuCrashes") >= 3) {
+  import_electron13.app.disableHardwareAcceleration();
+}
+import_electron13.app.whenReady().then(async () => {
+  const startupStart = performance.now();
+  const sysMem = process.getSystemMemoryInfo ? process.getSystemMemoryInfo() : null;
+  const cpus = require("os").cpus();
+  const displays = import_electron13.screen.getAllDisplays();
+  const primaryDisplay = import_electron13.screen.getPrimaryDisplay();
+  const gpuStatus = import_electron13.app.getGPUFeatureStatus();
+  logger.info(`GPU Status (2D Canvas): ${gpuStatus["2d_canvas"]}, (WebGL): ${gpuStatus.webgl}`);
+  logger.info(`
+--- Electron Health Report ---
+Version: ${import_electron13.app.getVersion()}
+Electron: ${process.versions.electron}
+Node: ${process.versions.node}
+OS: ${process.platform} ${process.arch}
+CPU: ${cpus.length > 0 ? cpus[0].model : "Unknown"} (${cpus.length} cores)
+RAM: ${sysMem ? `${Math.round(sysMem.total / 1024)}MB Total, ${Math.round(sysMem.free / 1024)}MB Free` : "Unknown"}
+GPU: 2D Canvas=${gpuStatus["2d_canvas"]}, WebGL=${gpuStatus.webgl}
+Locale: ${import_electron13.app.getLocale()}
+Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}
+Displays: ${displays.length} connected
+Resolution: ${primaryDisplay.size.width}x${primaryDisplay.size.height} (Primary)
+Scale Factor: ${primaryDisplay.scaleFactor}
+SQLite Path: ${import_path9.default.join(import_electron13.app.getPath("userData"), "tijarat_local.db")}
+------------------------------
+`);
+  setupCrashHandler();
+  if (!isDev4) {
+    import_electron13.Menu.setApplicationMenu(null);
+  }
   setupSecurity();
+  const splash = createSplashWindow();
+  updateSplashStatus(splash, "Preparing workspace...");
+  let startupTimeout = null;
+  if (!isDev4) {
+    startupTimeout = setTimeout(() => {
+      if (mainWindow && !mainWindow.isDestroyed() && mainWindow.isVisible()) return;
+      const response = import_electron13.dialog.showMessageBoxSync({
+        type: "warning",
+        title: "Startup Timeout",
+        message: "Startup is taking longer than expected.",
+        detail: "TijaratPro might be stuck initializing or downloading an update. What would you like to do?",
+        buttons: ["Retry", "Open Logs", "Exit"],
+        defaultId: 0,
+        cancelId: 2,
+        noLink: true
+      });
+      if (response === 0) {
+        import_electron13.app.relaunch();
+        import_electron13.app.exit(0);
+      } else if (response === 1) {
+        import_electron13.shell.showItemInFolder(import_path9.default.join(import_electron13.app.getPath("userData"), "logs", "main.log"));
+        import_electron13.app.quit();
+      } else if (response === 2) {
+        import_electron13.app.quit();
+      }
+    }, 3e4);
+  }
+  updateSplashStatus(splash, "Loading local database...");
   initDb();
   setupIpcHandlers();
+  updateSplashStatus(splash, "Starting services...");
   syncEngine.start();
   mainWindow = createWindow();
-  if (isDev2) {
+  logger.info("Main window created");
+  if (isDev4) {
     let loaded = false;
     for (let i = 0; i < 30; i++) {
       try {
@@ -923,16 +1436,19 @@ import_electron10.app.whenReady().then(async () => {
         loaded = true;
         break;
       } catch (err) {
-        console.log(`[electron] Waiting for Next.js dev server to start (${i + 1}/30)...`);
+        updateSplashStatus(splash, `Waiting for Next.js... (${i + 1}/30)`);
         await new Promise((resolve) => setTimeout(resolve, 1e3));
       }
     }
     if (!loaded) {
       console.error("[electron] Failed to connect to Next.js dev server.");
     }
-    mainWindow.webContents.openDevTools({ mode: "detach" });
+    if (process.env.OPEN_DEVTOOLS !== "false") {
+      mainWindow.webContents.openDevTools({ mode: "detach" });
+    }
   } else {
-    const indexPath = import_path6.default.join(__dirname, "../out/index.html");
+    updateSplashStatus(splash, "Checking updates...");
+    const indexPath = import_path9.default.join(__dirname, "../out/index.html");
     await mainWindow.loadFile(indexPath);
     const { setupUpdater: setupUpdater2 } = (init_updater(), __toCommonJS(updater_exports));
     setupUpdater2(mainWindow);
@@ -943,42 +1459,83 @@ import_electron10.app.whenReady().then(async () => {
       const isF12 = input.key === "F12";
       const isInspect = input.control && input.shift && input.key.toLowerCase() === "i";
       const isMacInspect = input.meta && input.alt && input.key.toLowerCase() === "i";
-      if (isF12 || isInspect || isMacInspect) {
+      const isF5 = input.key === "F5";
+      const isCtrlR = (input.control || input.meta) && input.key.toLowerCase() === "r";
+      if (isF12 || isInspect || isMacInspect || isF5 || isCtrlR) {
         event.preventDefault();
       }
     });
   }
-  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    if (!url.startsWith("file://") && !url.startsWith(NEXT_DEV_URL)) {
-      import_electron10.shell.openExternal(url);
-      return { action: "deny" };
-    }
-    return { action: "allow" };
+  mainWindow.once("ready-to-show", () => {
+    if (startupTimeout) clearTimeout(startupTimeout);
+    mainWindow.setOpacity(0);
+    mainWindow.show();
+    const FADE_DURATION = 200;
+    const FADE_INTERVAL = 20;
+    const FADE_STEP = FADE_INTERVAL / FADE_DURATION;
+    let splashOpacity = 1;
+    let mainOpacity = 0;
+    import_electron13.app.once("before-quit", () => {
+      if (startupTimeout) clearTimeout(startupTimeout);
+      if (fadeInterval) clearInterval(fadeInterval);
+    });
+    const fadeInterval = setInterval(() => {
+      splashOpacity -= FADE_STEP;
+      mainOpacity += FADE_STEP;
+      if (!splash.isDestroyed()) splash.setOpacity(Math.max(0, splashOpacity));
+      if (!mainWindow.isDestroyed()) mainWindow.setOpacity(Math.min(1, mainOpacity));
+      if (splashOpacity <= 0) {
+        clearInterval(fadeInterval);
+        if (!splash.isDestroyed()) splash.destroy();
+        if (!mainWindow.isDestroyed()) {
+          mainWindow.setOpacity(1);
+          logger.info(`Startup completed in ${Math.round(performance.now() - startupStart)} ms`);
+          crashStore2.set("startupCrashes", 0);
+          setTimeout(() => {
+            if (mainWindow && !mainWindow.isDestroyed()) {
+              crashStore2.set("gpuCrashes", 0);
+              logger.info("GPU stability threshold reached. Crash counter reset.");
+            }
+          }, 5 * 60 * 1e3);
+          setAppReadyForUse(true);
+        }
+      }
+    }, FADE_INTERVAL);
   });
-  import_electron10.app.on("activate", () => {
-    if (import_electron10.BrowserWindow.getAllWindows().length === 0) {
+  import_electron13.app.on("activate", () => {
+    if (import_electron13.BrowserWindow.getAllWindows().length === 0) {
       mainWindow = createWindow();
     }
   });
 });
-import_electron10.app.on("window-all-closed", () => {
+import_electron13.app.on("window-all-closed", () => {
+  logger.info("All windows closed.");
   if (process.platform !== "darwin") {
-    import_electron10.app.quit();
+    import_electron13.app.quit();
   }
 });
-import_electron10.ipcMain.handle("app:getInfo", () => ({
-  version: import_electron10.app.getVersion(),
-  name: import_electron10.app.getName(),
-  isDev: isDev2,
+import_electron13.app.on("before-quit", () => {
+  logger.info("App before-quit fired.");
+});
+import_electron13.app.on("will-quit", () => {
+  logger.info("App will-quit fired.");
+});
+import_electron13.app.on("quit", () => {
+  logger.info("App quit fired.");
+});
+import_electron13.ipcMain.handle("app:getInfo", () => ({
+  version: import_electron13.app.getVersion(),
+  name: import_electron13.app.getName(),
+  isDev: isDev4,
   platform: process.platform
 }));
-import_electron10.ipcMain.handle("app:quit", () => {
-  import_electron10.app.quit();
+import_electron13.ipcMain.handle("app:quit", () => {
+  import_electron13.app.quit();
 });
-import_electron10.ipcMain.handle("app:openExternal", (_event, url) => {
+import_electron13.ipcMain.handle("app:openExternal", (_event, url) => {
   const safeUrl = new URL(url);
   if (safeUrl.protocol === "https:" || safeUrl.protocol === "http:") {
-    import_electron10.shell.openExternal(url);
+    import_electron13.shell.openExternal(url);
   }
 });
 //# sourceMappingURL=main.js.map
