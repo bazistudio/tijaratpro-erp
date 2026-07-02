@@ -17,6 +17,13 @@ class SyncEngine {
     this.startPolling();
   }
 
+  stop() {
+    if (this.timer) {
+      clearInterval(this.timer);
+      this.timer = null;
+    }
+  }
+
   setOnlineStatus(status: boolean) {
     this.isOnline = status;
     if (this.isOnline) {

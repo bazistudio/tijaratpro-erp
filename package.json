@@ -12,7 +12,9 @@
     "start": "next start",
     "lint": "eslint",
     "postinstall": "electron-rebuild -f -w better-sqlite3",
-    "pack": "npm run build && npm run build:electron && electron-builder"
+    "pack": "npm run build && npm run build:electron && electron-builder --dir",
+    "dist": "npm run build && npm run build:electron && electron-builder --publish never",
+    "release": "npm run build && npm run build:electron && electron-builder --publish always"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",
@@ -37,7 +39,8 @@
     "tailwind-merge": "^3.6.0",
     "uuid": "^14.0.0",
     "zod": "^4.4.3",
-    "zustand": "^5.0.14"
+    "zustand": "^5.0.14",
+    "electron-log": "^5.4.4"
   },
   "build": {
     "appId": "com.tijaratpro.desktop",
@@ -56,22 +59,81 @@
       }
     ],
     "directories": {
-      "output": "dist"
+      "output": "release"
     },
     "files": [
       "dist-electron/**/*",
-      "out/**/*"
+      "out/**/*",
+      "build/**/*",
+      "package.json"
     ],
     "win": {
-      "target": "nsis"
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "icon": "build/icon.ico"
     },
     "nsis": {
-      "oneClick": true,
+      "artifactName": "\\ Setup \\.\\",
+      "oneClick": false,
       "perMachine": false,
-      "allowToChangeInstallationDirectory": false,
+      "allowToChangeInstallationDirectory": true,
+      "deleteAppDataOnUninstall": false,
+      "runAfterFinish": true,
+      "displayLanguageSelector": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "TijaratPro"
+      "shortcutName": "TijaratPro",
+      "license": "build/license.txt",
+      "installerIcon": "build/installer.ico",
+      "uninstallerIcon": "build/uninstaller.ico",
+      "installerHeader": "build/banner.bmp",
+      "installerSidebar": "build/sidebar.bmp"
+    },
+    "executableName": "TijaratPro",
+    "artifactName": "\\-\\-\\-\\.\\",
+    "compression": "maximum",
+    "fileAssociations": [
+      {
+        "ext": "tijarat",
+        "name": "TijaratPro Data",
+        "description": "TijaratPro Data File",
+        "role": "Editor"
+      },
+      {
+        "ext": "tpbackup",
+        "name": "TijaratPro Backup",
+        "description": "TijaratPro Backup File",
+        "role": "Editor"
+      },
+      {
+        "ext": "tijaratbackup",
+        "name": "TijaratPro Backup (Legacy)",
+        "description": "TijaratPro Backup File",
+        "role": "Editor"
+      },
+      {
+        "ext": "tijaratinvoice",
+        "name": "TijaratPro Invoice",
+        "description": "TijaratPro Invoice File",
+        "role": "Editor"
+      },
+      {
+        "ext": "tijaratconfig",
+        "name": "TijaratPro Config",
+        "description": "TijaratPro Config File",
+        "role": "Editor"
+      }
+    ],
+    "mac": {
+      "icon": "build/icon.icns"
+    },
+    "linux": {
+      "icon": "build/icon.png"
+    },
+    "portable": {
+      "artifactName": "\\ Portable.\\"
     }
   },
   "devDependencies": {
@@ -90,6 +152,10 @@
     "tailwindcss": "^4",
     "ts-prune": "^0.10.3",
     "tsup": "^8.5.1",
-    "typescript": "^5"
-  }
+    "typescript": "^5",
+    "@eslint/eslintrc": "^3.3.5",
+    "@types/better-sqlite3": "^7.6.13"
+  },
+  "description": "Professional Desktop Application for TijaratPro",
+  "author": "TijaratPro"
 }

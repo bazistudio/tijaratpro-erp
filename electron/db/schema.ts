@@ -1,4 +1,5 @@
-import type { Database } from 'better-sqlite3';
+import { Database } from 'better-sqlite3';
+import { logger } from '../logger';
 
 export function initializeSchema(db: Database) {
   // We use execute because these are DDL statements.
@@ -38,6 +39,24 @@ export function initializeSchema(db: Database) {
       version INTEGER NOT NULL DEFAULT 1
     );
   `);
+
+  // Simple migrations for existing DBs that were created before these columns were added
+  const newColumns = [
+    'customerId TEXT',
+    'items TEXT',
+    'paymentMethod TEXT',
+    'discount REAL'
+  ];
+
+  for (const col of newColumns) {
+    try {
+      db.exec(`ALTER TABLE orders ADD COLUMN ${col};`);
+    } catch (err) {
+      if (!(err instanceof Error) || !err.message.includes('duplicate column name')) {
+        logger.warn(`[DB] Migration warn: Could not add ${col} to orders:`, err);
+      }
+    }
+  }
 
   // 2. Sync Queue (Pending mutations)
   db.exec(`
