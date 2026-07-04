@@ -32,7 +32,7 @@ export const ShopAdminDashboardLayout = ({ children }: ShopAdminDashboardLayoutP
       <Sidebar />
 
       {/* Main Content Area */}
-      <div className="flex w-0 flex-1 flex-col lg:pl-64 transition-all duration-200">
+      <div className="flex w-0 flex-1 flex-col transition-all duration-200">
         {/* Topbar */}
         <Topbar setMobileMenuOpen={setMobileMenuOpen} />
 

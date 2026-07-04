@@ -39,31 +39,31 @@ export const DesktopShell = ({ children }: { children: React.ReactNode }) => {
 
       // Navigation
       case 'GOTO_DASHBOARD':
-        router.push('/dashboard');
+        router.push('/dashboard/shop-admin');
         break;
       case 'GOTO_POS':
-        router.push('/dashboard/pos');
+        router.push('/dashboard/shop-admin/pos');
         break;
       case 'GOTO_INVENTORY':
-        router.push('/dashboard/inventory');
+        router.push('/dashboard/shop-admin/products');
         break;
       case 'GOTO_CUSTOMERS':
-        router.push('/dashboard/customers');
+        router.push('/dashboard/shop-admin/customers');
         break;
       case 'GOTO_SUPPLIERS':
-        router.push('/dashboard/suppliers');
+        router.push('/dashboard/shop-admin/suppliers');
         break;
       case 'GOTO_REPORTS':
-        router.push('/dashboard/reports');
+        router.push('/dashboard/shop-admin/history');
         break;
       case 'NEW_SALE':
-        router.push('/dashboard/pos'); // New sale is typically handled inside POS
+        router.push('/dashboard/shop-admin/pos'); // New sale is typically handled inside POS
         break;
       case 'NEW_CUSTOMER':
-        router.push('/dashboard/customers?action=new');
+        router.push('/dashboard/shop-admin/customers?action=new');
         break;
       case 'NEW_SUPPLIER':
-        router.push('/dashboard/suppliers?action=new');
+        router.push('/dashboard/shop-admin/suppliers?action=new');
         break;
 
       // System
@@ -92,7 +92,7 @@ export const DesktopShell = ({ children }: { children: React.ReactNode }) => {
       {isDesktop && <TitleBar onMenuAction={handleAction} />}
 
       {/* Main Content Area */}
-      <div className={isDesktop ? "flex-1 flex flex-col min-h-0 overflow-y-auto relative [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" : "flex-1 flex flex-col min-h-0 relative"}>
+      <div className={isDesktop ? "flex-1 flex flex-col min-h-0 overflow-hidden relative" : "flex-1 flex flex-col min-h-0 relative"}>
         {children}
       </div>
 

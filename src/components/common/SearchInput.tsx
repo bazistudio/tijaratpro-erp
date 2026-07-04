@@ -225,7 +225,7 @@ export const SearchInput = ({ placeholder = "Search products, customers, invoice
   const activeCategoryLabel = CATEGORIES.find(c => c.id === category)?.label || 'Quick Search';
 
   return (
-    <div className="relative flex w-full md:ml-0 max-w-2xl" ref={dropdownRef}>
+    <div className="relative flex w-full min-w-0 md:ml-0 max-w-2xl" ref={dropdownRef}>
       <div className="w-full flex items-center bg-gray-100 dark:bg-gray-800 rounded-full border border-transparent focus-within:border-[#006970] dark:focus-within:border-[#008990] focus-within:bg-white dark:focus-within:bg-gray-700 focus-within:ring-2 focus-within:ring-[#006970] transition-all shadow-sm">
         <label htmlFor="search-field" className="sr-only">
           Search

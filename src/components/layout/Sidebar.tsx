@@ -15,7 +15,7 @@ export const Sidebar = () => {
   const shop = { name: 'Shop Admin', branchName: 'Main Branch' };
 
   return (
-    <div className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 z-20 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 transition-colors duration-200">
+    <div className="hidden lg:flex lg:flex-col lg:w-64 flex-shrink-0 z-20 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 transition-colors duration-200">
       <div className="flex-1 flex flex-col min-h-0 bg-white/50 dark:bg-gray-900/50 backdrop-blur-md">
         <div className="flex items-center h-12 flex-shrink-0 px-6 border-b border-gray-200 dark:border-gray-800">
           <div className="text-lg font-bold text-[#006970] dark:text-[#008990] flex items-center gap-2">

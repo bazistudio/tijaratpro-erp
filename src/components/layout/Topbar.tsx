@@ -30,13 +30,13 @@ export const Topbar = ({ setMobileMenuOpen }: TopbarProps) => {
         <Menu className="h-6 w-6" aria-hidden="true" />
       </button>
 
-      <div className="flex flex-1 items-center justify-between px-4 sm:px-6 lg:px-8">
+      <div className="flex flex-1 items-center justify-between px-4 sm:px-6 lg:px-8 min-w-0">
         
-        <div className="flex flex-1 max-w-3xl items-center gap-4">
+        <div className="flex flex-1 min-w-0 max-w-3xl items-center gap-4">
           <SearchInput placeholder="Search products, customers, invoices..." />
         </div>
         
-        <div className="ml-4 flex items-center gap-2 md:gap-4">
+        <div className="ml-4 flex flex-shrink-0 items-center gap-2 md:gap-4">
           
           {/* Fixed Sale Button */}
           <Link
