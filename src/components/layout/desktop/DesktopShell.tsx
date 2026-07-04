@@ -92,7 +92,7 @@ export const DesktopShell = ({ children }: { children: React.ReactNode }) => {
       {isDesktop && <TitleBar onMenuAction={handleAction} />}
 
       {/* Main Content Area */}
-      <div className={isDesktop ? "flex-1 overflow-y-auto relative [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" : "flex-1 relative"}>
+      <div className={isDesktop ? "flex-1 flex flex-col min-h-0 overflow-y-auto relative [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" : "flex-1 flex flex-col min-h-0 relative"}>
         {children}
       </div>
 

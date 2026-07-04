@@ -125,7 +125,7 @@ export const CartTable = () => {
   };
 
   return (
-    <div className="flex-1 h-full flex flex-col overflow-hidden bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl shadow-sm">
+    <div className="flex-1 h-full flex flex-col overflow-hidden min-h-0 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl shadow-sm">
       
       {/* Classic Table Header */}
       <div className="flex items-center px-2 py-1 border-b border-gray-200 dark:border-gray-800 bg-gray-50/80 dark:bg-gray-800/80 text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest shrink-0">

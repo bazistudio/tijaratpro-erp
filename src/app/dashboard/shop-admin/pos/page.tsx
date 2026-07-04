@@ -38,7 +38,7 @@ export default function POSPage() {
   if (!mounted) return null; // Avoid hydration mismatch for Zustand persist
 
   return (
-    <div className="flex flex-col flex-1 h-full w-full relative">
+    <div className="flex flex-col flex-1 h-full w-full min-h-0 relative">
       <PosHeader />
       <SaleWorkspace />
       <ReturnOverflowModal />

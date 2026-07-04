@@ -27,25 +27,25 @@ export const SaleWorkspace = () => {
     <>
       <InvoiceReceipt />
 
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden min-h-0">
 
         {/* MAIN PANEL (Cart) */}
-        <div className="flex-1 w-full flex flex-col bg-gray-50 dark:bg-gray-800/50 overflow-hidden h-full">
+        <div className="flex-1 w-full flex flex-col bg-gray-50 dark:bg-gray-800/50 overflow-hidden h-full min-h-0">
           
-          <div className="p-2 flex-1 grid grid-cols-12 gap-2 overflow-hidden">
+          <div className="p-2 flex-1 grid grid-cols-12 gap-2 overflow-hidden min-h-0">
             
             {/* Left Column: Extra Actions (Products) */}
-            <div className="col-span-3 md:col-span-2 lg:col-span-3 flex flex-col overflow-hidden h-full">
+            <div className="col-span-3 md:col-span-2 lg:col-span-3 flex flex-col overflow-hidden h-full min-h-0">
               <PosExtraActions />
             </div>
 
             {/* Center Column: Cart Items */}
-            <div className="col-span-6 md:col-span-6 lg:col-span-6 flex flex-col overflow-hidden h-full">
+            <div className="col-span-6 md:col-span-6 lg:col-span-6 flex flex-col overflow-hidden h-full min-h-0">
               <CartTable />
             </div>
             
             {/* Right Column: Cart Summary */}
-            <div className="col-span-3 md:col-span-4 lg:col-span-3 flex flex-col overflow-hidden h-full">
+            <div className="col-span-3 md:col-span-4 lg:col-span-3 flex flex-col overflow-hidden h-full min-h-0">
               <CartSummary />
             </div>
 
