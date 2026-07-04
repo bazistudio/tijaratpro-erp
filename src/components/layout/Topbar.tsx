@@ -2,11 +2,11 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Menu, Bell, ShoppingCart } from 'lucide-react';
+import { Menu, Bell, ShoppingCart, PackagePlus, ReceiptText, RefreshCw, Plus } from 'lucide-react';
 import { UserMenu } from './UserMenu';
 import { SearchInput } from '../common/SearchInput';
-import { PackagePlus, ReceiptText, RefreshCw, Plus } from 'lucide-react';
 import { DesktopAppButton } from './DesktopAppButton';
+import { ThemeToggle } from './ThemeToggle';
 import { selectForceSync, selectStatus } from '@/features/inventory/core/inventory.selectors';
 import { useExpensesStore } from '@/features/expenses';
 
@@ -86,8 +86,11 @@ export const Topbar = ({ setMobileMenuOpen }: TopbarProps) => {
             <span className="absolute top-1.5 right-1.5 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white dark:ring-gray-900" />
           </button>
 
-          {/* User Profile Menu */}
-          <UserMenu />
+          {/* Theme Toggle & User Profile Menu */}
+          <div className="flex items-center gap-1">
+            <ThemeToggle />
+            <UserMenu />
+          </div>
         </div>
       </div>
     </header>

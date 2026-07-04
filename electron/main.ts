@@ -18,7 +18,7 @@ import Store from 'electron-store';
 // Environment helpers
 // --------------------------------------------------------------------------
 const isDev = !app.isPackaged;
-const NEXT_DEV_URL = "http://localhost:3000";
+const NEXT_DEV_URL = "http://127.0.0.1:3000";
 
 // --------------------------------------------------------------------------
 // App lifecycle

@@ -48,6 +48,7 @@ export function setupSecurity(): void {
     contents.on("will-navigate", (event, navigationUrl) => {
       const allowed =
         navigationUrl.startsWith("http://localhost:3000") ||
+        navigationUrl.startsWith("http://127.0.0.1:3000") ||
         navigationUrl.startsWith("file://");
 
       if (!allowed) {

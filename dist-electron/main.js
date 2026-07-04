@@ -963,7 +963,7 @@ var ALLOWED_PERMISSIONS = /* @__PURE__ */ new Set([
 function setupSecurity() {
   import_electron4.app.on("web-contents-created", (_event, contents) => {
     contents.on("will-navigate", (event, navigationUrl) => {
-      const allowed = navigationUrl.startsWith("http://localhost:3000") || navigationUrl.startsWith("file://");
+      const allowed = navigationUrl.startsWith("http://localhost:3000") || navigationUrl.startsWith("http://127.0.0.1:3000") || navigationUrl.startsWith("file://");
       if (!allowed) {
         logger.warn(`[security] Blocked navigation to: ${navigationUrl}`);
         event.preventDefault();
@@ -1573,7 +1573,7 @@ init_notifications();
 init_backupManager();
 var import_electron_store6 = __toESM(require("electron-store"));
 var isDev4 = !import_electron15.app.isPackaged;
-var NEXT_DEV_URL = "http://localhost:3000";
+var NEXT_DEV_URL = "http://127.0.0.1:3000";
 var mainWindow = null;
 if (process.defaultApp) {
   if (process.argv.length >= 2) {
