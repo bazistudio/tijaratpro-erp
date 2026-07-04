@@ -80,6 +80,7 @@ export function createWindow(): BrowserWindow {
     // ── Size & position ──────────────────────────────────────────────────
     width: state.width,
     height: state.height,
+    useContentSize: true,
     x: state.x,
     y: state.y,
     minWidth: 1024,

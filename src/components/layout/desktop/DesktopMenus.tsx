@@ -43,7 +43,7 @@ export const DesktopMenus = ({ onAction }: DesktopMenusProps) => {
           </button>
           
           {activeMenu === key && (
-            <div className="absolute top-[84px] left-0 min-w-[200px] bg-[#1a1a1a] border border-white/10 shadow-xl py-1 z-50 rounded-b-md">
+            <div className="absolute top-full left-0 min-w-[200px] bg-[#1a1a1a] border border-white/10 shadow-xl py-1 z-50 rounded-b-md">
               {items.map((item, idx) => (
                 item.isSeparator ? (
                   <div key={idx} className="h-px bg-white/10 my-1 mx-2" />
