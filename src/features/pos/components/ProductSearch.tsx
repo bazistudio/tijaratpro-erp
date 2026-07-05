@@ -11,6 +11,7 @@ export const ProductSearch = () => {
   const [results, setResults] = useState<any[]>([]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [revealedPriceId, setRevealedPriceId] = useState<string | null>(null);
 
   const activeSession = usePosStore(state => state.getActiveSession());
   const addToCart = usePosStore(state => state.addToCart);
@@ -242,8 +243,19 @@ export const ProductSearch = () => {
                       <span className="text-[11px] sm:text-xs font-semibold text-gray-900 dark:text-gray-100 leading-tight">
                         {product.name}
                       </span>
-                      <span className="text-[11px] sm:text-xs font-black text-right text-gray-900 dark:text-gray-100 tabular-nums shrink-0">
-                        Rs {(product.price ?? product.salePrice ?? 0).toLocaleString()}
+                      <span 
+                        className="text-[11px] sm:text-xs font-black text-right text-gray-900 dark:text-gray-100 tabular-nums shrink-0 cursor-pointer select-none"
+                        onMouseDown={(e) => { e.stopPropagation(); setRevealedPriceId(product.id || product._id); }}
+                        onMouseUp={(e) => { e.stopPropagation(); setRevealedPriceId(null); }}
+                        onMouseLeave={(e) => { e.stopPropagation(); setRevealedPriceId(null); }}
+                        onTouchStart={(e) => { e.stopPropagation(); setRevealedPriceId(product.id || product._id); }}
+                        onTouchEnd={(e) => { e.stopPropagation(); setRevealedPriceId(null); }}
+                        onClick={(e) => { e.stopPropagation(); }}
+                        title="Hold to see cost price"
+                      >
+                        Rs {revealedPriceId === (product.id || product._id) 
+                          ? (product.purchasePrice ?? product.costPrice ?? 0).toLocaleString() 
+                          : (product.price ?? product.salePrice ?? 0).toLocaleString()}
                       </span>
                     </div>
                     

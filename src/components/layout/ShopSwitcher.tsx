@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDown, Building, Store, Loader2 } from 'lucide-react';
 import { useOrganizationStore, Shop } from '@/store/useOrganizationStore';
 import { useRouter } from 'next/navigation';
-import api from '@/lib/api'; // Assuming you have an axios instance
+import api from '@/lib/api/axios';
 
 export const ShopSwitcher = () => {
   const [isOpen, setIsOpen] = useState(false);

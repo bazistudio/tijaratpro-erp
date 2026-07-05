@@ -22,6 +22,7 @@ export const SearchInput = ({ placeholder = "Search products, customers, invoice
   const [isFocused, setIsFocused] = useState(false);
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [revealedPriceId, setRevealedPriceId] = useState<string | null>(null);
 
   const { results, isLoading, error, debouncedQuery } = useGlobalSearch(query, category, isFocused, 300);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -341,8 +342,17 @@ export const SearchInput = ({ placeholder = "Search products, customers, invoice
                           <p className="text-xs text-gray-500">{product.sku || product.barcode}</p>
                         </div>
                         <div className="flex flex-col items-end gap-1">
-                          <span className="text-sm font-bold text-[#006970] dark:text-[#008990]">
-                            Rs {product.price ?? product.salePrice ?? 0}
+                          <span 
+                            className="text-sm font-bold text-[#006970] dark:text-[#008990] cursor-pointer select-none"
+                            onMouseDown={(e) => { e.stopPropagation(); setRevealedPriceId(product._id); }}
+                            onMouseUp={(e) => { e.stopPropagation(); setRevealedPriceId(null); }}
+                            onMouseLeave={(e) => { e.stopPropagation(); setRevealedPriceId(null); }}
+                            onTouchStart={(e) => { e.stopPropagation(); setRevealedPriceId(product._id); }}
+                            onTouchEnd={(e) => { e.stopPropagation(); setRevealedPriceId(null); }}
+                            onClick={(e) => { e.stopPropagation(); }}
+                            title="Hold to see cost price"
+                          >
+                            Rs {revealedPriceId === product._id ? (product.purchasePrice ?? product.costPrice ?? 0) : (product.price ?? product.salePrice ?? 0)}
                           </span>
                           <span className="text-xs font-semibold bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 px-2 py-1 rounded">
                             Qty: {product.quantity}

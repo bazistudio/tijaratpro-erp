@@ -21,12 +21,12 @@ export interface LoginResponse {
  */
 export async function loginUser(identifier: string, password: string) {
   const res = await axiosInstance.post("/api/auth/login", {
-    identifier,
+    email: identifier,
     password,
     deviceId: getDeviceId(),
   });
 
-  const data: LoginResponse = res.data;
+  const data: LoginResponse = res.data.data;
 
   if (!data?.token || !data?.user) {
     throw new Error("Invalid login response");
