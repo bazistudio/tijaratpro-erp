@@ -4,15 +4,17 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { shopAdminNavigation } from '../../constants/navigation/shop-admin-navigation';
+import { organizationNavigation } from '../../constants/navigation/organization-navigation';
 import { validateRoute } from '../../lib/navigation/route-validator';
 import { usePermissions } from '../../lib/auth/usePermissions';
+import { useOrganizationStore } from '../../store/useOrganizationStore';
 
 export const Sidebar = () => {
   const pathname = usePathname();
   const { hasPermission } = usePermissions();
+  const { viewMode } = useOrganizationStore();
   
-  // Future: const shop = useAuthStore();
-  const shop = { name: 'Shop Admin', branchName: 'Main Branch' };
+  const currentNavigation = viewMode === 'organization' ? organizationNavigation : shopAdminNavigation;
 
   return (
     <div className="hidden lg:flex lg:flex-col lg:w-64 flex-shrink-0 z-20 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 transition-colors duration-200">
@@ -26,7 +28,7 @@ export const Sidebar = () => {
         
         <div className="flex-1 flex flex-col overflow-hidden pt-0 pb-2">
           <nav className="mt-1 flex-1 px-2 space-y-0">
-            {shopAdminNavigation.flatMap(group => group.items).map((item) => {
+            {currentNavigation.flatMap(group => group.items).map((item) => {
               // ENFORCE PERMISSIONS
               if (item.permission && !hasPermission(item.permission)) return null;
 

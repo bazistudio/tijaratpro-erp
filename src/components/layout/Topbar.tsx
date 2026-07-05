@@ -7,6 +7,7 @@ import { UserMenu } from './UserMenu';
 import { SearchInput } from '../common/SearchInput';
 import { DesktopAppButton } from './DesktopAppButton';
 import { ThemeToggle } from './ThemeToggle';
+import { ShopSwitcher } from './ShopSwitcher';
 import { selectForceSync, selectStatus } from '@/features/inventory/core/inventory.selectors';
 import { useExpensesStore } from '@/features/expenses';
 
@@ -34,6 +35,9 @@ export const Topbar = ({ setMobileMenuOpen }: TopbarProps) => {
         
         <div className="flex flex-1 min-w-0 max-w-3xl items-center gap-4">
           <SearchInput placeholder="Search products, customers, invoices..." />
+          <div className="hidden md:block">
+            <ShopSwitcher />
+          </div>
         </div>
         
         <div className="ml-4 flex flex-shrink-0 items-center gap-2 md:gap-4">
