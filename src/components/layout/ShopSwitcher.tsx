@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDown, Building, Store, Loader2 } from 'lucide-react';
 import { useOrganizationStore, Shop } from '@/store/useOrganizationStore';
+import { useAuthStore } from '@/lib/auth/core/auth.store';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api/axios';
 
@@ -13,6 +14,7 @@ export const ShopSwitcher = () => {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   
+  const { user } = useAuthStore();
   const { 
     activeOrganization, 
     activeOrganizationId,
@@ -51,7 +53,7 @@ export const ShopSwitcher = () => {
     }
   }, [isOpen, activeOrganizationId]);
 
-  if (!activeOrganizationId) return null;
+  if (!activeOrganizationId || (user as any)?.accountType === "SINGLE_SHOP") return null;
 
   const handleContextSwitch = async (shopId: string | null, path: string) => {
     // Optimistic UI Rollback Cache

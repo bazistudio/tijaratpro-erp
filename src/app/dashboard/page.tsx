@@ -28,7 +28,11 @@ export default function DashboardPage() {
       case "SHOP_ADMIN":
       case "OWNER":
       case "ADMIN": // backend default registration role — maps to shop-admin view
-        router.replace("/dashboard/shop-admin");
+        if ((user as any).accountType === "ORGANIZATION") {
+          router.replace("/dashboard/organization");
+        } else {
+          router.replace("/dashboard/shop-admin");
+        }
         break;
       case "STAFF":
         router.replace("/dashboard/staff");
