@@ -7,11 +7,38 @@ import { useRestoreTenant, useDeleteTenant } from '../hooks/useAdminActions';
 import { SecurityVerificationModal } from './SecurityVerificationModal';
 import { Tenant } from '../services/admin.api';
 import { RefreshCw, Trash2 } from 'lucide-react';
+import { getRequests, OrganizationRequest } from '@/lib/api/organization-requests.api';
 
-export const SuspendedTenantsTable = () => {
-  const { data: tenants, isLoading, isError } = useSuspendedTenants();
+export const SuspendedTenantsTable = ({ filterAccountType }: { filterAccountType?: 'SINGLE_SHOP' | 'ORGANIZATION' }) => {
+  const { data: allTenants, isLoading: isTenantsLoading, isError } = useSuspendedTenants();
   const restoreTenant = useRestoreTenant();
   const deleteTenant = useDeleteTenant();
+
+  const [requests, setRequests] = useState<OrganizationRequest[]>([]);
+  const [isLoadingRequests, setIsLoadingRequests] = useState(false);
+
+  React.useEffect(() => {
+    if (filterAccountType) {
+      setIsLoadingRequests(true);
+      getRequests()
+        .then(setRequests)
+        .catch(console.error)
+        .finally(() => setIsLoadingRequests(false));
+    }
+  }, [filterAccountType]);
+
+  const isLoading = isTenantsLoading || isLoadingRequests;
+
+  // Temporary client-side filtering until backend adds dedicated endpoints
+  const tenants = allTenants?.filter(tenant => {
+    if (!filterAccountType) return true;
+    
+    // Cross-reference with requests to determine accountType since V1 Tenant doesn't have it
+    const req = requests.find(r => r.name === tenant.name);
+    const accountType = (tenant as any).accountType || req?.accountType || 'SINGLE_SHOP';
+    
+    return accountType === filterAccountType;
+  });
 
   const [restoreModalOpen, setRestoreModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);

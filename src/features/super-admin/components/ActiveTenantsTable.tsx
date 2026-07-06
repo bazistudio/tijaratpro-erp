@@ -1,18 +1,45 @@
 'use client';
 
 import React, { useState } from 'react';
-import { format } from 'date-fns';
+import { format, differenceInDays } from 'date-fns';
 import { useActiveTenants } from '../hooks/useActiveTenants';
 import { useSuspendTenant, useHardDeleteTenant } from '../hooks/useAdminActions';
 import { SecurityVerificationModal } from './SecurityVerificationModal';
 import { Tenant } from '../services/admin.api';
 import { Ban, Eye, Trash2 } from 'lucide-react';
 import Link from 'next/link';
+import { getRequests, OrganizationRequest } from '@/lib/api/organization-requests.api';
 
-export const ActiveTenantsTable = () => {
-  const { data: tenants, isLoading, isError } = useActiveTenants();
+export const ActiveTenantsTable = ({ filterAccountType }: { filterAccountType?: 'SINGLE_SHOP' | 'ORGANIZATION' }) => {
+  const { data: allTenants, isLoading: isTenantsLoading, isError } = useActiveTenants();
   const suspendTenant = useSuspendTenant();
   const deleteTenant = useHardDeleteTenant();
+
+  const [requests, setRequests] = useState<OrganizationRequest[]>([]);
+  const [isLoadingRequests, setIsLoadingRequests] = useState(false);
+
+  React.useEffect(() => {
+    if (filterAccountType) {
+      setIsLoadingRequests(true);
+      getRequests()
+        .then(setRequests)
+        .catch(console.error)
+        .finally(() => setIsLoadingRequests(false));
+    }
+  }, [filterAccountType]);
+
+  const isLoading = isTenantsLoading || isLoadingRequests;
+
+  // Temporary client-side filtering until backend adds dedicated endpoints
+  const tenants = allTenants?.filter(tenant => {
+    if (!filterAccountType) return true;
+    
+    // Cross-reference with requests to determine accountType since V1 Tenant doesn't have it
+    const req = requests.find(r => r.name === tenant.name);
+    const accountType = (tenant as any).accountType || req?.accountType || 'SINGLE_SHOP';
+    
+    return accountType === filterAccountType;
+  });
 
   const [suspendModalOpen, setSuspendModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -83,6 +110,7 @@ export const ActiveTenantsTable = () => {
               <th className="px-6 py-1.5">Plan</th>
               <th className="px-6 py-1.5">Status</th>
               <th className="px-6 py-1.5">Expires</th>
+              <th className="px-6 py-1.5">Duration Left</th>
               <th className="px-6 py-1.5 text-right">Actions</th>
             </tr>
           </thead>
@@ -111,6 +139,15 @@ export const ActiveTenantsTable = () => {
                 </td>
                 <td className="px-6 py-1.5 text-gray-600">
                   {tenant.subscriptionEnd ? format(new Date(tenant.subscriptionEnd), 'MMM d, yyyy') : 'N/A'}
+                </td>
+                <td className="px-6 py-1.5 font-medium">
+                  {tenant.subscriptionEnd ? (
+                    <span className={differenceInDays(new Date(tenant.subscriptionEnd), new Date()) <= 5 ? "text-red-600" : "text-green-600"}>
+                      {differenceInDays(new Date(tenant.subscriptionEnd), new Date())} days remaining
+                    </span>
+                  ) : (
+                    <span className="text-gray-400">N/A</span>
+                  )}
                 </td>
                 <td className="px-6 py-1.5 flex justify-end gap-2">
                   <button

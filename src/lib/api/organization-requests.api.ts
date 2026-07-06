@@ -14,6 +14,7 @@ export interface OrganizationRequest {
   businessType: string;
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
   createdAt: string;
+  tempPassword?: string;
 }
 
 export const getRequests = async (): Promise<OrganizationRequest[]> => {
@@ -21,12 +22,17 @@ export const getRequests = async (): Promise<OrganizationRequest[]> => {
   return response.data.data;
 };
 
-export const approveRequest = async (id: string) => {
-  const response = await axios.post(`/api/organization-requests/${id}/approve`);
+export const approveRequest = async (id: string, adminPassword: string, planDuration: string) => {
+  const response = await axios.post(`/api/organization-requests/${id}/approve`, { adminPassword, planDuration });
   return response.data;
 };
 
-export const rejectRequest = async (id: string, reason: string) => {
-  const response = await axios.post(`/api/organization-requests/${id}/reject`, { reviewNote: reason });
+export const rejectRequest = async (id: string, reason: string, adminPassword: string) => {
+  const response = await axios.post(`/api/organization-requests/${id}/reject`, { reviewNote: reason, adminPassword });
+  return response.data;
+};
+
+export const deleteRequest = async (id: string, adminPassword: string) => {
+  const response = await axios.delete(`/api/organization-requests/${id}`, { data: { adminPassword } });
   return response.data;
 };

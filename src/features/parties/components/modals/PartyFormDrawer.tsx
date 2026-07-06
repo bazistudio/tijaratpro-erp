@@ -54,7 +54,7 @@ export const PartyFormDrawer: React.FC<PartyFormDrawerProps> = ({ isOpen, onClos
 
   useEffect(() => {
     if (formData.phone.length > 5) {
-      const exists = parties?.some(p => p.phone === formData.phone && p.id !== editingParty?.id);
+      const exists = parties?.some(p => p.phone === formData.phone && (p.id || p._id) !== (editingParty?.id || editingParty?._id));
       if (exists) {
         setPhoneError('Phone number already exists in your database');
         setIsPhoneValid(false);

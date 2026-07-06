@@ -1,18 +1,27 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { getRequests, approveRequest, rejectRequest, OrganizationRequest } from '@/lib/api/organization-requests.api';
+import { Eye, EyeOff } from 'lucide-react';
+import { getRequests, approveRequest, rejectRequest, deleteRequest, OrganizationRequest } from '@/lib/api/organization-requests.api';
 
 export default function SuperAdminRequestsPage() {
   const [requests, setRequests] = useState<OrganizationRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Modal State
+  const [modalConfig, setModalConfig] = useState<{ isOpen: boolean, action: 'APPROVE' | 'REJECT' | 'DELETE' | null, id: string | null, reason?: string }>({ isOpen: false, action: null, id: null });
+  const [adminPassword, setAdminPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [planDuration, setPlanDuration] = useState('15_days');
+  const [isProcessing, setIsProcessing] = useState(false);
+
   const fetchRequests = async () => {
     try {
       setLoading(true);
       const data = await getRequests();
-      setRequests(data);
+      // Filter out APPROVED requests since they are now in Active Tenants
+      setRequests(data.filter(req => req.status !== 'APPROVED'));
     } catch (err: any) {
       setError(err.response?.data?.message || err.message || 'Failed to fetch requests');
     } finally {
@@ -24,24 +33,51 @@ export default function SuperAdminRequestsPage() {
     fetchRequests();
   }, []);
 
-  const handleApprove = async (id: string) => {
+  const handleApprove = (id: string) => {
+    setModalConfig({ isOpen: true, action: 'APPROVE', id });
+  };
+
+  const handleReject = (id: string) => {
+    const reason = prompt('Enter rejection reason:');
+    if (reason === null) return; // cancelled
+    setModalConfig({ isOpen: true, action: 'REJECT', id, reason });
+  };
+
+  const handleDelete = (id: string) => {
+    setModalConfig({ isOpen: true, action: 'DELETE', id });
+  };
+
+  const handleConfirmAction = async () => {
+    if (!adminPassword) {
+      alert("Super admin password is required");
+      return;
+    }
+    if (!modalConfig.id || !modalConfig.action) return;
+
     try {
-      await approveRequest(id);
+      setIsProcessing(true);
+      if (modalConfig.action === 'APPROVE') {
+        await approveRequest(modalConfig.id, adminPassword, planDuration);
+      } else if (modalConfig.action === 'REJECT') {
+        await rejectRequest(modalConfig.id, modalConfig.reason || 'No reason provided', adminPassword);
+      } else if (modalConfig.action === 'DELETE') {
+        await deleteRequest(modalConfig.id, adminPassword);
+      }
+      
+      setModalConfig({ isOpen: false, action: null, id: null });
+      setAdminPassword('');
       await fetchRequests(); // Refresh list
     } catch (err: any) {
-      alert('Error approving request: ' + (err.response?.data?.message || err.message));
+      alert('Error: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setIsProcessing(false);
     }
   };
 
-  const handleReject = async (id: string) => {
-    const reason = prompt('Enter rejection reason:');
-    if (reason === null) return; // cancelled
-    try {
-      await rejectRequest(id, reason);
-      await fetchRequests(); // Refresh list
-    } catch (err: any) {
-      alert('Error rejecting request: ' + (err.response?.data?.message || err.message));
-    }
+  const closeModal = () => {
+    setModalConfig({ isOpen: false, action: null, id: null });
+    setAdminPassword('');
+    setShowPassword(false);
   };
 
   if (loading) return <div className="p-6">Loading requests...</div>;
@@ -73,6 +109,7 @@ export default function SuperAdminRequestsPage() {
                     {req.ownerId?.name}<br/>
                     <span className="text-xs text-gray-500">{req.ownerId?.email}</span><br/>
                     {req.ownerId?.phone && <span className="text-xs text-gray-400">{req.ownerId.phone}</span>}
+                    {req.tempPassword && <><br/><span className="text-xs font-mono text-red-500">Pwd: {req.tempPassword}</span></>}
                   </td>
                   <td className="px-6 py-4">
                     <span className="block">{req.accountType}</span>
@@ -90,7 +127,7 @@ export default function SuperAdminRequestsPage() {
                   <td className="px-6 py-4">
                     {new Date(req.createdAt).toLocaleDateString()}
                   </td>
-                  <td className="px-6 py-4 flex gap-2">
+                  <td className="px-6 py-4 flex flex-wrap gap-2">
                     {req.status === 'PENDING' && (
                       <>
                         <button
@@ -107,11 +144,91 @@ export default function SuperAdminRequestsPage() {
                         </button>
                       </>
                     )}
+                    <button
+                      onClick={() => handleDelete(req._id)}
+                      className="px-3 py-1 bg-red-100 text-red-600 rounded hover:bg-red-200 text-xs font-medium"
+                    >
+                      Delete
+                    </button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Password Confirmation Modal */}
+      {modalConfig.isOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-xl">
+            <h3 className="text-lg font-bold text-gray-900 mb-2">Confirm Action</h3>
+            <p className="text-sm text-gray-500 mb-4">
+              Please enter your super admin password to {modalConfig.action?.toLowerCase()} this request.
+              {modalConfig.action === 'DELETE' && ' This action is permanent and cannot be undone.'}
+            </p>
+            
+            {modalConfig.action === 'APPROVE' && (
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Select Package Plan</label>
+                <select
+                  value={planDuration}
+                  onChange={(e) => setPlanDuration(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                >
+                  <option value="15_days">15 Day Demo</option>
+                  <option value="1_month">1 Month</option>
+                  <option value="1_year">1 Year</option>
+                  <option value="2_years">2 Years</option>
+                  <option value="3_years">3 Years</option>
+                </select>
+              </div>
+            )}
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={adminPassword}
+                  onChange={(e) => setAdminPassword(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10"
+                  placeholder="Enter password"
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleConfirmAction();
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700 focus:outline-none"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+            </div>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={closeModal}
+                disabled={isProcessing}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmAction}
+                disabled={isProcessing || !adminPassword}
+                className={`px-4 py-2 text-sm font-medium text-white rounded-md ${
+                  modalConfig.action === 'DELETE' || modalConfig.action === 'REJECT' 
+                    ? 'bg-red-600 hover:bg-red-700' 
+                    : 'bg-blue-600 hover:bg-blue-700'
+                } disabled:opacity-50`}
+              >
+                {isProcessing ? 'Processing...' : 'Confirm'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
