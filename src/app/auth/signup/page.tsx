@@ -14,7 +14,8 @@ export default function SignupPage() {
     email: "",
     mobile: "",
     password: "",
-    businessStructure: "RETAIL",
+    accountType: "SINGLE_SHOP",
+    businessType: "RETAIL",
   });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -35,17 +36,18 @@ export default function SignupPage() {
 
     try {
       // STEP 1: Register — no auto login
-      await axios.post("/api/auth/register", {
-        name: formData.ownerName,
+      await axios.post("/api/auth/signup", {
+        ownerName: formData.ownerName,
         email: formData.email,
+        mobile: formData.mobile,
         password: formData.password,
-        phone: formData.mobile,
-        shopName: formData.businessName,
-        businessStructure: formData.businessStructure,
+        businessName: formData.businessName,
+        accountType: formData.accountType,
+        businessType: formData.businessType,
       });
 
       setIsSuccess(true);
-      setMessage({ type: "success", text: "Registration submitted successfully.\n\nYour business registration and account are pending Super Admin approval.\n\nYou will be able to access the system after approval." });
+      setMessage({ type: "success", text: "Your registration request has been submitted successfully.\n\nYour account is currently pending Super Admin approval.\n\nYou will be able to sign in after your request has been approved." });
 
     } catch (err: any) {
       setMessage({
@@ -181,21 +183,39 @@ export default function SignupPage() {
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="businessStructure" className="text-sm font-medium text-gray-700">
-              Business Type
+            <label htmlFor="accountType" className="text-sm font-medium text-gray-700">
+              Account Type
             </label>
             <select
-              id="businessStructure"
-              name="businessStructure"
-              value={formData.businessStructure}
-              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFormData({ ...formData, businessStructure: e.target.value })}
+              id="accountType"
+              name="accountType"
+              value={formData.accountType}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFormData({ ...formData, accountType: e.target.value })}
               className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-shadow text-sm bg-white text-gray-900"
             >
-              <option value="RETAIL">Single Shop</option>
-              <option value="WHOLESALE">Wholesale Business</option>
-              <option value="MEDICAL">Medical Store</option>
-              <option value="AUTO">Auto Parts</option>
-              <option value="SYSTEM">System/Platform</option>
+              <option value="SINGLE_SHOP">Single Shop</option>
+              <option value="ORGANIZATION">Organization (Multi-Shop)</option>
+            </select>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="businessType" className="text-sm font-medium text-gray-700">
+              Business Category
+            </label>
+            <select
+              id="businessType"
+              name="businessType"
+              value={formData.businessType}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFormData({ ...formData, businessType: e.target.value })}
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-shadow text-sm bg-white text-gray-900"
+            >
+              <option value="RETAIL">Retail</option>
+              <option value="MEDICAL">Medical</option>
+              <option value="AUTO">Auto Workshop</option>
+              <option value="WHOLESALE">Wholesale</option>
+              <option value="RESTAURANT">Restaurant</option>
+              <option value="SALON">Salon</option>
+              <option value="MANUFACTURING">Manufacturing</option>
             </select>
           </div>
 

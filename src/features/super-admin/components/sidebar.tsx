@@ -15,7 +15,7 @@ const navItems = [
   { name: 'Dashboard', href: '/dashboard/super-admin', icon: LayoutDashboard },
   { name: 'Tenant Approvals', href: '/dashboard/super-admin/tenants', icon: Building2 },
   { name: 'Shop Admin Approvals', href: '/dashboard/super-admin/users', icon: Users },
-  { name: 'Organization Approvals (Coming Soon)', href: '#', icon: Users },
+  { name: 'Account Requests', href: '/dashboard/super-admin/requests', icon: Users },
   { name: 'Active Tenants', href: '/dashboard/super-admin/active-tenants', icon: CheckCircle2 },
   { name: 'Suspended Tenants', href: '/dashboard/super-admin/suspended-tenants', icon: Settings },
   { name: 'Settings', href: '/dashboard/super-admin/settings', icon: Settings },
