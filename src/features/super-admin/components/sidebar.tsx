@@ -51,12 +51,14 @@ const navGroups = [
     ]
   },
   {
-    title: 'Subscriptions',
+    title: 'Subscription Management',
     items: [
-      { name: 'Plans', href: '/dashboard/super-admin/subscriptions/plans', icon: CreditCard },
+      { name: 'Dashboard', href: '/dashboard/super-admin/subscriptions', icon: LayoutDashboard },
+      { name: 'Packages', href: '/dashboard/super-admin/subscriptions/packages', icon: CreditCard },
       { name: 'Active Subscriptions', href: '/dashboard/super-admin/subscriptions/active', icon: CheckCircle2 },
-      { name: 'Trial Organizations', href: '/dashboard/super-admin/subscriptions/trials', icon: Clock },
-      { name: 'Expired Subscriptions', href: '/dashboard/super-admin/subscriptions/expired', icon: XCircle },
+      { name: 'Payment Requests', href: '/dashboard/super-admin/subscriptions/payments', icon: Clock },
+      { name: 'Subscription History', href: '/dashboard/super-admin/subscriptions/history', icon: History },
+      { name: 'Reports', href: '/dashboard/super-admin/subscriptions/reports', icon: FileText },
     ]
   },
   {
