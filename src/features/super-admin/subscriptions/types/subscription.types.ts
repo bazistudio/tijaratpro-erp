@@ -17,6 +17,7 @@ export interface Package {
   maxUsers?: number;
   maxBranches?: number;
   maxProducts?: number;
+  storageLimit?: number;
   status: PackageStatus;
   createdAt: string;
   updatedAt: string;
@@ -33,6 +34,15 @@ export interface Subscription {
   remainingDays: number;
   autoRenew: boolean;
   subscriptionPrice: number;
+  durationType: PackageDurationType;
+  durationValue: number;
+  limits: {
+    maxBranches: number;
+    maxUsers: number;
+    maxProducts: number;
+    storageLimit: number;
+  };
+  enabledModules: string[];
   isSuspended: boolean;
   paymentStatus: PaymentStatus;
   createdAt: string;

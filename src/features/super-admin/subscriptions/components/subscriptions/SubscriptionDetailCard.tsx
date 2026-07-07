@@ -1,8 +1,9 @@
 'use client';
 import React, { useState } from 'react';
-import { useSubscription, useSubscriptionHistory, useSuspendSubscription, useResumeSubscription } from '../../hooks/useSubscriptions';
+import { useSubscription, useSubscriptionHistory, useSuspendSubscription, useResumeSubscription, useCustomizeSubscription } from '../../hooks/useSubscriptions';
 import { SubscriptionStatusBadge } from './SubscriptionStatusBadge';
 import { RenewalDialog } from '../renewal/RenewalDialog';
+import { SubscriptionCustomizationPanel, SubscriptionCustomizationData } from './SubscriptionCustomizationPanel';
 
 interface Props {
   subscriptionId: string;
@@ -14,10 +15,14 @@ export const SubscriptionDetailCard: React.FC<Props> = ({ subscriptionId }) => {
   
   const suspendMutation = useSuspendSubscription();
   const resumeMutation = useResumeSubscription();
+  const customizeMutation = useCustomizeSubscription();
   
   const [suspendReason, setSuspendReason] = useState('');
   const [showSuspendModal, setShowSuspendModal] = useState(false);
   const [showRenewalDialog, setShowRenewalDialog] = useState(false);
+  
+  const [isEditing, setIsEditing] = useState(false);
+  const [customizationData, setCustomizationData] = useState<SubscriptionCustomizationData>({});
 
   const sub = subscriptionRes?.data;
   const history = historyRes?.data || [];
@@ -45,6 +50,11 @@ export const SubscriptionDetailCard: React.FC<Props> = ({ subscriptionId }) => {
     }
   };
 
+  const handleSaveCustomization = async () => {
+    await customizeMutation.mutateAsync({ id: sub._id, data: customizationData });
+    setIsEditing(false);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header Card */}
@@ -63,8 +73,11 @@ export const SubscriptionDetailCard: React.FC<Props> = ({ subscriptionId }) => {
             >
               Renew Subscription
             </button>
-            <button className="border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 px-4 py-2 rounded font-medium text-sm">
-              Change Package
+            <button 
+              onClick={() => setIsEditing(!isEditing)}
+              className="border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 px-4 py-2 rounded font-medium text-sm"
+            >
+              {isEditing ? 'Cancel Edit' : 'Edit Subscription'}
             </button>
             {sub.status === 'SUSPENDED' ? (
               <button onClick={handleResume} disabled={resumeMutation.isPending} className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-medium text-sm">
@@ -139,6 +152,55 @@ export const SubscriptionDetailCard: React.FC<Props> = ({ subscriptionId }) => {
           {history.length === 0 && <p className="text-gray-500 text-sm">No historical events found.</p>}
         </div>
       </div>
+
+      {/* Customization Editing Panel */}
+      {isEditing ? (
+        <div className="bg-white shadow rounded-lg p-6 border-2 border-blue-100">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-medium text-gray-900">Edit Custom Subscription</h3>
+            <button
+              onClick={handleSaveCustomization}
+              disabled={customizeMutation.isPending}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded font-medium text-sm"
+            >
+              {customizeMutation.isPending ? 'Saving...' : 'Save Changes'}
+            </button>
+          </div>
+          <SubscriptionCustomizationPanel 
+            basePackage={pkg}
+            initialData={{
+              subscriptionPrice: sub.subscriptionPrice,
+              durationType: sub.durationType,
+              durationValue: sub.durationValue,
+              limits: sub.limits,
+              enabledModules: sub.enabledModules
+            }}
+            onChange={setCustomizationData}
+          />
+        </div>
+      ) : (
+        <div className="bg-white shadow rounded-lg p-6">
+          <h3 className="text-lg font-medium text-gray-900 mb-4 border-b pb-2">Customized Limits</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 text-sm">
+            <div>
+              <p className="text-gray-500">Max Branches</p>
+              <p className="font-semibold text-gray-900">{sub.limits?.maxBranches === 0 ? 'Unlimited' : sub.limits?.maxBranches || 'Default'}</p>
+            </div>
+            <div>
+              <p className="text-gray-500">Max Users</p>
+              <p className="font-semibold text-gray-900">{sub.limits?.maxUsers === 0 ? 'Unlimited' : sub.limits?.maxUsers || 'Default'}</p>
+            </div>
+            <div>
+              <p className="text-gray-500">Max Products</p>
+              <p className="font-semibold text-gray-900">{sub.limits?.maxProducts === 0 ? 'Unlimited' : sub.limits?.maxProducts || 'Default'}</p>
+            </div>
+            <div>
+              <p className="text-gray-500">Storage Limit (MB)</p>
+              <p className="font-semibold text-gray-900">{sub.limits?.storageLimit === 0 ? 'Unlimited' : sub.limits?.storageLimit || 'Default'}</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Suspend Modal */}
       {showSuspendModal && (

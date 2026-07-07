@@ -128,6 +128,18 @@ export const useResumeSubscription = () => {
   });
 };
 
+export const useCustomizeSubscription = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) => api.customizeSubscription(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['subscription', variables.id] });
+      queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
+      queryClient.invalidateQueries({ queryKey: ['subscription-history', variables.id] });
+    },
+  });
+};
+
 // --- Payment Requests Hooks ---
 export const usePaymentRequests = (params?: Record<string, any>) => {
   return useQuery({
@@ -153,6 +165,25 @@ export const useRejectPaymentRequest = () => {
     mutationFn: ({ id, reason }: { id: string; reason: string }) => api.rejectPaymentRequest(id, reason),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['payment-requests'] });
+    },
+  });
+};
+
+// --- Organization Limits Hooks ---
+export const useOrganizationLimits = (organizationId: string) => {
+  return useQuery({
+    queryKey: ['organizationLimits', organizationId],
+    queryFn: () => api.getOrganizationLimits(organizationId),
+    enabled: !!organizationId,
+  });
+};
+
+export const useUpdateOrganizationLimits = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) => api.updateOrganizationLimits(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['organizationLimits', variables.id] });
     },
   });
 };

@@ -22,8 +22,12 @@ export const getRequests = async (): Promise<OrganizationRequest[]> => {
   return response.data.data;
 };
 
-export const approveRequest = async (id: string, adminPassword: string, planDuration: string) => {
-  const response = await axios.post(`/api/organization-requests/${id}/approve`, { adminPassword, planDuration });
+export const approveRequest = async (id: string, adminPassword: string, packageId: string, customization: any) => {
+  const response = await axios.post(`/api/organization-requests/${id}/approve`, { 
+    adminPassword, 
+    packageId,
+    ...customization
+  });
   return response.data;
 };
 

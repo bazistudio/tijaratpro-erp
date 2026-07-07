@@ -73,6 +73,11 @@ export const resumeSubscription = async (id: string) => {
   return response.data;
 };
 
+export const customizeSubscription = async (id: string, data: any) => {
+  const response = await api.patch(`/api/subscriptions/${id}/customize`, data);
+  return response.data;
+};
+
 export const getSubscriptionHistory = async (id: string) => {
   const response = await api.get(`/api/subscriptions/${id}/history`);
   return response.data;
@@ -98,5 +103,18 @@ export const approvePaymentRequest = async (id: string) => {
 
 export const rejectPaymentRequest = async (id: string, reason: string) => {
   const response = await api.post(`/api/subscriptions/payment-requests/${id}/reject`, { reason });
+  return response.data;
+};
+
+// ==========================================
+// Organization Limits
+// ==========================================
+export const getOrganizationLimits = async (organizationId: string) => {
+  const response = await api.get(`/api/organizations/${organizationId}/limits`);
+  return response.data;
+};
+
+export const updateOrganizationLimits = async (organizationId: string, limits: any) => {
+  const response = await api.patch(`/api/organizations/${organizationId}/limits`, limits);
   return response.data;
 };

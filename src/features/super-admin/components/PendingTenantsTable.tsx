@@ -42,10 +42,15 @@ export const PendingTenantsTable = () => {
     setDeleteModalOpen(true);
   };
 
-  const onConfirmApprove = (plan: string, password: string) => {
+  const onConfirmApprove = (packageId: string, customization: any, password: string) => {
     if (selectedTenant) {
       approveTenant.mutate(
-        { tenantId: selectedTenant._id, password, subscriptionPlan: plan },
+        { 
+          tenantId: selectedTenant._id, 
+          password, 
+          packageId,
+          ...customization
+        },
         {
           onSuccess: () => {
             setApprovalModalOpen(false);

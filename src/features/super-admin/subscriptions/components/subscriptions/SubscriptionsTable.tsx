@@ -4,6 +4,7 @@ import { useSubscriptions } from '../../hooks/useSubscriptions';
 import { SubscriptionFilters } from './SubscriptionFilters';
 import { SubscriptionStatusBadge } from './SubscriptionStatusBadge';
 import { Subscription } from '../../types/subscription.types';
+import { SubscriptionManagementDrawer } from './SubscriptionManagementDrawer';
 import Link from 'next/link';
 
 export const SubscriptionsTable = () => {
@@ -13,6 +14,8 @@ export const SubscriptionsTable = () => {
   const [expiryFilter, setExpiryFilter] = useState('');
   const [page, setPage] = useState(1);
   const limit = 10;
+  
+  const [selectedSubId, setSelectedSubId] = useState<string | null>(null);
 
   // Compute expiry dates based on filter
   const { expiryBefore, expiryAfter } = useMemo(() => {
@@ -120,12 +123,12 @@ export const SubscriptionsTable = () => {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <Link 
-                      href={`/dashboard/super-admin/subscriptions/${sub._id}`}
-                      className="text-blue-600 hover:text-blue-900 mr-3"
+                    <button 
+                      onClick={() => setSelectedSubId(sub._id)}
+                      className="text-blue-600 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded transition-colors"
                     >
-                      View
-                    </Link>
+                      Manage
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -157,6 +160,12 @@ export const SubscriptionsTable = () => {
           </div>
         </div>
       )}
+
+      <SubscriptionManagementDrawer 
+        subscriptionId={selectedSubId}
+        isOpen={!!selectedSubId}
+        onClose={() => setSelectedSubId(null)}
+      />
     </div>
   );
 };

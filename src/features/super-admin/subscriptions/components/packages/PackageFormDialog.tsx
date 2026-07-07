@@ -31,6 +31,10 @@ export const PackageFormDialog: React.FC<DialogProps> = ({ isOpen, onClose, init
       price: 0,
       trialEnabled: false,
       trialDays: 14,
+      maxBranches: 1,
+      maxUsers: 1,
+      maxProducts: 100,
+      storageLimit: 1024,
       enabledModules: [] as string[],
       status: 'ACTIVE'
     }
@@ -51,6 +55,10 @@ export const PackageFormDialog: React.FC<DialogProps> = ({ isOpen, onClose, init
           price: initialData.price || 0,
           trialEnabled: (initialData.trialDays || 0) > 0,
           trialDays: initialData.trialDays || 14,
+          maxBranches: initialData.maxBranches ?? 1,
+          maxUsers: initialData.maxUsers ?? 1,
+          maxProducts: initialData.maxProducts ?? 100,
+          storageLimit: initialData.storageLimit ?? 1024,
           enabledModules: initialData.enabledModules || [],
           status: initialData.status || 'ACTIVE'
         });
@@ -64,6 +72,10 @@ export const PackageFormDialog: React.FC<DialogProps> = ({ isOpen, onClose, init
           price: 0,
           trialEnabled: false,
           trialDays: 14,
+          maxBranches: 1,
+          maxUsers: 1,
+          maxProducts: 100,
+          storageLimit: 1024,
           enabledModules: [],
           status: 'ACTIVE'
         });
@@ -207,6 +219,45 @@ export const PackageFormDialog: React.FC<DialogProps> = ({ isOpen, onClose, init
                 />
               </div>
             )}
+          </div>
+
+          {/* Limits Configuration */}
+          <div>
+            <h4 className="text-sm font-medium text-gray-900 mb-4 border-b pb-2">Limits Configuration</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Maximum Shops (0 for unlimited)</label>
+                <input 
+                  {...register('maxBranches', { min: 0 })}
+                  type="number" 
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" 
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Maximum Users (0 for unlimited)</label>
+                <input 
+                  {...register('maxUsers', { min: 0 })}
+                  type="number" 
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" 
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Maximum Products (0 for unlimited)</label>
+                <input 
+                  {...register('maxProducts', { min: 0 })}
+                  type="number" 
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" 
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Storage Limit in MB (0 for unlimited)</label>
+                <input 
+                  {...register('storageLimit', { min: 0 })}
+                  type="number" 
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" 
+                />
+              </div>
+            </div>
           </div>
 
           {/* Feature Modules */}

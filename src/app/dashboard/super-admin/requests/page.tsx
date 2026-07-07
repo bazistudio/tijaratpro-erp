@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { getRequests, approveRequest, rejectRequest, deleteRequest, OrganizationRequest } from '@/lib/api/organization-requests.api';
+import { TenantApprovalModal } from '@/features/super-admin/components/TenantApprovalModal';
 
 export default function SuperAdminRequestsPage() {
   const [requests, setRequests] = useState<OrganizationRequest[]>([]);
@@ -10,11 +11,14 @@ export default function SuperAdminRequestsPage() {
   const [error, setError] = useState<string | null>(null);
 
   // Modal State
-  const [modalConfig, setModalConfig] = useState<{ isOpen: boolean, action: 'APPROVE' | 'REJECT' | 'DELETE' | null, id: string | null, reason?: string }>({ isOpen: false, action: null, id: null });
+  const [modalConfig, setModalConfig] = useState<{ isOpen: boolean, action: 'REJECT' | 'DELETE' | null, id: string | null, reason?: string }>({ isOpen: false, action: null, id: null });
   const [adminPassword, setAdminPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [planDuration, setPlanDuration] = useState('15_days');
   const [isProcessing, setIsProcessing] = useState(false);
+
+  // Approval Modal State
+  const [approvalModalOpen, setApprovalModalOpen] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState<OrganizationRequest | null>(null);
 
   const fetchRequests = async () => {
     try {
@@ -33,8 +37,9 @@ export default function SuperAdminRequestsPage() {
     fetchRequests();
   }, []);
 
-  const handleApprove = (id: string) => {
-    setModalConfig({ isOpen: true, action: 'APPROVE', id });
+  const handleApprove = (req: OrganizationRequest) => {
+    setSelectedRequest(req);
+    setApprovalModalOpen(true);
   };
 
   const handleReject = (id: string) => {
@@ -56,9 +61,7 @@ export default function SuperAdminRequestsPage() {
 
     try {
       setIsProcessing(true);
-      if (modalConfig.action === 'APPROVE') {
-        await approveRequest(modalConfig.id, adminPassword, planDuration);
-      } else if (modalConfig.action === 'REJECT') {
+      if (modalConfig.action === 'REJECT') {
         await rejectRequest(modalConfig.id, modalConfig.reason || 'No reason provided', adminPassword);
       } else if (modalConfig.action === 'DELETE') {
         await deleteRequest(modalConfig.id, adminPassword);
@@ -78,6 +81,21 @@ export default function SuperAdminRequestsPage() {
     setModalConfig({ isOpen: false, action: null, id: null });
     setAdminPassword('');
     setShowPassword(false);
+  };
+
+  const handleConfirmApprove = async (packageId: string, customizations: any, password: string) => {
+    if (!selectedRequest) return;
+    try {
+      setIsProcessing(true);
+      await approveRequest(selectedRequest._id, password, packageId, customizations);
+      setApprovalModalOpen(false);
+      setSelectedRequest(null);
+      await fetchRequests();
+    } catch (err: any) {
+      alert('Error: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   if (loading) return <div className="p-6">Loading requests...</div>;
@@ -131,7 +149,7 @@ export default function SuperAdminRequestsPage() {
                     {req.status === 'PENDING' && (
                       <>
                         <button
-                          onClick={() => handleApprove(req._id)}
+                          onClick={() => handleApprove(req)}
                           className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-xs font-medium"
                         >
                           Approve
@@ -158,7 +176,7 @@ export default function SuperAdminRequestsPage() {
         </div>
       )}
 
-      {/* Password Confirmation Modal */}
+      {/* Password Confirmation Modal for Delete/Reject */}
       {modalConfig.isOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-xl">
@@ -167,24 +185,6 @@ export default function SuperAdminRequestsPage() {
               Please enter your super admin password to {modalConfig.action?.toLowerCase()} this request.
               {modalConfig.action === 'DELETE' && ' This action is permanent and cannot be undone.'}
             </p>
-            
-            {modalConfig.action === 'APPROVE' && (
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Select Package Plan</label>
-                <select
-                  value={planDuration}
-                  onChange={(e) => setPlanDuration(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                >
-                  <option value="15_days">15 Day Demo</option>
-                  <option value="1_month">1 Month</option>
-                  <option value="1_year">1 Year</option>
-                  <option value="2_years">2 Years</option>
-                  <option value="3_years">3 Years</option>
-                </select>
-              </div>
-            )}
-
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
               <div className="relative">
@@ -231,6 +231,18 @@ export default function SuperAdminRequestsPage() {
           </div>
         </div>
       )}
+
+      {/* Tenant Approval Modal */}
+      <TenantApprovalModal
+        isOpen={approvalModalOpen}
+        onClose={() => {
+          setApprovalModalOpen(false);
+          setSelectedRequest(null);
+        }}
+        onConfirm={handleConfirmApprove}
+        tenant={selectedRequest}
+        isProcessing={isProcessing}
+      />
     </div>
   );
 }
