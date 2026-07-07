@@ -1,9 +1,10 @@
+'use client';
 import React, { useState } from 'react';
-import { usePackages } from '../../../hooks/useSubscriptions';
+import { usePackages } from '../../hooks/useSubscriptions';
 import { PackageFilters } from './PackageFilters';
 import { PackageStatusBadge } from './PackageStatusBadge';
 import { PackageFormDialog } from './PackageFormDialog';
-import { Package } from '../../../types/subscription.types';
+import { Package } from '../../types/subscription.types';
 
 export const PackagesTable = () => {
   const [search, setSearch] = useState('');
@@ -96,7 +97,7 @@ export const PackagesTable = () => {
                   </td>
                   <td className="px-6 py-4">
                     <div className="text-sm text-gray-900 flex flex-wrap gap-1 max-w-[200px]">
-                      {pkg.enabledModules?.slice(0, 3).map(mod => (
+                      {pkg.enabledModules?.slice(0, 3).map((mod: string) => (
                         <span key={mod} className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-xs">{mod}</span>
                       ))}
                       {pkg.enabledModules?.length > 3 && (

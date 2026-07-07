@@ -1,6 +1,7 @@
+'use client';
 import React, { useState } from 'react';
-import { usePaymentRequests } from '../../../hooks/useSubscriptions';
-import { PaymentRequest } from '../../../types/subscription.types';
+import { usePaymentRequests } from '../../hooks/useSubscriptions';
+import { PaymentRequest } from '../../types/subscription.types';
 import { PaymentFilters } from './PaymentFilters';
 import { PaymentStatusBadge } from './PaymentStatusBadge';
 import { PaymentReviewDrawer } from './PaymentReviewDrawer';

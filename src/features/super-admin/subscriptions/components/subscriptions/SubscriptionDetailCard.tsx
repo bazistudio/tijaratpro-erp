@@ -1,6 +1,7 @@
+'use client';
 import React, { useState } from 'react';
-import { useSubscription, useSubscriptionHistory, useSuspendSubscription, useResumeSubscription } from '../../../hooks/useSubscriptions';
-import { SubscriptionStatusBadge } from '../subscriptions/SubscriptionStatusBadge';
+import { useSubscription, useSubscriptionHistory, useSuspendSubscription, useResumeSubscription } from '../../hooks/useSubscriptions';
+import { SubscriptionStatusBadge } from './SubscriptionStatusBadge';
 import { RenewalDialog } from '../renewal/RenewalDialog';
 
 interface Props {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { PackageStatus } from '../../../types/subscription.types';
+import { PackageStatus } from '../../types/subscription.types';
 
 interface BadgeProps {
   status: PackageStatus;

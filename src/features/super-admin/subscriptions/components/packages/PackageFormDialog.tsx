@@ -1,7 +1,8 @@
+'use client';
 import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { Package } from '../../../types/subscription.types';
-import { useCreatePackage, useUpdatePackage } from '../../../hooks/useSubscriptions';
+import { Package } from '../../types/subscription.types';
+import { useCreatePackage, useUpdatePackage } from '../../hooks/useSubscriptions';
 
 interface DialogProps {
   isOpen: boolean;

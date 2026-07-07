@@ -1,6 +1,7 @@
+'use client';
 import React, { useState, useEffect, useMemo } from 'react';
-import { useRenewSubscription, usePackages } from '../../../hooks/useSubscriptions';
-import { Subscription, Package } from '../../../types/subscription.types';
+import { useRenewSubscription, usePackages } from '../../hooks/useSubscriptions';
+import { Subscription, Package } from '../../types/subscription.types';
 
 interface Props {
   isOpen: boolean;

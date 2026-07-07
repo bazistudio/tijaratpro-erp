@@ -1,8 +1,9 @@
+'use client';
 import React, { useState, useMemo } from 'react';
-import { useSubscriptions } from '../../../hooks/useSubscriptions';
+import { useSubscriptions } from '../../hooks/useSubscriptions';
 import { SubscriptionFilters } from './SubscriptionFilters';
 import { SubscriptionStatusBadge } from './SubscriptionStatusBadge';
-import { Subscription } from '../../../types/subscription.types';
+import { Subscription } from '../../types/subscription.types';
 import Link from 'next/link';
 
 export const SubscriptionsTable = () => {

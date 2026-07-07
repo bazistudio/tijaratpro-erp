@@ -1,9 +1,9 @@
 'use client';
 import React from 'react';
-import { useSubscriptionDashboard } from '../../../../../features/super-admin/subscriptions/hooks/useSubscriptions';
-import { SubscriptionKPICards } from '../../../../../features/super-admin/subscriptions/components/dashboard/SubscriptionKPICards';
-import { PackageDistributionChart, SubscriptionGrowthChart } from '../../../../../features/super-admin/subscriptions/components/dashboard/Charts';
-import { ExpiryAlertWidget, RecentActivityFeed } from '../../../../../features/super-admin/subscriptions/components/dashboard/Widgets';
+import { useSubscriptionDashboard } from '../../../../features/super-admin/subscriptions/hooks/useSubscriptions';
+import { SubscriptionKPICards } from '../../../../features/super-admin/subscriptions/components/dashboard/SubscriptionKPICards';
+import { PackageDistributionChart, SubscriptionGrowthChart } from '../../../../features/super-admin/subscriptions/components/dashboard/Charts';
+import { ExpiryAlertWidget, RecentActivityFeed } from '../../../../features/super-admin/subscriptions/components/dashboard/Widgets';
 
 export default function SubscriptionDashboard() {
   const { data, isLoading, isError } = useSubscriptionDashboard();

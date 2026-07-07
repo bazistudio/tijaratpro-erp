@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { useApprovePaymentRequest, useRejectPaymentRequest } from '../../../hooks/useSubscriptions';
-import { PaymentRequest } from '../../../types/subscription.types';
+import { useApprovePaymentRequest, useRejectPaymentRequest } from '../../hooks/useSubscriptions';
+import { PaymentRequest } from '../../types/subscription.types';
 import { PaymentStatusBadge } from './PaymentStatusBadge';
 
 interface Props {

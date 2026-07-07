@@ -1,6 +1,6 @@
 'use client';
 import React, { useState } from 'react';
-import { useRevenueReport, usePackagePerformanceReport, useExpiryReport } from '../../../hooks/useSubscriptions';
+import { useRevenueReport, usePackagePerformanceReport, useExpiryReport } from '../../hooks/useSubscriptions';
 import { RevenueReport } from './RevenueReport';
 import { PackagePerformanceReport } from './PackagePerformanceReport';
 import { ExpiryReport } from './ExpiryReport';

@@ -1,5 +1,5 @@
 import React from 'react';
-import { PaymentStatus } from '../../../types/subscription.types';
+import { PaymentStatus } from '../../types/subscription.types';
 
 interface BadgeProps {
   status: PaymentStatus | string;
