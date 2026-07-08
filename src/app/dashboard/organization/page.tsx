@@ -22,10 +22,10 @@ export default function OrganizationDashboardPage() {
     try {
       setLoading(true);
       setError(null);
-      // Ensure user has tenantId which is the organization ID for Organization Owners
-      if (!user?.tenantId) throw new Error('Organization ID not found in session');
+      // Ensure user has organizationId which is the organization ID for Organization Owners
+      if (!user?.organizationId) throw new Error('Organization ID not found in session');
       
-      const dashboardData = await getOrganizationDashboard(user.tenantId);
+      const dashboardData = await getOrganizationDashboard(user.organizationId);
       setData(dashboardData);
     } catch (err: any) {
       setError(err.response?.data?.message || err.message || 'Failed to load dashboard');
@@ -59,7 +59,7 @@ export default function OrganizationDashboardPage() {
     return (
       <div className="p-4 lg:p-8 bg-gray-50 min-h-full">
         <CreateShopWizard 
-          organizationId={user!.tenantId} 
+          organizationId={user!.organizationId!} 
           onSuccess={() => {
             // After creating the shop, the user's view should be redirected to Shop Selector 
             // Since we haven't built Shop Selector yet, we can reload dashboard to show KPI 

@@ -28,6 +28,12 @@ export const VALID_ROUTES = [
 
   // Dev-only
   '/dashboard/shop-admin/audit',
+
+  // Organization
+  '/dashboard/organization',
+  
+  // Super Admin
+  '/dashboard/super-admin',
 ] as const;
 
 export type ValidRoute = typeof VALID_ROUTES[number];

@@ -1,4 +1,4 @@
-import api from './interceptors';
+import api from './axios';
 
 export interface DashboardData {
   organization: {
