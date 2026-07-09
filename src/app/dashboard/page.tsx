@@ -45,7 +45,7 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen flex items-center justify-center">
       <p className="text-gray-500 text-sm animate-pulse">
-        Redirecting to your dashboard…
+        DashboardPage is redirecting... (role: {user?.role})
       </p>
     </div>
   );
