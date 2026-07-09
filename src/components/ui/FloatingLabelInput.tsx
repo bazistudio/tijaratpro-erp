@@ -13,7 +13,7 @@ export const FloatingLabelInput = React.forwardRef<HTMLInputElement, FloatingLab
     let borderClass = 'border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500 focus:border-[#006970] focus:ring-[#006970]';
     
     if (error) {
-      borderClass = 'border-red-500 hover:border-red-600 focus:border-red-500 focus:ring-red-500';
+      borderClass = ' hover: focus: focus:ring-red-500';
     } else if (success) {
       borderClass = 'border-green-500 hover:border-green-600 focus:border-green-500 focus:ring-green-500';
     }

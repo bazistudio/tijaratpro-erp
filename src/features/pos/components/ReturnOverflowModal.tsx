@@ -52,7 +52,7 @@ export const ReturnOverflowModal = () => {
           <div className="space-y-3">
             <button
               onClick={onKeepCredit}
-              className="w-full flex items-center p-3 rounded-xl border-2 border-blue-100 dark:border-blue-900/30 hover:border-blue-500 bg-blue-50/50 dark:bg-blue-900/10 transition-all text-left group"
+              className="w-full flex items-center p-3 rounded-xl border-2  dark:/30 hover: bg-blue-50/50 dark:bg-blue-900/10 transition-all text-left group"
             >
               <div className="bg-blue-100 dark:bg-blue-900/50 p-2 rounded-lg mr-3 group-hover:scale-110 transition-transform">
                 <PiggyBank className="w-5 h-5 text-blue-600 dark:text-blue-400" />
@@ -68,12 +68,12 @@ export const ReturnOverflowModal = () => {
               disabled={isCashInsufficient}
               className={`w-full flex items-center p-3 rounded-xl border-2 transition-all text-left group ${
                 isCashInsufficient 
-                  ? 'border-red-100 dark:border-red-900/30 bg-red-50/30 dark:bg-red-900/10 opacity-70 cursor-not-allowed'
+                  ? ' dark:/30 /30 dark:/10 opacity-70 cursor-not-allowed'
                   : 'border-green-100 dark:border-green-900/30 hover:border-green-500 bg-green-50/50 dark:bg-green-900/10'
               }`}
             >
               <div className={`p-2 rounded-lg mr-3 transition-transform ${
-                isCashInsufficient ? 'bg-red-100 dark:bg-red-900/50' : 'bg-green-100 dark:bg-green-900/50 group-hover:scale-110'
+                isCashInsufficient ? ' dark:/50' : 'bg-green-100 dark:bg-green-900/50 group-hover:scale-110'
               }`}>
                 <Wallet className={`w-5 h-5 ${isCashInsufficient ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`} />
               </div>

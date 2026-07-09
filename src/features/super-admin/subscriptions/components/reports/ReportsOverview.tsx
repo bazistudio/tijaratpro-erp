@@ -42,7 +42,7 @@ export const ReportsOverview = () => {
             <select 
               value={dateRange}
               onChange={(e) => setDateRange(e.target.value)}
-              className="w-full md:w-48 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              className="w-full md:w-48 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus: sm:text-sm"
             >
               <option value="ALL">All Time</option>
               <option value="YTD">Year to Date</option>
@@ -54,7 +54,7 @@ export const ReportsOverview = () => {
             <select 
               value={expiryDays}
               onChange={(e) => setExpiryDays(e.target.value)}
-              className="w-full md:w-48 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              className="w-full md:w-48 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus: sm:text-sm"
             >
               <option value="7">Next 7 Days</option>
               <option value="30">Next 30 Days</option>

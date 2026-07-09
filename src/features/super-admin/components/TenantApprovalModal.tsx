@@ -99,8 +99,8 @@ export const TenantApprovalModal: React.FC<TenantApprovalModalProps> = ({
                     onClick={() => setSelectedPackageId(pkg._id)}
                     className={`p-3 text-left border rounded-xl transition-all ${
                       selectedPackageId === pkg._id
-                        ? 'border-blue-600 bg-blue-50 ring-1 ring-blue-600'
-                        : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'
+                        ? ' bg-blue-50 ring-1 ring-blue-600'
+                        : 'border-gray-200 hover: hover:bg-gray-50'
                     }`}
                   >
                     <p className={`font-medium ${selectedPackageId === pkg._id ? 'text-blue-900' : 'text-gray-900'}`}>
@@ -136,7 +136,7 @@ export const TenantApprovalModal: React.FC<TenantApprovalModalProps> = ({
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-4 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                className="w-full pl-4 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus: transition-colors"
                 placeholder="Enter password to authorize..."
                 disabled={isProcessing}
               />

@@ -48,7 +48,7 @@ export const SubscriptionKPICards: React.FC<Props> = ({ stats }) => {
       </div>
 
       {/* MRR */}
-      <div className="bg-white rounded-lg shadow p-5 border-t-4 border-blue-500">
+      <div className="bg-white rounded-lg shadow p-5 border-t-4 ">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-sm font-medium text-gray-500">Monthly Revenue</h3>
           <CreditCard className="h-5 w-5 text-blue-500" />
@@ -61,7 +61,7 @@ export const SubscriptionKPICards: React.FC<Props> = ({ stats }) => {
       </div>
 
       {/* Pending Payments */}
-      <Link href="/dashboard/super-admin/subscriptions/payments" className="bg-white rounded-lg shadow p-5 border-t-4 border-red-500 hover:bg-gray-50 transition block cursor-pointer">
+      <Link href="/dashboard/super-admin/subscriptions/payments" className="bg-white rounded-lg shadow p-5 border-t-4  hover:bg-gray-50 transition block cursor-pointer">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-sm font-medium text-gray-500">Pending Payments</h3>
           <AlertCircle className="h-5 w-5 text-red-500" />

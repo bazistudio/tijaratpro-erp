@@ -22,14 +22,14 @@ export const SubscriptionFilters: React.FC<FiltersProps> = ({
           placeholder="Search by owner ID..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:"
         />
       </div>
       <div className="w-full sm:w-40">
         <select
           value={ownerType}
           onChange={(e) => setOwnerType(e.target.value)}
-          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 bg-white"
+          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus: bg-white"
         >
           <option value="">All Owner Types</option>
           <option value="ORGANIZATION">Organization</option>
@@ -40,7 +40,7 @@ export const SubscriptionFilters: React.FC<FiltersProps> = ({
         <select
           value={status}
           onChange={(e) => setStatus(e.target.value)}
-          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 bg-white"
+          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus: bg-white"
         >
           <option value="">All Statuses</option>
           <option value="ACTIVE">Active</option>
@@ -54,7 +54,7 @@ export const SubscriptionFilters: React.FC<FiltersProps> = ({
         <select
           value={expiryFilter}
           onChange={(e) => setExpiryFilter(e.target.value)}
-          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 bg-white"
+          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus: bg-white"
         >
           <option value="">All Expiry</option>
           <option value="7_DAYS">Expires in 7 days</option>

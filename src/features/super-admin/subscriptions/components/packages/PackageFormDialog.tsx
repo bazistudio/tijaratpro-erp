@@ -135,7 +135,7 @@ export const PackageFormDialog: React.FC<DialogProps> = ({ isOpen, onClose, init
                 <input 
                   {...register('name', { required: 'Name is required' })}
                   type="text" 
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" 
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:" 
                   placeholder="e.g. PRO"
                 />
                 {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name.message as string}</p>}
@@ -145,7 +145,7 @@ export const PackageFormDialog: React.FC<DialogProps> = ({ isOpen, onClose, init
                 <input 
                   {...register('code', { required: 'Code is required' })}
                   type="text" 
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" 
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:" 
                   placeholder="e.g. PRO_YEARLY"
                   disabled={isEditing}
                 />
@@ -155,7 +155,7 @@ export const PackageFormDialog: React.FC<DialogProps> = ({ isOpen, onClose, init
                 <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
                 <textarea 
                   {...register('description')}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" 
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:" 
                   rows={2}
                 />
               </div>
@@ -171,14 +171,14 @@ export const PackageFormDialog: React.FC<DialogProps> = ({ isOpen, onClose, init
                 <input 
                   {...register('price', { required: 'Price is required', min: 0 })}
                   type="number" 
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" 
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:" 
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Duration Unit</label>
                 <select 
                   {...register('durationType')}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus: bg-white"
                 >
                   <option value="DAYS">Days</option>
                   <option value="MONTHS">Months</option>
@@ -190,7 +190,7 @@ export const PackageFormDialog: React.FC<DialogProps> = ({ isOpen, onClose, init
                 <input 
                   {...register('durationValue', { required: 'Value is required', min: 1 })}
                   type="number" 
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" 
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:" 
                 />
               </div>
             </div>
@@ -215,7 +215,7 @@ export const PackageFormDialog: React.FC<DialogProps> = ({ isOpen, onClose, init
                 <input 
                   {...register('trialDays', { min: 1 })}
                   type="number" 
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" 
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:" 
                 />
               </div>
             )}
@@ -230,7 +230,7 @@ export const PackageFormDialog: React.FC<DialogProps> = ({ isOpen, onClose, init
                 <input 
                   {...register('maxBranches', { min: 0 })}
                   type="number" 
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" 
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:" 
                 />
               </div>
               <div>
@@ -238,7 +238,7 @@ export const PackageFormDialog: React.FC<DialogProps> = ({ isOpen, onClose, init
                 <input 
                   {...register('maxUsers', { min: 0 })}
                   type="number" 
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" 
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:" 
                 />
               </div>
               <div>
@@ -246,7 +246,7 @@ export const PackageFormDialog: React.FC<DialogProps> = ({ isOpen, onClose, init
                 <input 
                   {...register('maxProducts', { min: 0 })}
                   type="number" 
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" 
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:" 
                 />
               </div>
               <div>
@@ -254,7 +254,7 @@ export const PackageFormDialog: React.FC<DialogProps> = ({ isOpen, onClose, init
                 <input 
                   {...register('storageLimit', { min: 0 })}
                   type="number" 
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" 
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:" 
                 />
               </div>
             </div>
@@ -285,7 +285,7 @@ export const PackageFormDialog: React.FC<DialogProps> = ({ isOpen, onClose, init
               <h4 className="text-sm font-medium text-gray-900 mb-4 border-b pb-2">Status</h4>
               <select 
                 {...register('status')}
-                className="w-full sm:max-w-xs px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-white"
+                className="w-full sm:max-w-xs px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus: bg-white"
               >
                 <option value="ACTIVE">Active</option>
                 <option value="INACTIVE">Archived</option>

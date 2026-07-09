@@ -24,7 +24,7 @@ export const ExpensesTable: React.FC = () => {
       case 'utilities': return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-500/10 dark:text-yellow-400';
       case 'salary': return 'bg-purple-100 text-purple-700 dark:bg-purple-500/10 dark:text-purple-400';
       case 'purchase': return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400';
-      case 'repair': return 'bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400';
+      case 'repair': return ' text-red-700 dark:/10 dark:text-red-400';
       case 'transport': return 'bg-indigo-100 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400';
       default: return 'bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300';
     }
@@ -116,7 +116,7 @@ export const ExpensesTable: React.FC = () => {
                       </button>
                       <button 
                         onClick={() => handleDelete(item.id)}
-                        className="p-1.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 rounded tooltip-trigger"
+                        className="p-1.5 text-red-600 hover: dark:hover:/10 rounded tooltip-trigger"
                         title="Delete (Reverse)"
                       >
                         <Trash2 className="w-4 h-4" />

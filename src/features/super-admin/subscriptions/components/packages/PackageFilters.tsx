@@ -16,14 +16,14 @@ export const PackageFilters: React.FC<FiltersProps> = ({ search, setSearch, stat
           placeholder="Search packages by name or code..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full sm:max-w-md px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+          className="w-full sm:max-w-md px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:"
         />
       </div>
       <div className="w-full sm:w-48">
         <select
           value={status}
           onChange={(e) => setStatus(e.target.value)}
-          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 bg-white"
+          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus: bg-white"
         >
           <option value="">All Statuses</option>
           <option value="ACTIVE">Active</option>

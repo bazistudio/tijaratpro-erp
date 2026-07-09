@@ -151,7 +151,7 @@ export const RenewalDialog: React.FC<Props> = ({ isOpen, onClose, subscription }
                   <select 
                     value={selectedPackageId} 
                     onChange={(e) => setSelectedPackageId(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 bg-white"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus: bg-white"
                   >
                     {packages.map(p => (
                       <option key={p._id} value={p._id}>{p.name} ({p.durationValue} {p.durationType})</option>
@@ -179,7 +179,7 @@ export const RenewalDialog: React.FC<Props> = ({ isOpen, onClose, subscription }
                 <select 
                   value={discountType} 
                   onChange={(e) => setDiscountType(e.target.value as 'FIXED' | 'PERCENTAGE')}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus: bg-white"
                 >
                   <option value="FIXED">Fixed Amount</option>
                   <option value="PERCENTAGE">Percentage (%)</option>
@@ -192,7 +192,7 @@ export const RenewalDialog: React.FC<Props> = ({ isOpen, onClose, subscription }
                   min="0"
                   value={discountValue}
                   onChange={(e) => setDiscountValue(Number(e.target.value))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:"
                 />
               </div>
               <div className="md:col-span-2 bg-blue-50 p-4 rounded-md flex justify-between items-center">
@@ -226,7 +226,7 @@ export const RenewalDialog: React.FC<Props> = ({ isOpen, onClose, subscription }
             <textarea 
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" 
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:" 
               rows={2}
             />
           </div>

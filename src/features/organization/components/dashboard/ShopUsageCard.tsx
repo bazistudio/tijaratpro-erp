@@ -25,7 +25,7 @@ export const ShopUsageCard = ({ shops, employees }: { shops: DashboardData['shop
           {shops.limit !== 'Unlimited' && (
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div 
-                className={`h-2 rounded-full ${percentage > 90 ? 'bg-red-500' : percentage > 75 ? 'bg-yellow-500' : 'bg-indigo-600'}`}
+                className={`h-2 rounded-full ${percentage > 90 ? '' : percentage > 75 ? 'bg-yellow-500' : 'bg-indigo-600'}`}
                 style={{ width: `${percentage}%` }}
               ></div>
             </div>

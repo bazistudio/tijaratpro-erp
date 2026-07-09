@@ -29,7 +29,7 @@ export const WindowControls = () => {
       </button>
       <button 
         onClick={handleClose}
-        className="px-4 h-full hover:bg-red-500 text-gray-400 hover:text-white transition-colors"
+        className="px-4 h-full hover: text-gray-400 hover:text-white transition-colors"
       >
         <svg width="12" height="12" viewBox="0 0 12 12"><path fill="currentColor" fillRule="evenodd" d="M7.414 6l3.536-3.536-1.414-1.414L6 4.586 2.464 1.05 1.05 2.464 4.586 6 1.05 9.536l1.414 1.414L6 7.414l3.536 3.536 1.414-1.414L7.414 6z" clipRule="evenodd"/></svg>
       </button>

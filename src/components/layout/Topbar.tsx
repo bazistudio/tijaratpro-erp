@@ -87,7 +87,7 @@ export const Topbar = ({ setMobileMenuOpen }: TopbarProps) => {
           >
             <span className="sr-only">View notifications</span>
             <Bell className="h-5 w-5" aria-hidden="true" />
-            <span className="absolute top-1.5 right-1.5 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white dark:ring-gray-900" />
+            <span className="absolute top-1.5 right-1.5 block h-2 w-2 rounded-full  ring-2 ring-white dark:ring-gray-900" />
           </button>
 
           {/* Theme Toggle & User Profile Menu */}

@@ -84,7 +84,7 @@ export const SubscriptionDetailCard: React.FC<Props> = ({ subscriptionId }) => {
                 Resume
               </button>
             ) : (
-              <button onClick={() => setShowSuspendModal(true)} className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded font-medium text-sm">
+              <button onClick={() => setShowSuspendModal(true)} className=" hover: text-white px-4 py-2 rounded font-medium text-sm">
                 Suspend
               </button>
             )}
@@ -155,7 +155,7 @@ export const SubscriptionDetailCard: React.FC<Props> = ({ subscriptionId }) => {
 
       {/* Customization Editing Panel */}
       {isEditing ? (
-        <div className="bg-white shadow rounded-lg p-6 border-2 border-blue-100">
+        <div className="bg-white shadow rounded-lg p-6 border-2 ">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-medium text-gray-900">Edit Custom Subscription</h3>
             <button
@@ -211,7 +211,7 @@ export const SubscriptionDetailCard: React.FC<Props> = ({ subscriptionId }) => {
             <textarea 
               value={suspendReason} 
               onChange={(e) => setSuspendReason(e.target.value)}
-              className="w-full border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500 mb-4" 
+              className="w-full border-gray-300 rounded-md focus:ring-red-500 focus: mb-4" 
               rows={3} 
               required
             />
@@ -220,7 +220,7 @@ export const SubscriptionDetailCard: React.FC<Props> = ({ subscriptionId }) => {
               <button 
                 onClick={handleSuspend} 
                 disabled={!suspendReason || suspendMutation.isPending} 
-                className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 disabled:opacity-50"
+                className=" text-white px-4 py-2 rounded hover: disabled:opacity-50"
               >
                 {suspendMutation.isPending ? 'Suspending...' : 'Confirm Suspend'}
               </button>

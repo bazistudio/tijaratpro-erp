@@ -39,9 +39,9 @@ export const SecurityVerificationModal: React.FC<SecurityVerificationModalProps>
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
-        <div className="p-6 border-b border-gray-100 bg-red-50/50">
+        <div className="p-6 border-b border-gray-100 /50">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center text-red-600">
+            <div className="w-10 h-10 rounded-full  flex items-center justify-center text-red-600">
               <Lock className="w-5 h-5" />
             </div>
             <div>
@@ -61,7 +61,7 @@ export const SecurityVerificationModal: React.FC<SecurityVerificationModalProps>
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-4 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors"
+                className="w-full pl-4 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-red-500 focus: transition-colors"
                 placeholder="Enter password..."
                 disabled={isProcessing}
                 autoFocus
@@ -94,7 +94,7 @@ export const SecurityVerificationModal: React.FC<SecurityVerificationModalProps>
             <button
               type="submit"
               disabled={isProcessing || !password}
-              className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="px-4 py-2 text-sm font-medium text-white  rounded-lg hover: focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {isProcessing && (
                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />

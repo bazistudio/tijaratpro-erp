@@ -118,7 +118,7 @@ export const LedgerDashboard: React.FC = () => {
               onClick={() => setDirectoryTab('EXPENSE')}
               className={`px-4 py-2 text-sm font-bold rounded-lg flex items-center gap-2 transition-colors ${
                 directoryTab === 'EXPENSE' 
-                ? 'bg-red-500 text-white shadow-md' 
+                ? ' text-white shadow-md' 
                 : 'bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800'
               }`}
             >
