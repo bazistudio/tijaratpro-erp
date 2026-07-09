@@ -35,7 +35,7 @@ export interface DashboardData {
 }
 
 export const getOrganizationDashboard = async (orgId: string): Promise<DashboardData> => {
-  const response = await api.get(`/organizations/${orgId}/dashboard`);
+  const response = await api.get(`/api/v1/organizations/${orgId}/dashboard`);
   return response.data.data;
 };
 
@@ -45,6 +45,6 @@ export const createOrganizationShop = async (orgId: string, payload: {
   address: string;
   city: string;
 }) => {
-  const response = await api.post(`/organizations/${orgId}/shops`, payload);
+  const response = await api.post(`/api/v1/organizations/${orgId}/shops`, payload);
   return response.data.data;
 };
