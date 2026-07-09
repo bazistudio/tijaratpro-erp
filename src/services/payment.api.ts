@@ -16,7 +16,7 @@ export const paymentApi = {
         newBalance: number;
       };
       message: string;
-    }>('/api/ledger/payment', payload);
+    }>('/api/v1/ledger/payment', payload);
     return response.data;
   }
 };

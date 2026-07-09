@@ -38,12 +38,11 @@ export const ShopHeaderCardEditor: React.FC = () => {
         </div>
         <div className="space-y-1 md:col-span-2">
           <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Address</label>
-          <input
-            type="text"
+          <textarea
             value={shopHeader.address || ''}
             onChange={e => updateShopHeader({ address: e.target.value })}
-            className="w-full px-3 py-2 border rounded-md dark:bg-neutral-800 dark:border-neutral-700"
-            placeholder="e.g. 123 Main St, Lahore"
+            className="w-full px-3 py-2 border rounded-md dark:bg-neutral-800 dark:border-neutral-700 min-h-[80px]"
+            placeholder="e.g. 123 Main St,\nLahore"
           />
         </div>
         <div className="space-y-1">
@@ -67,11 +66,10 @@ export const ShopHeaderCardEditor: React.FC = () => {
         </div>
         <div className="space-y-1 md:col-span-2">
           <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Footer Note</label>
-          <input
-            type="text"
+          <textarea
             value={shopHeader.footerText || ''}
             onChange={e => updateShopHeader({ footerText: e.target.value })}
-            className="w-full px-3 py-2 border rounded-md dark:bg-neutral-800 dark:border-neutral-700"
+            className="w-full px-3 py-2 border rounded-md dark:bg-neutral-800 dark:border-neutral-700 min-h-[80px]"
             placeholder="Thank you for your business!"
           />
         </div>

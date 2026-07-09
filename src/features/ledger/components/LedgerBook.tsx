@@ -163,7 +163,7 @@ export const LedgerBook: React.FC<LedgerBookProps> = ({ initialParty, readonly }
         <div className="w-full relative min-h-[400px] overflow-x-auto lg:overflow-visible">
           {isLedgerLoading ? (
             <div className="absolute inset-0 flex items-center justify-center bg-white/50 dark:bg-gray-800/50">
-              <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full"></div>
+              <div className="animate-spin w-8 h-8 border-4  border-t-transparent rounded-full"></div>
             </div>
           ) : (
             <table className="w-full text-sm text-left">
@@ -246,7 +246,7 @@ export const LedgerBook: React.FC<LedgerBookProps> = ({ initialParty, readonly }
 
                       {expandedRows[entry.id] && isPayment && entryAllocations.length > 0 && (
                         <tr className="bg-gray-50/50 dark:bg-gray-800/20">
-                          <td colSpan={7} className="px-6 py-4 border-l-4 border-blue-500">
+                          <td colSpan={7} className="px-6 py-4 border-l-4 ">
                             <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Settled Invoices</h4>
                             <div className="space-y-2">
                               {entryAllocations.map(alloc => (

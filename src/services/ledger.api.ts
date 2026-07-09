@@ -51,19 +51,19 @@ export interface RecordPaymentPayload {
 
 export const ledgerApi = {
   getPartyLedger: async (partyId: string, partyType: 'CUSTOMER' | 'SUPPLIER') => {
-    const response = await axiosInstance.get<PartyLedgerResponse>(`/api/ledger/${partyId}`, {
+    const response = await axiosInstance.get<PartyLedgerResponse>(`/api/v1/ledger/${partyId}`, {
       params: { partyType }
     });
     return response.data;
   },
 
   recordPayment: async (payload: RecordPaymentPayload) => {
-    const response = await axiosInstance.post<{ success: boolean; data: { paymentId: string; newBalance: number } }>('/api/ledger/payment', payload);
+    const response = await axiosInstance.post<{ success: boolean; data: { paymentId: string; newBalance: number } }>('/api/v1/ledger/payment', payload);
     return response.data;
   },
 
   recordPayout: async (payload: RecordPaymentPayload) => {
-    const response = await axiosInstance.post<{ success: boolean; data: { paymentId: string; newBalance: number; shopCashBalance: number } }>('/api/ledger/payout', payload);
+    const response = await axiosInstance.post<{ success: boolean; data: { paymentId: string; newBalance: number; shopCashBalance: number } }>('/api/v1/ledger/payout', payload);
     return response.data;
   }
 };

@@ -35,7 +35,7 @@ export const dashboardApi = {
     const response = await axiosInstance.get<{
       success: boolean;
       data: DashboardMetrics;
-    }>('/api/dashboard/metrics');
+    }>('/api/v1/dashboard/metrics');
     return response.data;
   }
 };

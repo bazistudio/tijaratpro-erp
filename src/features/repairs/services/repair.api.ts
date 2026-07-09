@@ -11,7 +11,7 @@ export const repairApi = {
     if (filters.search) params.append('search', filters.search);
     if (filters.customerId) params.append('customerId', filters.customerId);
 
-    const response = await axiosInstance.get(`/api/repairs?${params.toString()}`);
+    const response = await axiosInstance.get(`/api/v1/repairs?${params.toString()}`);
     return {
       data: response.data.data.map((job: any) => ({
         ...job,
@@ -24,7 +24,7 @@ export const repairApi = {
   },
 
   getRepairJobById: async (id: string): Promise<RepairJob> => {
-    const response = await axiosInstance.get(`/api/repairs/${id}`);
+    const response = await axiosInstance.get(`/api/v1/repairs/${id}`);
     const job = response.data.data;
     return {
       ...job,
@@ -33,7 +33,7 @@ export const repairApi = {
   },
 
   createRepairJob: async (jobData: any): Promise<RepairJob> => {
-    const response = await axiosInstance.post(`/api/repairs`, jobData);
+    const response = await axiosInstance.post(`/api/v1/repairs`, jobData);
     const job = response.data.data;
     return {
       ...job,
@@ -42,7 +42,7 @@ export const repairApi = {
   },
 
   updateStatus: async (id: string, status: string, note?: string): Promise<RepairJob> => {
-    const response = await axiosInstance.patch(`/api/repairs/${id}/status`, { status, note });
+    const response = await axiosInstance.patch(`/api/v1/repairs/${id}/status`, { status, note });
     const job = response.data.data;
     return {
       ...job,
@@ -51,7 +51,7 @@ export const repairApi = {
   },
 
   addPart: async (id: string, partData: { productId: string, qty: number, cost: number, price: number }): Promise<RepairJob> => {
-    const response = await axiosInstance.post(`/api/repairs/${id}/parts`, partData);
+    const response = await axiosInstance.post(`/api/v1/repairs/${id}/parts`, partData);
     const job = response.data.data;
     return {
       ...job,
@@ -60,7 +60,7 @@ export const repairApi = {
   },
 
   addPayment: async (id: string, paymentData: { amount: number, method: string }): Promise<RepairJob> => {
-    const response = await axiosInstance.post(`/api/repairs/${id}/payments`, paymentData);
+    const response = await axiosInstance.post(`/api/v1/repairs/${id}/payments`, paymentData);
     const job = response.data.data;
     return {
       ...job,

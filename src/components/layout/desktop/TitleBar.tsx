@@ -23,7 +23,7 @@ export const TitleBar = ({ onMenuAction }: TitleBarProps) => {
 
   return (
     <div 
-      className="h-9 flex items-center justify-between bg-[#111111] border-b border-white/5 select-none text-gray-300 relative z-50"
+      className="h-9 flex items-center justify-between bg-[#111111] border-b border-white/5 select-none text-gray-300 relative z-[100]"
       style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
     >
       <div className="flex items-center h-full">

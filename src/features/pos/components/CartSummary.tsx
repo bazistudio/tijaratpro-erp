@@ -298,8 +298,8 @@ export const CartSummary = () => {
   };
 
   return (
-    <div className="flex flex-col gap-2 h-full w-full ml-auto max-w-[320px] pl-2">
-      <div className="border border-gray-200/60 dark:border-gray-700/60 rounded-xl p-2 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl shadow-sm flex-1 flex flex-col overflow-hidden">
+    <div className="flex flex-col gap-2 h-full w-full ml-auto max-w-[320px] pl-2 min-h-0">
+      <div className="border border-gray-200/60 dark:border-gray-700/60 rounded-xl p-2 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl shadow-sm flex-1 flex flex-col overflow-hidden min-h-0">
         
         {activeSession.mode === 'replace' && (
           <div className="flex justify-between items-center mb-2 text-xs">

@@ -1,8 +1,6 @@
 import React from 'react';
 import { TopStats } from '@/features/super-admin/components/TopStats';
-import { PendingTenantsTable } from '@/features/super-admin/components/PendingTenantsTable';
-import { PendingUsersTable } from '@/features/super-admin/components/PendingUsersTable';
-import { PendingOrgAdminsTable } from '@/features/super-admin/components/PendingOrgAdminsTable';
+import SuperAdminRequestsPage from './requests/page';
 
 export default function SuperAdminDashboardPage() {
   return (
@@ -17,20 +15,7 @@ export default function SuperAdminDashboardPage() {
       <TopStats />
 
       <div className="space-y-6">
-        <div>
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Pending Tenant Approvals</h2>
-          <PendingTenantsTable />
-        </div>
-
-        <div>
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Pending Shop Admin Approvals</h2>
-          <PendingUsersTable />
-        </div>
-
-        <div>
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Pending Organization Approvals</h2>
-          <PendingOrgAdminsTable />
-        </div>
+        <SuperAdminRequestsPage />
       </div>
     </div>
   );

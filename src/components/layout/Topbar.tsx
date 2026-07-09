@@ -2,11 +2,12 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Menu, Bell, ShoppingCart } from 'lucide-react';
+import { Menu, Bell, ShoppingCart, PackagePlus, ReceiptText, RefreshCw, Plus } from 'lucide-react';
 import { UserMenu } from './UserMenu';
 import { SearchInput } from '../common/SearchInput';
-import { PackagePlus, ReceiptText, RefreshCw, Plus } from 'lucide-react';
 import { DesktopAppButton } from './DesktopAppButton';
+import { ThemeToggle } from './ThemeToggle';
+import { ShopSwitcher } from './ShopSwitcher';
 import { selectForceSync, selectStatus } from '@/features/inventory/core/inventory.selectors';
 import { useExpensesStore } from '@/features/expenses';
 
@@ -30,13 +31,16 @@ export const Topbar = ({ setMobileMenuOpen }: TopbarProps) => {
         <Menu className="h-6 w-6" aria-hidden="true" />
       </button>
 
-      <div className="flex flex-1 items-center justify-between px-4 sm:px-6 lg:px-8">
+      <div className="flex flex-1 items-center justify-between px-4 sm:px-6 lg:px-8 min-w-0">
         
-        <div className="flex flex-1 max-w-3xl items-center gap-4">
+        <div className="flex flex-1 min-w-0 max-w-3xl items-center gap-4">
           <SearchInput placeholder="Search products, customers, invoices..." />
+          <div className="hidden md:block">
+            <ShopSwitcher />
+          </div>
         </div>
         
-        <div className="ml-4 flex items-center gap-2 md:gap-4">
+        <div className="ml-4 flex flex-shrink-0 items-center gap-2 md:gap-4">
           
           {/* Fixed Sale Button */}
           <Link
@@ -83,11 +87,14 @@ export const Topbar = ({ setMobileMenuOpen }: TopbarProps) => {
           >
             <span className="sr-only">View notifications</span>
             <Bell className="h-5 w-5" aria-hidden="true" />
-            <span className="absolute top-1.5 right-1.5 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white dark:ring-gray-900" />
+            <span className="absolute top-1.5 right-1.5 block h-2 w-2 rounded-full  ring-2 ring-white dark:ring-gray-900" />
           </button>
 
-          {/* User Profile Menu */}
-          <UserMenu />
+          {/* Theme Toggle & User Profile Menu */}
+          <div className="flex items-center gap-1">
+            <ThemeToggle />
+            <UserMenu />
+          </div>
         </div>
       </div>
     </header>

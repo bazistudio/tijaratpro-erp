@@ -23,6 +23,12 @@ export interface ElectronAPI {
   /** Opens a URL safely in the system default browser */
   openExternal: (url: string) => Promise<void>;
 
+  /** Relaunches the app */
+  relaunch: () => Promise<void>;
+
+  /** Opens the log folder */
+  openLogs: () => Promise<void>;
+
   /** Subscribe to a named event pushed from the main process */
   on: (channel: string, listener: (event: IpcRendererEvent, ...args: unknown[]) => void) => void;
 
@@ -82,6 +88,8 @@ const electronAPI: ElectronAPI = {
   close: () => ipcRenderer.invoke("app:close"),
 
   openExternal: (url: string) => ipcRenderer.invoke("app:openExternal", url),
+  relaunch: () => ipcRenderer.invoke("app:relaunch"),
+  openLogs: () => ipcRenderer.invoke("app:openLogs"),
 
   on: (channel, listener) => {
     if (!isAllowedChannel(channel)) {

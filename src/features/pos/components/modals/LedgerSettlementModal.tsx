@@ -92,13 +92,13 @@ export const LedgerSettlementModal: React.FC<Props> = ({ customer, invoiceTotal,
                 onChange={(e) => setCashReceived(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="0"
-                className="w-full pl-10 pr-4 py-3 text-lg font-bold bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-0 no-spinners tabular-nums transition-colors"
+                className="w-full pl-10 pr-4 py-3 text-lg font-bold bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus: focus:ring-0 no-spinners tabular-nums transition-colors"
               />
             </div>
           </div>
 
           {/* New Ledger State Result */}
-          <div className={`p-4 rounded-lg border ${customerAdvance > 0 ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'}`}>
+          <div className={`p-4 rounded-lg border ${customerAdvance > 0 ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : ' dark:/20  dark:'}`}>
             <div className="flex justify-between items-center">
               <span className={`text-sm font-bold ${customerAdvance > 0 ? 'text-green-800 dark:text-green-400' : 'text-red-800 dark:text-red-400'}`}>
                 {customerAdvance > 0 ? 'Advance Credit Given:' : 'New Outstanding:'}

@@ -1,5 +1,9 @@
 import { autoUpdater } from "electron-updater";
-import { BrowserWindow, ipcMain } from "electron";
+import { app, BrowserWindow, ipcMain, dialog } from "electron";
+import { logger } from "./logger";
+import { syncEngine } from "./services/syncEngine";
+import { closeDb } from "./db";
+import { showNotification } from "./notifications";
 
 export function setupUpdater(mainWindow: BrowserWindow) {
   // We want full control over the download and install process
@@ -7,35 +11,70 @@ export function setupUpdater(mainWindow: BrowserWindow) {
   autoUpdater.autoInstallOnAppQuit = true;
 
   autoUpdater.on('checking-for-update', () => {
-    mainWindow.webContents.send('updater:status', 'Checking for updates...');
+    logger.info('Checking for updates...');
   });
 
   autoUpdater.on('update-available', (info) => {
-    mainWindow.webContents.send('updater:available', info);
+    logger.info(`Update available: ${info.version}`);
   });
 
   autoUpdater.on('update-not-available', () => {
-    mainWindow.webContents.send('updater:status', 'App is up to date.');
+    logger.info('App is up to date.');
   });
 
   autoUpdater.on('error', (err) => {
-    mainWindow.webContents.send('updater:error', err.message);
+    logger.error(`
+--- Update Error ---
+Current version: ${app.getVersion()}
+Error: ${err.message}
+Stack Trace:\n${err.stack || 'None'}
+--------------------
+`);
   });
 
   autoUpdater.on('download-progress', (progressObj) => {
-    mainWindow.webContents.send('updater:progress', progressObj);
+    const percent = Math.round(progressObj.percent);
+    logger.info(`Downloading update... ${percent}%`);
   });
 
   autoUpdater.on('update-downloaded', (info) => {
-    mainWindow.webContents.send('updater:downloaded', info);
+    logger.info(`Update downloaded: ${info.version}`);
+    
+    dialog.showMessageBox(mainWindow, {
+      type: 'info',
+      title: 'TijaratPro Update Ready',
+      message: 'A new version has been downloaded and is ready to install.',
+      buttons: ['Install Now', 'Later'],
+      defaultId: 0,
+      cancelId: 1
+    }).then(({ response }) => {
+      if (response === 0) {
+        app.removeAllListeners("window-all-closed");
+        const windows = BrowserWindow.getAllWindows();
+        windows.forEach((win) => win.close());
+        try {
+          syncEngine.stop();
+          closeDb();
+        } catch (err) {}
+        autoUpdater.quitAndInstall(false, true);
+      }
+    });
   });
 
-  // Handle IPC calls from the renderer
-  ipcMain.handle('updater:check', () => {
-    return autoUpdater.checkForUpdatesAndNotify();
-  });
+  // Handle IPC calls from the renderer safely
+  if (!ipcMain.listenerCount('updater:check')) {
+    ipcMain.handle('updater:check', () => {
+      return autoUpdater.checkForUpdatesAndNotify();
+    });
+  }
 
-  ipcMain.handle('updater:install', () => {
-    autoUpdater.quitAndInstall();
-  });
+  if (!ipcMain.listenerCount('updater:install')) {
+    ipcMain.handle('updater:install', () => {
+      try {
+        syncEngine.stop();
+        closeDb();
+      } catch (err) {}
+      autoUpdater.quitAndInstall(false, true);
+    });
+  }
 }

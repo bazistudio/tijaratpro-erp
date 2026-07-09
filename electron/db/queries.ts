@@ -2,6 +2,7 @@ import { db } from './index';
 import { memoryCache } from '../cache/memoryCache';
 import { v7 as uuidv7 } from 'uuid';
 import { syncEngine } from '../services/syncEngine';
+import { logger } from '../logger';
 
 // Abstracted mutation that handles Cache -> DB -> Queue -> Log
 export function mutateEntity(entityType: string, operation: 'CREATE' | 'UPDATE' | 'DELETE', payload: any) {
@@ -87,8 +88,8 @@ export function mutateEntity(entityType: string, operation: 'CREATE' | 'UPDATE' 
     memoryCache.set(entityType, payload.id, payload);
   }
   
-  // Trigger Sync
-  syncEngine.triggerSync().catch(console.error);
+  // Trigger sync non-blockingly
+  syncEngine.triggerSync().catch(logger.error);
   
   return { success: true, opId };
 }

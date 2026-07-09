@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Change this to the real API endpoint later
-const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:4000/api';
+const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:4000/api/v1';
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,

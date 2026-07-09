@@ -2,21 +2,17 @@ import React, { useState } from 'react';
 import { Eye, EyeOff, CheckCircle2, AlertTriangle, Building2, Calendar } from 'lucide-react';
 import { Tenant } from '../services/admin.api';
 
+import { usePackages } from '../subscriptions/hooks/useSubscriptions';
+import { SubscriptionCustomizationPanel, SubscriptionCustomizationData } from '../subscriptions/components/subscriptions/SubscriptionCustomizationPanel';
+import { Package } from '../subscriptions/types/subscription.types';
+
 interface TenantApprovalModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: (plan: string, password: string) => void;
-  tenant: Tenant | null;
+  onConfirm: (packageId: string, customization: SubscriptionCustomizationData, password: string) => void;
+  tenant: { _id: string; name: string; businessType?: string } | null;
   isProcessing?: boolean;
 }
-
-const SUBSCRIPTION_PLANS = [
-  { id: '15-day demo', label: '15-Day Demo', duration: '15 days' },
-  { id: '1 month', label: '1 Month', duration: '30 days' },
-  { id: '1 year', label: '1 Year', duration: '365 days' },
-  { id: '2 year', label: '2 Years', duration: '730 days' },
-  { id: '3 year', label: '3 Years', duration: '1095 days' },
-];
 
 export const TenantApprovalModal: React.FC<TenantApprovalModalProps> = ({
   isOpen,
@@ -25,21 +21,31 @@ export const TenantApprovalModal: React.FC<TenantApprovalModalProps> = ({
   tenant,
   isProcessing = false
 }) => {
-  const [selectedPlan, setSelectedPlan] = useState<string>('15-day demo');
+  const { data: packagesData, isLoading: isLoadingPackages } = usePackages({ status: 'ACTIVE' });
+  const packages: Package[] = packagesData?.data || [];
+
+  const [selectedPackageId, setSelectedPackageId] = useState<string>('');
+  const [customizationData, setCustomizationData] = useState<SubscriptionCustomizationData>({});
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+
+  const selectedPackage = packages.find((p) => p._id === selectedPackageId) || null;
 
   if (!isOpen || !tenant) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!selectedPackageId) {
+      setError('Please select a package first.');
+      return;
+    }
     if (!password.trim()) {
       setError('Super Admin password is required to approve tenants.');
       return;
     }
     setError('');
-    onConfirm(selectedPlan, password);
+    onConfirm(selectedPackageId, customizationData, password);
   };
 
   return (
@@ -80,30 +86,45 @@ export const TenantApprovalModal: React.FC<TenantApprovalModalProps> = ({
           <div>
             <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
               <Calendar className="w-4 h-4 text-blue-600" />
-              Select Subscription Plan
+              Select Base Package
             </label>
-            <div className="grid grid-cols-2 gap-3">
-              {SUBSCRIPTION_PLANS.map((plan) => (
-                <button
-                  key={plan.id}
-                  type="button"
-                  onClick={() => setSelectedPlan(plan.id)}
-                  className={`p-3 text-left border rounded-xl transition-all ${
-                    selectedPlan === plan.id
-                      ? 'border-blue-600 bg-blue-50 ring-1 ring-blue-600'
-                      : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'
-                  }`}
-                >
-                  <p className={`font-medium ${selectedPlan === plan.id ? 'text-blue-900' : 'text-gray-900'}`}>
-                    {plan.label}
-                  </p>
-                  <p className={`text-xs mt-1 ${selectedPlan === plan.id ? 'text-blue-600' : 'text-gray-500'}`}>
-                    Valid for {plan.duration}
-                  </p>
-                </button>
-              ))}
-            </div>
+            {isLoadingPackages ? (
+              <div className="text-sm text-gray-500">Loading packages...</div>
+            ) : (
+              <div className="grid grid-cols-2 gap-3">
+                {packages.map((pkg) => (
+                  <button
+                    key={pkg._id}
+                    type="button"
+                    onClick={() => setSelectedPackageId(pkg._id)}
+                    className={`p-3 text-left border rounded-xl transition-all ${
+                      selectedPackageId === pkg._id
+                        ? ' bg-blue-50 ring-1 ring-blue-600'
+                        : 'border-gray-200 hover: hover:bg-gray-50'
+                    }`}
+                  >
+                    <p className={`font-medium ${selectedPackageId === pkg._id ? 'text-blue-900' : 'text-gray-900'}`}>
+                      {pkg.name}
+                    </p>
+                    <p className={`text-xs mt-1 ${selectedPackageId === pkg._id ? 'text-blue-600' : 'text-gray-500'}`}>
+                      Valid for {pkg.durationValue} {pkg.durationType}
+                    </p>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
+
+          {/* Customization Panel */}
+          {selectedPackage && (
+            <div className="mt-6 border-t border-gray-100 pt-6">
+              <h3 className="text-sm font-medium text-gray-900 mb-4">Customize Before Activation</h3>
+              <SubscriptionCustomizationPanel 
+                basePackage={selectedPackage}
+                onChange={setCustomizationData}
+              />
+            </div>
+          )}
 
           {/* Password Verification */}
           <div>
@@ -115,7 +136,7 @@ export const TenantApprovalModal: React.FC<TenantApprovalModalProps> = ({
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-4 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                className="w-full pl-4 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus: transition-colors"
                 placeholder="Enter password to authorize..."
                 disabled={isProcessing}
               />

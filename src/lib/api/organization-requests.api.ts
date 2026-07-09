@@ -1,0 +1,42 @@
+import axios from './axios';
+
+export interface OrganizationRequest {
+  _id: string;
+  name: string;
+  code: string;
+  ownerId: {
+    _id: string;
+    name: string;
+    email: string;
+    phone?: string;
+  };
+  accountType: string;
+  businessType: string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  createdAt: string;
+  tempPassword?: string;
+}
+
+export const getRequests = async (): Promise<OrganizationRequest[]> => {
+  const response = await axios.get('/api/v1/organization-requests');
+  return response.data.data;
+};
+
+export const approveRequest = async (id: string, adminPassword: string, packageId: string, customization: any) => {
+  const response = await axios.post(`/api/v1/organization-requests/${id}/approve`, { 
+    adminPassword, 
+    packageId,
+    ...customization
+  });
+  return response.data;
+};
+
+export const rejectRequest = async (id: string, reason: string, adminPassword: string) => {
+  const response = await axios.post(`/api/v1/organization-requests/${id}/reject`, { reviewNote: reason, adminPassword });
+  return response.data;
+};
+
+export const deleteRequest = async (id: string, adminPassword: string) => {
+  const response = await axios.delete(`/api/v1/organization-requests/${id}`, { data: { adminPassword } });
+  return response.data;
+};

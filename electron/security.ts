@@ -1,4 +1,5 @@
 import { app, session, shell } from "electron";
+import { logger } from "./logger";
 
 // --------------------------------------------------------------------------
 // Content Security Policy
@@ -47,10 +48,11 @@ export function setupSecurity(): void {
     contents.on("will-navigate", (event, navigationUrl) => {
       const allowed =
         navigationUrl.startsWith("http://localhost:3000") ||
+        navigationUrl.startsWith("http://127.0.0.1:3000") ||
         navigationUrl.startsWith("file://");
 
       if (!allowed) {
-        console.warn(`[security] Blocked navigation to: ${navigationUrl}`);
+        logger.warn(`[security] Blocked navigation to: ${navigationUrl}`);
         event.preventDefault();
         // Open in system browser instead
         shell.openExternal(navigationUrl);
@@ -59,7 +61,7 @@ export function setupSecurity(): void {
 
     // 2. Block new windows / popups from the renderer
     contents.setWindowOpenHandler(({ url }) => {
-      console.warn(`[security] Blocked window.open for: ${url}`);
+      logger.warn(`[security] Blocked window.open for: ${url}`);
       shell.openExternal(url);
       return { action: "deny" };
     });
@@ -71,6 +73,10 @@ export function setupSecurity(): void {
 
     // Inject CSP header for every response
     ses.webRequest.onHeadersReceived((details, callback) => {
+      if (isDev) {
+        callback({ responseHeaders: details.responseHeaders });
+        return;
+      }
       callback({
         responseHeaders: {
           ...details.responseHeaders,
@@ -83,7 +89,7 @@ export function setupSecurity(): void {
     ses.setPermissionRequestHandler((_webContents, permission, callback) => {
       const granted = ALLOWED_PERMISSIONS.has(permission);
       if (!granted) {
-        console.warn(`[security] Permission denied: ${permission}`);
+        logger.warn(`[security] Permission denied: ${permission}`);
       }
       callback(granted);
     });

@@ -90,7 +90,7 @@ export const RepairFormDrawer: React.FC<RepairFormDrawerProps> = ({ isOpen, onCl
                     className="w-full px-4 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:ring-[#006970]"
                     value={formData.customerId}
                     onChange={e => setFormData({...formData, customerId: e.target.value})}
-                    placeholder="Enter valid customer ObjectId for now"
+                    placeholder="Enter valid customer UUID for now"
                   />
                 </div>
               </div>

@@ -11,10 +11,12 @@ export const DesktopShell = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
   const [activeModal, setActiveModal] = useState<'SHORTCUTS' | 'SYSINFO' | 'ABOUT' | 'COMING_SOON' | 'DOCS' | 'SUPPORT' | null>(null);
 
-  // We only run this wrapper logic if we're in Electron.
-  // We can render normally on web.
-  // Note: Since this is 'use client', it's safe to check isElectron().
   const runningInElectron = isElectron();
+  const [mounted, setMounted] = useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleAction = (action: string) => {
     switch (action) {
@@ -37,31 +39,31 @@ export const DesktopShell = ({ children }: { children: React.ReactNode }) => {
 
       // Navigation
       case 'GOTO_DASHBOARD':
-        router.push('/dashboard');
+        router.push('/dashboard/shop-admin');
         break;
       case 'GOTO_POS':
-        router.push('/dashboard/pos');
+        router.push('/dashboard/shop-admin/pos');
         break;
       case 'GOTO_INVENTORY':
-        router.push('/dashboard/inventory');
+        router.push('/dashboard/shop-admin/products');
         break;
       case 'GOTO_CUSTOMERS':
-        router.push('/dashboard/customers');
+        router.push('/dashboard/shop-admin/customers');
         break;
       case 'GOTO_SUPPLIERS':
-        router.push('/dashboard/suppliers');
+        router.push('/dashboard/shop-admin/suppliers');
         break;
       case 'GOTO_REPORTS':
-        router.push('/dashboard/reports');
+        router.push('/dashboard/shop-admin/history');
         break;
       case 'NEW_SALE':
-        router.push('/dashboard/pos'); // New sale is typically handled inside POS
+        router.push('/dashboard/shop-admin/pos'); // New sale is typically handled inside POS
         break;
       case 'NEW_CUSTOMER':
-        router.push('/dashboard/customers?action=new');
+        router.push('/dashboard/shop-admin/customers?action=new');
         break;
       case 'NEW_SUPPLIER':
-        router.push('/dashboard/suppliers?action=new');
+        router.push('/dashboard/shop-admin/suppliers?action=new');
         break;
 
       // System
@@ -82,22 +84,20 @@ export const DesktopShell = ({ children }: { children: React.ReactNode }) => {
 
   useGlobalShortcuts(handleAction);
 
-  if (!runningInElectron) {
-    return <>{children}</>;
-  }
+  const isDesktop = mounted && runningInElectron;
 
   return (
-    <div className="flex flex-col h-screen w-screen overflow-hidden bg-[#0a0a0a]">
+    <div className={isDesktop ? "flex flex-col h-screen w-screen overflow-hidden bg-[#0a0a0a]" : "flex flex-col min-h-screen"}>
       {/* Custom Frameless Titlebar */}
-      <TitleBar onMenuAction={handleAction} />
+      {isDesktop && <TitleBar onMenuAction={handleAction} />}
 
       {/* Main Content Area */}
-      <div className="flex-1 overflow-auto relative">
+      <div className={isDesktop ? "flex-1 flex flex-col min-h-0 overflow-hidden relative" : "flex-1 flex flex-col min-h-0 relative"}>
         {children}
       </div>
 
       {/* Shared Desktop Modals */}
-      <DesktopModals activeModal={activeModal} onClose={() => setActiveModal(null)} />
+      {isDesktop && <DesktopModals activeModal={activeModal} onClose={() => setActiveModal(null)} />}
     </div>
   );
 };

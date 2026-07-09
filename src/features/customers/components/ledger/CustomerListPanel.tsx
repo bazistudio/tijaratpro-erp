@@ -74,7 +74,7 @@ export const CustomerListPanel = ({ customers, selectedCustomerId, onSelectCusto
   const getStatusColor = (balance: number, limit: number) => {
     if (limit <= 0) return 'bg-gray-400';
     const ratio = balance / limit;
-    if (ratio >= 0.9) return 'bg-red-500';
+    if (ratio >= 0.9) return '';
     if (ratio >= 0.5) return 'bg-yellow-400';
     return 'bg-green-500';
   };

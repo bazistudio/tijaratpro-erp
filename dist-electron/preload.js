@@ -37,6 +37,8 @@ var electronAPI = {
   maximize: () => import_electron.ipcRenderer.invoke("app:maximize"),
   close: () => import_electron.ipcRenderer.invoke("app:close"),
   openExternal: (url) => import_electron.ipcRenderer.invoke("app:openExternal", url),
+  relaunch: () => import_electron.ipcRenderer.invoke("app:relaunch"),
+  openLogs: () => import_electron.ipcRenderer.invoke("app:openLogs"),
   on: (channel, listener) => {
     if (!isAllowedChannel(channel)) {
       console.warn(`[preload] Blocked subscription to unknown channel: ${channel}`);

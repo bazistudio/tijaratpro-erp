@@ -7,9 +7,12 @@ import { SaleWorkspace } from '@/features/pos/components/SaleWorkspace';
 import { ReturnOverflowModal } from '@/features/pos/components/ReturnOverflowModal';
 import { usePosStore } from '@/features/pos/store/usePosStore';
 import { toast } from 'react-hot-toast';
+import { useOrganizationStore } from '@/store/useOrganizationStore';
+import { Store } from 'lucide-react';
 
 export default function POSPage() {
   const { saleTabs } = usePosStore();
+  const { viewMode } = useOrganizationStore();
   const [mounted, setMounted] = useState(false);
   const notified = useRef(false);
 
@@ -37,8 +40,18 @@ export default function POSPage() {
 
   if (!mounted) return null; // Avoid hydration mismatch for Zustand persist
 
+  if (viewMode === 'organization') {
+    return (
+      <div className="flex flex-col items-center justify-center flex-1 h-full w-full bg-gray-50 dark:bg-gray-900">
+        <Store className="w-16 h-16 text-gray-400 mb-4" />
+        <h2 className="text-xl font-bold text-gray-700 dark:text-gray-200">Select a shop to start selling</h2>
+        <p className="text-gray-500 mt-2">The POS system requires a specific shop context.</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-col flex-1 h-full w-full relative">
+    <div className="flex flex-col flex-1 h-full w-full min-h-0 relative">
       <PosHeader />
       <SaleWorkspace />
       <ReturnOverflowModal />

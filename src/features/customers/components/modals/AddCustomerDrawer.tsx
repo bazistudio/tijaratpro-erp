@@ -56,7 +56,7 @@ export const CustomerFormDrawer: React.FC<CustomerFormDrawerProps> = ({ isOpen, 
     if (formData.phone.length > 5) {
       const exists = customers.some(c => 
         (c.phone === formData.phone || c.mobile === formData.phone) && 
-        c.id !== editingCustomer?.id
+        (c.id || c._id) !== (editingCustomer?.id || editingCustomer?._id)
       );
       if (exists) {
         setPhoneError('Phone number already exists in your database');

@@ -22,7 +22,7 @@ export const salesApi = {
       success: boolean;
       order: any;
       message: string;
-    }>('/api/orders', data, {
+    }>('/api/v1/orders', data, {
       headers: idempotencyKey ? {
         'idempotency-key': idempotencyKey
       } : {}
@@ -34,7 +34,7 @@ export const salesApi = {
     const response = await axiosInstance.get<{
       success: boolean;
       data: any[];
-    }>('/api/orders', { params });
+    }>('/api/v1/orders', { params });
     return response.data;
   },
 
@@ -42,7 +42,7 @@ export const salesApi = {
     const response = await axiosInstance.patch<{
       success: boolean;
       message: string;
-    }>(`/api/orders/${orderId}/status`, { status: 'cancelled' });
+    }>(`/api/v1/orders/${orderId}/status`, { status: 'cancelled' });
     return response.data;
   }
 };

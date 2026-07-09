@@ -1,5 +1,6 @@
 import { safeStorage } from 'electron';
 import Store from 'electron-store';
+import { logger } from '../logger';
 
 const store = new Store({
   name: 'auth-tokens'
@@ -26,7 +27,7 @@ export function getToken(key: string): string | null {
       return Buffer.from(data, 'base64').toString('utf-8');
     }
   } catch (err) {
-    console.error('[safeStorage] Failed to decrypt token', err);
+    logger.error('[safeStorage] Failed to decrypt token', err);
     return null;
   }
 }

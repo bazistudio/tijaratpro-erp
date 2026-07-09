@@ -10,7 +10,7 @@ export default function SuperAdminLayout({
 }) {
   return (
     <SuperAdminGuard>
-      <div className="flex h-screen bg-gray-50 font-sans">
+      <div className="flex flex-1 h-full w-full min-h-0 bg-gray-50 font-sans">
         <Sidebar />
         <div className="flex-1 flex flex-col overflow-hidden">
           <Header />

@@ -35,9 +35,29 @@ export const DailySalesModal = ({ isOpen, onClose }: DailySalesModalProps) => {
   }, [isOpen, settings, fetchSettings]);
 
   const handleReprint = (order: any) => {
-    if (!settings || !shopHeader) return;
-    const html = printFormatter.formatSaleInvoice(order, settings, shopHeader);
-    openPreview({ html, documentType: 'SaleInvoice', referenceId: order._id, title: `Invoice - ${order.orderNumber}` });
+    const defaultSettings: any = settings || {
+      enabled: true,
+      printerType: 'THERMAL_80MM',
+      paperSize: { width: '80mm' },
+      layout: { orientation: 'portrait', marginTop: 0, marginBottom: 0, marginLeft: 0, marginRight: 0 },
+      font: { size: 12, family: 'monospace' },
+      invoice: {
+        showLogo: false,
+        showShopInfo: true,
+        showBarcode: true,
+        showTax: true,
+        showDiscount: true
+      }
+    };
+    const defaultHeader: any = shopHeader || {
+      name: 'Receipt',
+      address: '',
+      phone: '',
+      footerText: 'Thank you!'
+    };
+
+    const html = printFormatter.formatSaleInvoice(order, defaultSettings, defaultHeader);
+    openPreview({ html, documentType: 'SaleInvoice', referenceId: order._id, title: `Invoice - ${order.orderNumber || order.displayNumber}` });
   };
 
   useEffect(() => {

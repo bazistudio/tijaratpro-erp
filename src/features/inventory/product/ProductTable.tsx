@@ -50,6 +50,7 @@ export const ProductTable = ({ products, isLoading }: ProductTableProps) => {
     { label: 'SKU' },
     { label: 'Stock', field: 'stock' },
     { label: 'Status' },
+    { label: 'Cost', field: 'purchasePrice' },
     { label: 'Price', field: 'price' },
     { label: '' },
   ];
@@ -124,6 +125,11 @@ export const ProductTable = ({ products, isLoading }: ProductTableProps) => {
                 </td>
                 <td className="px-4 py-1.5">
                   <StockStatusBadge status={product.status} />
+                </td>
+                <td className="px-4 py-1.5 whitespace-nowrap">
+                  <span className="text-gray-500 dark:text-gray-400 font-medium">
+                    {product.purchasePrice ? `PKR ${product.purchasePrice.toLocaleString()}` : '-'}
+                  </span>
                 </td>
                 <td className="px-4 py-1.5 whitespace-nowrap">
                   <span className="text-gray-700 dark:text-gray-300 font-medium">

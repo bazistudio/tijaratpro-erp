@@ -10,7 +10,7 @@ interface DashboardShellProps {
 export const DashboardShell = ({ children, variant = 'default' }: DashboardShellProps) => {
   if (variant === 'pos') {
     return (
-      <main className="flex-1 overflow-hidden bg-gray-50 dark:bg-gray-950 flex flex-col w-full h-[calc(100vh-4rem)]">
+      <main className="flex-1 overflow-hidden bg-gray-50 dark:bg-gray-950 flex flex-col w-full min-h-0">
         {children}
       </main>
     );

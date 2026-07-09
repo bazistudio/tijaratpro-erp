@@ -6,7 +6,7 @@ export const partyApi = {
       success: boolean;
       data: any[];
       pagination: { page: number; limit: number; total: number; pages: number };
-    }>(`/api/parties?page=${page}&limit=${limit}`);
+    }>(`/api/v1/parties?page=${page}&limit=${limit}`);
     
     return {
       ...response.data,
@@ -22,7 +22,7 @@ export const partyApi = {
       success: boolean;
       data: any;
       message: string;
-    }>('/api/parties', partyData);
+    }>('/api/v1/parties', partyData);
     
     return {
       ...response.data,
@@ -38,7 +38,7 @@ export const partyApi = {
       success: boolean;
       data: any;
       message: string;
-    }>(`/api/parties/${id}`, partyData);
+    }>(`/api/v1/parties/${id}`, partyData);
     
     return {
       ...response.data,
@@ -53,7 +53,7 @@ export const partyApi = {
     const response = await axiosInstance.delete<{
       success: boolean;
       message: string;
-    }>(`/api/parties/${id}`);
+    }>(`/api/v1/parties/${id}`);
     return response.data;
   },
 
@@ -61,7 +61,7 @@ export const partyApi = {
     const response = await axiosInstance.get<{
       success: boolean;
       data: any;
-    }>(`/api/parties/${id}`);
+    }>(`/api/v1/parties/${id}`);
     
     return {
       ...response.data,
@@ -80,7 +80,7 @@ export const partyApi = {
         ledger: any[];
         currentBalance: number;
       };
-    }>(`/api/parties/${id}/ledger`);
+    }>(`/api/v1/parties/${id}/ledger`);
     
     return {
       ...response.data,

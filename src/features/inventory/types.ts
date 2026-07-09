@@ -10,7 +10,7 @@ export type RequestStatus = 'idle' | 'loading' | 'success' | 'error';
 
 export type InventoryFilterType = 'all' | 'low_stock' | 'out_of_stock';
 
-export type SortField = 'name' | 'stock' | 'category' | 'price';
+export type SortField = 'name' | 'stock' | 'category' | 'price' | 'purchasePrice';
 export type SortDirection = 'asc' | 'desc';
 
 export interface PaginationParams {

@@ -26,8 +26,13 @@ export default function DashboardPage() {
         router.replace("/dashboard/multi-admin");
         break;
       case "SHOP_ADMIN":
+      case "OWNER":
       case "ADMIN": // backend default registration role — maps to shop-admin view
-        router.replace("/dashboard/shop-admin");
+        if ((user as any).accountType === "ORGANIZATION") {
+          router.replace("/dashboard/organization");
+        } else {
+          router.replace("/dashboard/shop-admin");
+        }
         break;
       case "STAFF":
         router.replace("/dashboard/staff");
@@ -40,7 +45,7 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen flex items-center justify-center">
       <p className="text-gray-500 text-sm animate-pulse">
-        Redirecting to your dashboard…
+        DashboardPage is redirecting... (role: {user?.role})
       </p>
     </div>
   );

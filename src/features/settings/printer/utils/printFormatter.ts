@@ -85,7 +85,7 @@ export const printFormatter = {
     
     if (settings.invoice.showShopInfo) {
       html += '<h1 style="margin: 5px 0;">' + shop.name + '</h1>';
-      html += '<p style="margin: 2px 0;">' + shop.address + '</p>';
+      html += '<p style="margin: 2px 0; white-space: pre-wrap;">' + shop.address + '</p>';
       html += '<p style="margin: 2px 0;">' + shop.phone + '</p>';
     }
     
@@ -139,7 +139,7 @@ export const printFormatter = {
 
     html += '</tbody>';
     html += '</table>';
-    html += '<div style="clear: both; margin-top: 50px; text-align: center;">';
+    html += '<div style="clear: both; margin-top: 50px; text-align: center; white-space: pre-wrap;">';
     html += '<p>' + (shop.footerText || '') + '</p>';
     html += '</div>';
     html += '</div>';
@@ -174,8 +174,8 @@ const formatA4 = (invoice: UnifiedInvoice, settings: PrinterSettings, title: str
         ${settings.invoice.showLogo && invoice.shop.logoUrl ? `<img src="${invoice.shop.logoUrl}" style="max-height: 80px;" />` : ''}
         ${settings.invoice.showShopInfo ? `
           <h1 style="margin: 5px 0;">${invoice.shop.name}</h1>
-          <p style="margin: 2px 0;">${invoice.shop.address}</p>
-          <p style="margin: 2px 0;">${invoice.shop.phone}</p>
+          <p style="margin: 2px 0; white-space: pre-wrap; text-align: center;">${invoice.shop.address}</p>
+          <p style="margin: 2px 0; text-align: center;">${invoice.shop.phone}</p>
         ` : ''}
         <h2 style="margin: 10px 0; border: 1px solid #000; display: inline-block; padding: 5px 15px; border-radius: 4px;">${title}</h2>
       </div>
@@ -234,7 +234,7 @@ const formatA4 = (invoice: UnifiedInvoice, settings: PrinterSettings, title: str
         </div>
       </div>
       
-      <div style="clear: both; margin-top: 50px; text-align: center;">
+      <div style="clear: both; margin-top: 50px; text-align: center; white-space: pre-wrap;">
         <p>${invoice.shop.footerText || ''}</p>
       </div>
     </div>
@@ -250,9 +250,9 @@ const formatThermal = (invoice: UnifiedInvoice, settings: PrinterSettings, width
       <div style="text-align: center; margin-bottom: 10px;">
         ${!is58 && settings.invoice.showLogo && invoice.shop.logoUrl ? `<img src="${invoice.shop.logoUrl}" style="max-width: 80%; max-height: 80px; margin-bottom: 5px;" />` : ''}
         ${settings.invoice.showShopInfo ? `
-          <div style="font-weight: bold; font-size: ${is58 ? '1.1em' : '1.2em'};">${invoice.shop.name}</div>
-          ${!is58 ? `<div>${invoice.shop.address}</div>` : ''}
-          <div>${invoice.shop.phone}</div>
+          <div style="font-weight: bold; font-size: ${is58 ? '1.1em' : '1.2em'}; text-align: center;">${invoice.shop.name}</div>
+          ${!is58 ? `<div style="white-space: pre-wrap; text-align: center;">${invoice.shop.address}</div>` : ''}
+          <div style="text-align: center;">${invoice.shop.phone}</div>
         ` : ''}
         <div style="margin-top: 3px; font-weight: bold;">*** ${title.toUpperCase()} ***</div>
       </div>
@@ -263,18 +263,19 @@ const formatThermal = (invoice: UnifiedInvoice, settings: PrinterSettings, width
         ${invoice.customer ? `<div>Cust: ${invoice.customer.name}</div>` : ''}
       </div>
 
-      <table style="width: 100%; text-align: left; margin-bottom: 5px; font-size: 0.95em;">
+      <table style="width: 100%; text-align: left; margin-bottom: 5px; font-size: 0.9em; table-layout: fixed;">
         <tr style="border-bottom: 1px dashed #000;">
-          <th style="padding-bottom: 2px;">Item</th>
-          <th style="text-align: right; padding-bottom: 2px;">Amount</th>
+          <th style="padding-bottom: 2px; width: 52%;">Item</th>
+          <th style="text-align: center; padding-bottom: 2px; width: 10%;">Qty</th>
+          <th style="text-align: center; padding-bottom: 2px; width: 18%;">Price</th>
+          <th style="text-align: right; padding-bottom: 2px; width: 20%;">Total</th>
         </tr>
         ${invoice.items.map(item => `
-          <tr>
-            <td colspan="2" style="padding-top: 3px; word-break: break-word;">${item.name}</td>
-          </tr>
-          <tr>
-            <td style="color: #444;">${item.qty} x ${item.price}</td>
-            <td style="text-align: right;">${item.total.toFixed(2)}</td>
+          <tr style="vertical-align: top;">
+            <td style="padding-top: 3px; word-break: break-word; padding-right: 2px;">${item.name}</td>
+            <td style="text-align: center; padding-top: 3px;">${item.qty}</td>
+            <td style="text-align: center; padding-top: 3px;">${item.price}</td>
+            <td style="text-align: right; padding-top: 3px;">${item.total.toFixed(2)}</td>
           </tr>
         `).join('')}
       </table>
@@ -300,7 +301,7 @@ const formatThermal = (invoice: UnifiedInvoice, settings: PrinterSettings, width
         </div>
       </div>
       
-      <div style="text-align: center; margin-top: 15px; font-size: 0.9em;">
+      <div style="text-align: center; margin-top: 15px; font-size: 0.9em; white-space: pre-wrap;">
         <div>${invoice.shop.footerText || ''}</div>
       </div>
     </div>

@@ -343,7 +343,7 @@ export const ProductForm = () => {
                             setImageFile(null);
                             setImagePreview(null);
                           }}
-                          className="absolute top-0 right-0 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
+                          className="absolute top-0 right-0  text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
                         >
                           ×
                         </button>
@@ -373,7 +373,7 @@ export const ProductForm = () => {
           </div>
           
           {submitError && (
-            <div className="mt-4 p-3 bg-red-50 text-red-600 rounded-xl text-sm border border-red-100">
+            <div className="mt-4 p-3  text-red-600 rounded-xl text-sm border ">
               {submitError}
             </div>
           )}
@@ -509,7 +509,7 @@ export const ProductForm = () => {
                             <div className="flex items-center gap-2">
                               <button 
                                 onClick={() => handleDelete(product._id || product.id)}
-                                className="text-xs bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
+                                className="text-xs  text-white px-2 py-1 rounded hover:"
                               >
                                 Yes
                               </button>

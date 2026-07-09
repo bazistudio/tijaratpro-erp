@@ -54,7 +54,7 @@ export const SupplierFormDrawer: React.FC<SupplierFormDrawerProps> = ({ isOpen, 
   // Validate phone uniqueness while typing
   useEffect(() => {
     if (formData.phone.length > 5) {
-      const exists = suppliers.some(s => s.phone === formData.phone && s.id !== editingSupplier?.id);
+      const exists = suppliers.some(s => s.phone === formData.phone && (s.id || s._id) !== (editingSupplier?.id || editingSupplier?._id));
       if (exists) {
         setPhoneError('Phone number already exists in your database');
         setIsPhoneValid(false);

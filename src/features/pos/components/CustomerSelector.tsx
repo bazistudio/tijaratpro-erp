@@ -81,8 +81,8 @@ export const CustomerSelector: React.FC<CustomerSelectorProps> = ({ onSelectCust
     let isWarning = false;
 
     if (usagePercentage > 100) {
-      statusColor = 'text-red-600 bg-red-50 dark:text-red-400 dark:bg-red-900/20';
-      dotColor = 'bg-red-500';
+      statusColor = 'text-red-600  dark:text-red-400 dark:/20';
+      dotColor = '';
       statusText = 'Over Limit';
       isWarning = true;
     } else if (usagePercentage > 80) {
@@ -162,7 +162,7 @@ export const CustomerSelector: React.FC<CustomerSelectorProps> = ({ onSelectCust
                   key={customer.id}
                   className={`px-3 py-2 cursor-pointer flex justify-between items-center transition-colors ${
                     index === selectedIndex 
-                      ? 'bg-blue-50 dark:bg-gray-700 border-l-4 border-blue-500' 
+                      ? 'bg-blue-50 dark:bg-gray-700 border-l-4 ' 
                       : 'hover:bg-gray-100 dark:hover:bg-gray-700 border-l-4 border-transparent'
                   }`}
                   onClick={() => handleSelect(customer)}
