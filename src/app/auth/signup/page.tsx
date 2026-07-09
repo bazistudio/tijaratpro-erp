@@ -36,7 +36,7 @@ export default function SignupPage() {
 
     try {
       // STEP 1: Register — no auto login
-      await axios.post("/api/auth/signup", {
+      await axios.post("/api/v1/auth/signup", {
         ownerName: formData.ownerName,
         email: formData.email,
         mobile: formData.mobile,

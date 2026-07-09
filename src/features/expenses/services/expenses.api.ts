@@ -16,7 +16,7 @@ export const expensesApi = {
       total: number;
       page: number;
       limit: number;
-    }>(`/api/expenses?${params.toString()}`);
+    }>(`/api/v1/expenses?${params.toString()}`);
     return {
       data: response.data.data.map(exp => ({
         ...exp,
@@ -29,12 +29,12 @@ export const expensesApi = {
   },
 
   getStats: async (): Promise<ExpenseStats> => {
-    const response = await axiosInstance.get<ExpenseStats>('/api/expenses/stats');
+    const response = await axiosInstance.get<ExpenseStats>('/api/v1/expenses/stats');
     return response.data;
   },
 
   addExpense: async (expense: Omit<ExpenseItem, 'id'>): Promise<ExpenseItem> => {
-    const response = await axiosInstance.post<any>('/api/expenses', expense);
+    const response = await axiosInstance.post<any>('/api/v1/expenses', expense);
     return {
       ...response.data,
       id: response.data._id || response.data.id,
@@ -42,7 +42,7 @@ export const expensesApi = {
   },
 
   updateExpense: async (id: string, expense: Partial<ExpenseItem>): Promise<ExpenseItem> => {
-    const response = await axiosInstance.put<any>(`/api/expenses/${id}`, expense);
+    const response = await axiosInstance.put<any>(`/api/v1/expenses/${id}`, expense);
     return {
       ...response.data,
       id: response.data._id || response.data.id,
@@ -50,11 +50,11 @@ export const expensesApi = {
   },
 
   deleteExpense: async (id: string): Promise<void> => {
-    await axiosInstance.delete(`/api/expenses/${id}`);
+    await axiosInstance.delete(`/api/v1/expenses/${id}`);
   },
 
   getTrace: async (id: string): Promise<any> => {
-    const response = await axiosInstance.get<any>(`/api/expenses/${id}/trace`);
+    const response = await axiosInstance.get<any>(`/api/v1/expenses/${id}/trace`);
     return response.data;
   }
 };

@@ -5,22 +5,22 @@ import { Package, Subscription, PaymentRequest, SubscriptionHistory } from '../t
 // Packages
 // ==========================================
 export const getPackages = async (params?: Record<string, any>) => {
-  const response = await api.get('/api/packages', { params });
+  const response = await api.get('/api/v1/packages', { params });
   return response.data;
 };
 
 export const createPackage = async (data: Partial<Package>) => {
-  const response = await api.post('/api/packages', data);
+  const response = await api.post('/api/v1/packages', data);
   return response.data;
 };
 
 export const updatePackage = async (id: string, data: Partial<Package>) => {
-  const response = await api.put(`/api/packages/${id}`, data);
+  const response = await api.put(`/api/v1/packages/${id}`, data);
   return response.data;
 };
 
 export const archivePackage = async (id: string) => {
-  const response = await api.delete(`/api/packages/${id}`);
+  const response = await api.delete(`/api/v1/packages/${id}`);
   return response.data;
 };
 
@@ -28,58 +28,58 @@ export const archivePackage = async (id: string) => {
 // Subscriptions
 // ==========================================
 export const getSubscriptions = async (params?: Record<string, any>) => {
-  const response = await api.get('/api/subscriptions', { params });
+  const response = await api.get('/api/v1/subscriptions', { params });
   return response.data;
 };
 
 export const getDashboardStats = async () => {
-  const response = await api.get('/api/subscriptions/dashboard');
+  const response = await api.get('/api/v1/subscriptions/dashboard');
   return response.data;
 };
 
 // Reports
 export const getRevenueReport = async (params?: any) => {
-  const response = await api.get('/api/subscriptions/reports/revenue', { params });
+  const response = await api.get('/api/v1/subscriptions/reports/revenue', { params });
   return response.data;
 };
 
 export const getPackagePerformanceReport = async (params?: any) => {
-  const response = await api.get('/api/subscriptions/reports/packages', { params });
+  const response = await api.get('/api/v1/subscriptions/reports/packages', { params });
   return response.data;
 };
 
 export const getExpiryReport = async (params?: any) => {
-  const response = await api.get('/api/subscriptions/reports/expiry', { params });
+  const response = await api.get('/api/v1/subscriptions/reports/expiry', { params });
   return response.data;
 };
 
 export const getSubscription = async (id: string) => {
-  const response = await api.get(`/api/subscriptions/${id}`);
+  const response = await api.get(`/api/v1/subscriptions/${id}`);
   return response.data;
 };
 
 export const renewSubscription = async (id: string, data: { paymentRequestId?: string }) => {
-  const response = await api.post(`/api/subscriptions/${id}/renew`, data);
+  const response = await api.post(`/api/v1/subscriptions/${id}/renew`, data);
   return response.data;
 };
 
 export const suspendSubscription = async (id: string, reason: string) => {
-  const response = await api.post(`/api/subscriptions/${id}/suspend`, { reason });
+  const response = await api.post(`/api/v1/subscriptions/${id}/suspend`, { reason });
   return response.data;
 };
 
 export const resumeSubscription = async (id: string) => {
-  const response = await api.post(`/api/subscriptions/${id}/resume`);
+  const response = await api.post(`/api/v1/subscriptions/${id}/resume`);
   return response.data;
 };
 
 export const customizeSubscription = async (id: string, data: any) => {
-  const response = await api.patch(`/api/subscriptions/${id}/customize`, data);
+  const response = await api.patch(`/api/v1/subscriptions/${id}/customize`, data);
   return response.data;
 };
 
 export const getSubscriptionHistory = async (id: string) => {
-  const response = await api.get(`/api/subscriptions/${id}/history`);
+  const response = await api.get(`/api/v1/subscriptions/${id}/history`);
   return response.data;
 };
 
@@ -87,22 +87,22 @@ export const getSubscriptionHistory = async (id: string) => {
 // Payment Requests
 // ==========================================
 export const getPaymentRequests = async (params?: Record<string, any>) => {
-  const response = await api.get('/api/subscriptions/payment-requests/all', { params });
+  const response = await api.get('/api/v1/subscriptions/payment-requests/all', { params });
   return response.data;
 };
 
 export const createPaymentRequest = async (data: Partial<PaymentRequest>) => {
-  const response = await api.post('/api/subscriptions/payment-requests', data);
+  const response = await api.post('/api/v1/subscriptions/payment-requests', data);
   return response.data;
 };
 
 export const approvePaymentRequest = async (id: string) => {
-  const response = await api.post(`/api/subscriptions/payment-requests/${id}/approve`);
+  const response = await api.post(`/api/v1/subscriptions/payment-requests/${id}/approve`);
   return response.data;
 };
 
 export const rejectPaymentRequest = async (id: string, reason: string) => {
-  const response = await api.post(`/api/subscriptions/payment-requests/${id}/reject`, { reason });
+  const response = await api.post(`/api/v1/subscriptions/payment-requests/${id}/reject`, { reason });
   return response.data;
 };
 
@@ -110,11 +110,11 @@ export const rejectPaymentRequest = async (id: string, reason: string) => {
 // Organization Limits
 // ==========================================
 export const getOrganizationLimits = async (organizationId: string) => {
-  const response = await api.get(`/api/organizations/${organizationId}/limits`);
+  const response = await api.get(`/api/v1/organizations/${organizationId}/limits`);
   return response.data;
 };
 
 export const updateOrganizationLimits = async (organizationId: string, limits: any) => {
-  const response = await api.patch(`/api/organizations/${organizationId}/limits`, limits);
+  const response = await api.patch(`/api/v1/organizations/${organizationId}/limits`, limits);
   return response.data;
 };

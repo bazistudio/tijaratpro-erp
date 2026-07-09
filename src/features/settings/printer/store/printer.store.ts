@@ -23,7 +23,7 @@ export const usePrinterStore = create<PrinterState>((set, get) => ({
   fetchSettings: async () => {
     try {
       set({ isLoading: true, error: null });
-      const response = await axiosInstance.get('/api/settings');
+      const response = await axiosInstance.get('/api/v1/settings');
       set({ 
         settings: response.data.printer,
         shopHeader: response.data.shopHeader || {
@@ -54,7 +54,7 @@ export const usePrinterStore = create<PrinterState>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
       const { settings, shopHeader } = get();
-      await axiosInstance.put('/api/settings', { printer: settings, shopHeader });
+      await axiosInstance.put('/api/v1/settings', { printer: settings, shopHeader });
       set({ isLoading: false });
       toast.success('Printer settings saved successfully');
     } catch (err: any) {

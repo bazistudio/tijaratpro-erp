@@ -11,7 +11,7 @@ export const importApi = {
       rawLines: string[];
       products: any[];
       meta: { parsedCount: number; matchedCount: number };
-    }>('/api/import/upload', formData, {
+    }>('/api/v1/import/upload', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -27,7 +27,7 @@ export const importApi = {
         totalCost: number;
       };
       message: string;
-    }>('/api/import/commit', payload);
+    }>('/api/v1/import/commit', payload);
     return response.data;
   },
 
@@ -36,7 +36,7 @@ export const importApi = {
       success: boolean;
       data: any;
       message: string;
-    }>('/api/inventory/manual-import', payload);
+    }>('/api/v1/inventory/manual-import', payload);
     return response.data;
   }
 };

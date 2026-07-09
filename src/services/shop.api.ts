@@ -15,7 +15,7 @@ export interface ShopData {
 
 export const shopApi = {
   getMyShop: async () => {
-    const response = await axiosInstance.get<{ success: boolean; data: ShopData; message: string }>('/api/shops/me');
+    const response = await axiosInstance.get<{ success: boolean; data: ShopData; message: string }>('/api/v1/shops/me');
     return response.data;
   }
 };

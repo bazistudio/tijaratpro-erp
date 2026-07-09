@@ -7,7 +7,7 @@ export const customerApi = {
       success: boolean;
       data: any[];
       pagination: { page: number; limit: number; total: number; pages: number };
-    }>(`/api/customers?page=${page}&limit=${limit}`);
+    }>(`/api/v1/customers?page=${page}&limit=${limit}`);
     
     return {
       ...response.data,
@@ -22,7 +22,7 @@ export const customerApi = {
     const response = await axiosInstance.get<{
       success: boolean;
       data: any[];
-    }>(`/api/customers/search?keyword=${keyword}`);
+    }>(`/api/v1/customers/search?keyword=${keyword}`);
     
     return {
       ...response.data,
@@ -38,7 +38,7 @@ export const customerApi = {
       success: boolean;
       data: any;
       message: string;
-    }>('/api/customers', customerData);
+    }>('/api/v1/customers', customerData);
     
     return {
       ...response.data,
@@ -54,7 +54,7 @@ export const customerApi = {
       success: boolean;
       data: any;
       message: string;
-    }>(`/api/customers/${id}`, customerData);
+    }>(`/api/v1/customers/${id}`, customerData);
     
     return {
       ...response.data,
@@ -69,7 +69,7 @@ export const customerApi = {
     const response = await axiosInstance.delete<{
       success: boolean;
       message: string;
-    }>(`/api/customers/${id}`);
+    }>(`/api/v1/customers/${id}`);
     return response.data;
   },
 
@@ -86,7 +86,7 @@ export const customerApi = {
           recentInvoices: any[];
         }
       };
-    }>(`/api/customers/${id}/detail`);
+    }>(`/api/v1/customers/${id}/detail`);
     
     return {
       ...response.data,

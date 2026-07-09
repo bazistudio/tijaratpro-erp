@@ -43,7 +43,7 @@ export function useGlobalSearch(query: string, type: string = 'quick', isFocused
 
       try {
         const response = await axiosInstance.get<{ success: boolean; data: GlobalSearchResult }>(
-          `/api/search?query=${encodeURIComponent(debouncedQuery)}&type=${debouncedType}`, 
+          `/api/v1/search?query=${encodeURIComponent(debouncedQuery)}&type=${debouncedType}`, 
           { signal: controller.signal }
         );
         

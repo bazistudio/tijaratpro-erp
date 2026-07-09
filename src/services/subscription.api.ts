@@ -46,48 +46,48 @@ export interface PaymentRequestData {
 
 export const subscriptionApi = {
   getSubscriptions: async () => {
-    const response = await axiosInstance.get<{ success: boolean; data: SubscriptionData[]; total: number }>('/api/subscriptions');
+    const response = await axiosInstance.get<{ success: boolean; data: SubscriptionData[]; total: number }>('/api/v1/subscriptions');
     return response.data;
   },
   getSubscription: async (id: string) => {
-    const response = await axiosInstance.get<{ success: boolean; data: SubscriptionData }>(`/api/subscriptions/${id}`);
+    const response = await axiosInstance.get<{ success: boolean; data: SubscriptionData }>(`/api/v1/subscriptions/${id}`);
     return response.data;
   },
   createSubscription: async (data: any) => {
-    const response = await axiosInstance.post<{ success: boolean; data: SubscriptionData }>('/api/subscriptions', data);
+    const response = await axiosInstance.post<{ success: boolean; data: SubscriptionData }>('/api/v1/subscriptions', data);
     return response.data;
   },
   suspendSubscription: async (id: string, reason: string) => {
-    const response = await axiosInstance.post<{ success: boolean; data: SubscriptionData }>(`/api/subscriptions/${id}/suspend`, { reason });
+    const response = await axiosInstance.post<{ success: boolean; data: SubscriptionData }>(`/api/v1/subscriptions/${id}/suspend`, { reason });
     return response.data;
   },
   resumeSubscription: async (id: string) => {
-    const response = await axiosInstance.post<{ success: boolean; data: SubscriptionData }>(`/api/subscriptions/${id}/resume`);
+    const response = await axiosInstance.post<{ success: boolean; data: SubscriptionData }>(`/api/v1/subscriptions/${id}/resume`);
     return response.data;
   },
   renewSubscription: async (id: string, paymentRequestId: string) => {
-    const response = await axiosInstance.post<{ success: boolean; data: SubscriptionData }>(`/api/subscriptions/${id}/renew`, { paymentRequestId });
+    const response = await axiosInstance.post<{ success: boolean; data: SubscriptionData }>(`/api/v1/subscriptions/${id}/renew`, { paymentRequestId });
     return response.data;
   },
   getHistory: async (id: string) => {
-    const response = await axiosInstance.get<{ success: boolean; data: SubscriptionHistoryData[] }>(`/api/subscriptions/${id}/history`);
+    const response = await axiosInstance.get<{ success: boolean; data: SubscriptionHistoryData[] }>(`/api/v1/subscriptions/${id}/history`);
     return response.data;
   },
   // Payment Requests
   getPaymentRequests: async () => {
-    const response = await axiosInstance.get<{ success: boolean; data: PaymentRequestData[] }>('/api/subscriptions/payment-requests/all');
+    const response = await axiosInstance.get<{ success: boolean; data: PaymentRequestData[] }>('/api/v1/subscriptions/payment-requests/all');
     return response.data;
   },
   createPaymentRequest: async (data: any) => {
-    const response = await axiosInstance.post<{ success: boolean; data: PaymentRequestData }>('/api/subscriptions/payment-requests', data);
+    const response = await axiosInstance.post<{ success: boolean; data: PaymentRequestData }>('/api/v1/subscriptions/payment-requests', data);
     return response.data;
   },
   approvePayment: async (id: string) => {
-    const response = await axiosInstance.post<{ success: boolean; data: PaymentRequestData }>(`/api/subscriptions/payment-requests/${id}/approve`);
+    const response = await axiosInstance.post<{ success: boolean; data: PaymentRequestData }>(`/api/v1/subscriptions/payment-requests/${id}/approve`);
     return response.data;
   },
   rejectPayment: async (id: string, reason: string) => {
-    const response = await axiosInstance.post<{ success: boolean; data: PaymentRequestData }>(`/api/subscriptions/payment-requests/${id}/reject`, { reason });
+    const response = await axiosInstance.post<{ success: boolean; data: PaymentRequestData }>(`/api/v1/subscriptions/payment-requests/${id}/reject`, { reason });
     return response.data;
   }
 };

@@ -58,7 +58,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   // -------------------------
   logoutAsync: async () => {
     try {
-      await axiosInstance.post("/api/auth/logout");
+      await axiosInstance.post("/api/v1/auth/logout");
     } catch { /* ignore — clear client state regardless */ }
     clearSession();
     getQueryClient().clear();

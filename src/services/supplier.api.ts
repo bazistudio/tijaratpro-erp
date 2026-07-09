@@ -7,7 +7,7 @@ export const supplierApi = {
       success: boolean;
       data: any[];
       pagination: { page: number; limit: number; total: number; pages: number };
-    }>(`/api/suppliers?page=${page}&limit=${limit}`);
+    }>(`/api/v1/suppliers?page=${page}&limit=${limit}`);
     
     return {
       ...response.data,
@@ -22,7 +22,7 @@ export const supplierApi = {
     const response = await axiosInstance.get<{
       success: boolean;
       data: any[];
-    }>(`/api/suppliers/search?keyword=${keyword}`);
+    }>(`/api/v1/suppliers/search?keyword=${keyword}`);
     
     return {
       ...response.data,
@@ -38,7 +38,7 @@ export const supplierApi = {
       success: boolean;
       data: any;
       message: string;
-    }>('/api/suppliers', supplierData);
+    }>('/api/v1/suppliers', supplierData);
     
     return {
       ...response.data,
@@ -54,7 +54,7 @@ export const supplierApi = {
       success: boolean;
       data: any;
       message: string;
-    }>(`/api/suppliers/${id}`, supplierData);
+    }>(`/api/v1/suppliers/${id}`, supplierData);
     
     return {
       ...response.data,
@@ -69,7 +69,7 @@ export const supplierApi = {
     const response = await axiosInstance.delete<{
       success: boolean;
       message: string;
-    }>(`/api/suppliers/${id}`);
+    }>(`/api/v1/suppliers/${id}`);
     return response.data;
   },
 
@@ -86,7 +86,7 @@ export const supplierApi = {
           recentPurchases: any[];
         }
       };
-    }>(`/api/suppliers/${id}/detail`);
+    }>(`/api/v1/suppliers/${id}/detail`);
     
     return {
       ...response.data,

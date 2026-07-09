@@ -18,12 +18,12 @@ export interface OrganizationRequest {
 }
 
 export const getRequests = async (): Promise<OrganizationRequest[]> => {
-  const response = await axios.get('/api/organization-requests');
+  const response = await axios.get('/api/v1/organization-requests');
   return response.data.data;
 };
 
 export const approveRequest = async (id: string, adminPassword: string, packageId: string, customization: any) => {
-  const response = await axios.post(`/api/organization-requests/${id}/approve`, { 
+  const response = await axios.post(`/api/v1/organization-requests/${id}/approve`, { 
     adminPassword, 
     packageId,
     ...customization
@@ -32,11 +32,11 @@ export const approveRequest = async (id: string, adminPassword: string, packageI
 };
 
 export const rejectRequest = async (id: string, reason: string, adminPassword: string) => {
-  const response = await axios.post(`/api/organization-requests/${id}/reject`, { reviewNote: reason, adminPassword });
+  const response = await axios.post(`/api/v1/organization-requests/${id}/reject`, { reviewNote: reason, adminPassword });
   return response.data;
 };
 
 export const deleteRequest = async (id: string, adminPassword: string) => {
-  const response = await axios.delete(`/api/organization-requests/${id}`, { data: { adminPassword } });
+  const response = await axios.delete(`/api/v1/organization-requests/${id}`, { data: { adminPassword } });
   return response.data;
 };

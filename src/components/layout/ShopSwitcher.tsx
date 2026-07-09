@@ -41,7 +41,7 @@ export const ShopSwitcher = () => {
       const fetchShops = async () => {
         try {
           // Assuming you have an endpoint that returns shops for the active organization
-          const res = await api.get(`/api/shops`);
+          const res = await api.get(`/api/v1/shops`);
           if (res.data?.success) {
             setShops(res.data.data);
           }
@@ -75,7 +75,7 @@ export const ShopSwitcher = () => {
     }
 
     try {
-      await api.post('/api/auth/switch-context', {
+      await api.post('/api/v1/auth/switch-context', {
         organizationId: activeOrganizationId,
         shopId: shopId
       });

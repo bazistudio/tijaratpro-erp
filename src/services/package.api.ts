@@ -17,23 +17,23 @@ export interface PackageData {
 
 export const packageApi = {
   getPackages: async () => {
-    const response = await axiosInstance.get<{ success: boolean; data: PackageData[]; total: number }>('/api/packages');
+    const response = await axiosInstance.get<{ success: boolean; data: PackageData[]; total: number }>('/api/v1/packages');
     return response.data;
   },
   getPackage: async (id: string) => {
-    const response = await axiosInstance.get<{ success: boolean; data: PackageData }>(`/api/packages/${id}`);
+    const response = await axiosInstance.get<{ success: boolean; data: PackageData }>(`/api/v1/packages/${id}`);
     return response.data;
   },
   createPackage: async (data: Partial<PackageData>) => {
-    const response = await axiosInstance.post<{ success: boolean; data: PackageData }>('/api/packages', data);
+    const response = await axiosInstance.post<{ success: boolean; data: PackageData }>('/api/v1/packages', data);
     return response.data;
   },
   updatePackage: async (id: string, data: Partial<PackageData>) => {
-    const response = await axiosInstance.put<{ success: boolean; data: PackageData }>(`/api/packages/${id}`, data);
+    const response = await axiosInstance.put<{ success: boolean; data: PackageData }>(`/api/v1/packages/${id}`, data);
     return response.data;
   },
   deletePackage: async (id: string) => {
-    const response = await axiosInstance.delete<{ success: boolean; message: string }>(`/api/packages/${id}`);
+    const response = await axiosInstance.delete<{ success: boolean; message: string }>(`/api/v1/packages/${id}`);
     return response.data;
   }
 };

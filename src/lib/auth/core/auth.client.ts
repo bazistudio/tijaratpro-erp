@@ -20,7 +20,7 @@ export interface LoginResponse {
  * MAIN LOGIN FUNCTION (CORE ENTRY POINT)
  */
 export async function loginUser(identifier: string, password: string) {
-  const res = await axiosInstance.post("/api/auth/login", {
+  const res = await axiosInstance.post("/api/v1/auth/login", {
     email: identifier,
     password,
     deviceId: getDeviceId(),
@@ -66,6 +66,6 @@ export function logoutUser() {
  * GET ME (fetch current user via cookie)
  */
 export async function getMeUser() {
-  const res = await axiosInstance.get("/api/auth/me");
+  const res = await axiosInstance.get("/api/v1/auth/me");
   return res.data.data; // backend returns { success: true, data: { ... } }
 }
