@@ -5,7 +5,7 @@ import { Eye, EyeOff } from 'lucide-react';
 import { getRequests, approveRequest, rejectRequest, deleteRequest, OrganizationRequest } from '@/lib/api/organization-requests.api';
 import { TenantApprovalModal } from '@/features/super-admin/components/TenantApprovalModal';
 
-export default function SuperAdminRequestsPage() {
+export const OrganizationRequestsTable = () => {
   const [requests, setRequests] = useState<OrganizationRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -83,11 +83,11 @@ export default function SuperAdminRequestsPage() {
     setShowPassword(false);
   };
 
-  const handleConfirmApprove = async (packageId: string, customizations: any, password: string) => {
+  const handleConfirmApprove = async (payload: any, password: string) => {
     if (!selectedRequest) return;
     try {
       setIsProcessing(true);
-      await approveRequest(selectedRequest._id, password, packageId, customizations);
+      await approveRequest(selectedRequest._id, password, payload);
       setApprovalModalOpen(false);
       setSelectedRequest(null);
       await fetchRequests();
@@ -98,12 +98,11 @@ export default function SuperAdminRequestsPage() {
     }
   };
 
-  if (loading) return <div className="p-6">Loading requests...</div>;
-  if (error) return <div className="p-6 text-red-500">Error: {error}</div>;
+  if (loading) return <div className="p-6 text-center">Loading requests...</div>;
+  if (error) return <div className="p-6 text-red-500 text-center">Error: {error}</div>;
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">Organization Requests</h1>
+    <div className="w-full">
       {requests.length === 0 ? (
         <p className="text-gray-500">No requests found.</p>
       ) : (

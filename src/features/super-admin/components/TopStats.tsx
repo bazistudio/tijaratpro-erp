@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Building2, Building, AlertCircle, Users } from 'lucide-react';
+import { Building2, Store, AlertCircle, CheckCircle, Clock, DollarSign, Users, CalendarX } from 'lucide-react';
 import { StatsCard } from './StatsCard';
 import { useDashboardStats } from '../hooks/useDashboardStats';
 
@@ -11,7 +11,7 @@ export const TopStats = () => {
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {[...Array(4)].map((_, i) => (
+        {[...Array(8)].map((_, i) => (
           <div key={i} className="bg-white p-6 rounded-xl border border-gray-200 h-28 animate-pulse" />
         ))}
       </div>
@@ -27,30 +27,49 @@ export const TopStats = () => {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
       <StatsCard
-        title="Total Tenants"
-        value={stats.totalTenants}
+        title="Total Organizations"
+        value={stats.organizations.total}
         icon={Building2}
       />
       <StatsCard
-        title="Active Tenants"
-        value={stats.activeTenants}
-        icon={Building}
+        title="Total Shops"
+        value={stats.shops.total}
+        icon={Store}
       />
       <StatsCard
-        title="Pending Tenants"
-        value={stats.pendingTenants}
+        title="Pending Requests"
+        value={stats.requests.pending}
         icon={AlertCircle}
       />
       <StatsCard
-        title="Pending Shop Admin Approvals"
-        value={stats.pendingShopAdmins}
-        icon={Users}
+        title="Active Subscriptions"
+        value={stats.subscriptions.active}
+        icon={CheckCircle}
       />
       <StatsCard
-        title="Pending Organization Approvals"
-        value={stats.pendingOrgAdmins}
+        title="Trial Accounts"
+        value={stats.subscriptions.trial}
+        icon={Clock}
+      />
+      
+      {stats.revenue.monthly > 0 && (
+        <StatsCard
+          title="Monthly Revenue"
+          value={`$${stats.revenue.monthly.toLocaleString()}`}
+          icon={DollarSign}
+        />
+      )}
+      
+      <StatsCard
+        title="Expired Subscriptions"
+        value={stats.subscriptions.expired}
+        icon={CalendarX}
+      />
+      <StatsCard
+        title="Active Users"
+        value={stats.users.active}
         icon={Users}
       />
     </div>

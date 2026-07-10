@@ -22,11 +22,10 @@ export const getRequests = async (): Promise<OrganizationRequest[]> => {
   return response.data.data;
 };
 
-export const approveRequest = async (id: string, adminPassword: string, packageId: string, customization: any) => {
+export const approveRequest = async (id: string, adminPassword: string, payload: any) => {
   const response = await axios.post(`/api/v1/organization-requests/${id}/approve`, { 
     adminPassword, 
-    packageId,
-    ...customization
+    ...payload
   });
   return response.data;
 };

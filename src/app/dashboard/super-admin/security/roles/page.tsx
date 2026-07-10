@@ -1,24 +1,25 @@
-import React from 'react';
+﻿import React from 'react';
 
 export default function Page() {
   return (
-    <div className="space-y-6 max-w-7xl mx-auto p-6">
-      <div>
-        <nav className="flex text-sm text-gray-500 mb-4">
-          <ol className="flex items-center space-x-2">
-            <li><a href="/dashboard/super-admin" className="hover:text-gray-900">Dashboard</a></li>
-            <li><span className="mx-2">/</span></li>
-            <li><span className="text-gray-900 font-medium">Roles</span></li>
-          </ol>
-        </nav>
-        <h1 className="text-2xl font-bold text-gray-900">Roles</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Manage roles and configure settings.
-        </p>
+    <div className="p-6">
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Roles</h1>
+          <p className="mt-1 text-sm text-gray-500">This module is part of the new enterprise architecture.</p>
+        </div>
+        <div className="mt-4 sm:mt-0">
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-amber-100 text-amber-800">
+            Status: Planned
+          </span>
+        </div>
       </div>
-      <div className="bg-white rounded-xl border border-gray-200 p-12 text-center shadow-sm">
-        <h3 className="text-lg font-medium text-gray-900">Coming Soon</h3>
-        <p className="mt-2 text-gray-500">This module is under development.</p>
+      
+      <div className="bg-white shadow rounded-lg border border-gray-200 p-8 text-center">
+        <h3 className="text-lg font-medium text-gray-900 mb-2">Coming Soon</h3>
+        <p className="text-gray-500 max-w-md mx-auto">
+          This section is currently under development. It will soon provide comprehensive tools to manage and monitor this aspect of the platform.
+        </p>
       </div>
     </div>
   );

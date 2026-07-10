@@ -29,14 +29,17 @@ export interface Tenant {
   suspendedBy?: string | null;
   suspendedAt?: string | null;
   createdAt: string;
+  userCount?: number;
+  shopCount?: number;
 }
 
 export interface DashboardStats {
-  totalTenants: number;
-  activeTenants: number;
-  pendingTenants: number;
-  pendingShopAdmins: number;
-  pendingOrgAdmins: number;
+  organizations: { total: number; active: number; suspended: number };
+  shops: { total: number; active: number };
+  subscriptions: { active: number; trial: number; expired: number };
+  revenue: { monthly: number; today: number };
+  requests: { pending: number };
+  users: { active: number };
 }
 
 export const adminApi = {
@@ -87,8 +90,8 @@ export const adminApi = {
     await axiosInstance.patch(`/api/v1/admin/users/${userId}/reject`, { password, reason });
   },
 
-  approveTenant: async ({ tenantId, password, subscriptionPlan }: { tenantId: string; password?: string; subscriptionPlan?: string }): Promise<void> => {
-    await axiosInstance.patch(`/api/v1/admin/tenants/${tenantId}/approve`, { password, subscriptionPlan });
+  approveTenant: async ({ tenantId, password, ...payload }: { tenantId: string; password?: string; [key: string]: any }): Promise<void> => {
+    await axiosInstance.patch(`/api/v1/admin/tenants/${tenantId}/approve`, { password, ...payload });
   },
 
   suspendTenant: async ({ tenantId, password }: { tenantId: string; password?: string }): Promise<void> => {
