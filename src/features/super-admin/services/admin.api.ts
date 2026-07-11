@@ -112,5 +112,24 @@ export const adminApi = {
 
   hardDeleteTenant: async ({ tenantId, password }: { tenantId: string; password?: string }): Promise<void> => {
     await axiosInstance.delete(`/api/v1/admin/tenants/${tenantId}/hard-delete`, { data: { password } });
+  },
+
+  updateTenant: async ({ tenantId, ...payload }: { tenantId: string; name?: string; ownerEmail?: string; ownerPhone?: string; subscriptionPlan?: string; subscriptionEnd?: string; v1PlainPassword?: string }): Promise<void> => {
+    await axiosInstance.patch(`/api/v1/admin/tenants/${tenantId}/update`, payload);
+  },
+
+  // Organization Control Center endpoints
+  getOrganizationDetails: async (orgId: string): Promise<{ organization: any; subscription: any; branches: any[]; users: any[]; activity: any[] }> => {
+    const response = await axiosInstance.get<{ success: boolean; data: any }>(`/api/v1/admin/organizations/${orgId}`);
+    return response.data.data;
+  },
+
+  updateOrganizationLimits: async ({ orgId, maxBranches, branchesToDeactivate, reason, password }: { orgId: string; maxBranches: number; branchesToDeactivate?: string[]; reason?: string; password?: string }): Promise<void> => {
+    await axiosInstance.patch(`/api/v1/admin/organizations/${orgId}/limits`, { maxBranches, branchesToDeactivate, reason, password });
+  },
+
+  updateSubscription: async ({ orgId, expiresAt, status, password }: { orgId: string; expiresAt?: string; status?: string; password?: string }): Promise<void> => {
+    await axiosInstance.patch(`/api/v1/admin/organizations/${orgId}/subscription`, { expiresAt, status, password });
   }
 };
+

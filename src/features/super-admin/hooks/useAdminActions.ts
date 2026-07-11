@@ -103,3 +103,14 @@ export const useHardDeleteTenant = () => {
     },
   });
 };
+
+export const useUpdateTenant = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: adminApi.updateTenant,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'active-tenants'] });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'suspended-tenants'] });
+    },
+  });
+};

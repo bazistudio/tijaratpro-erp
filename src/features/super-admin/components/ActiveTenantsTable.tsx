@@ -5,10 +5,12 @@ import { format, differenceInDays } from 'date-fns';
 import { useActiveTenants } from '../hooks/useActiveTenants';
 import { useSuspendTenant, useHardDeleteTenant } from '../hooks/useAdminActions';
 import { SecurityVerificationModal } from './SecurityVerificationModal';
+import { EditTenantModal } from './EditTenantModal';
 import { Tenant } from '../services/admin.api';
-import { Ban, Eye, Trash2 } from 'lucide-react';
+import { Ban, Pencil, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { getRequests, OrganizationRequest } from '@/lib/api/organization-requests.api';
+
 
 export const ActiveTenantsTable = ({ filterAccountType }: { filterAccountType?: 'SINGLE_SHOP' | 'ORGANIZATION' }) => {
   const { data: allTenants, isLoading: isTenantsLoading, isError } = useActiveTenants();
@@ -43,7 +45,13 @@ export const ActiveTenantsTable = ({ filterAccountType }: { filterAccountType?: 
 
   const [suspendModalOpen, setSuspendModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
+
+  const handleEditClick = (tenant: Tenant) => {
+    setSelectedTenant(tenant);
+    setEditModalOpen(true);
+  };
 
   const handleSuspendClick = (tenant: Tenant) => {
     setSelectedTenant(tenant);
@@ -151,6 +159,13 @@ export const ActiveTenantsTable = ({ filterAccountType }: { filterAccountType?: 
                 </td>
                 <td className="px-6 py-1.5 flex justify-end gap-2">
                   <button
+                    onClick={() => handleEditClick(tenant)}
+                    className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                    title="Edit Organization"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </button>
+                  <button
                     onClick={() => handleSuspendClick(tenant)}
                     className="p-1.5 text-gray-500 hover:text-orange-600 hover:bg-orange-50 rounded transition-colors"
                     title="Suspend Tenant"
@@ -197,6 +212,16 @@ export const ActiveTenantsTable = ({ filterAccountType }: { filterAccountType?: 
         message={`WARNING: This will permanently delete active tenant ${selectedTenant?.name} and ALL associated data (users, products, sales, etc). This cannot be undone. Type your password to confirm.`}
         actionLabel="Delete Permanently"
         isProcessing={deleteTenant.isPending}
+      />
+
+      <EditTenantModal
+        tenant={selectedTenant}
+        isOpen={editModalOpen}
+        showBranchCapacity={filterAccountType === 'ORGANIZATION'}
+        onClose={() => {
+          setEditModalOpen(false);
+          setSelectedTenant(null);
+        }}
       />
     </div>
   );
