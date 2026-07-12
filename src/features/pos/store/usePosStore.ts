@@ -441,13 +441,25 @@ export const usePosStore = create<PosStore>()(
 
             toast.success(`Invoice ${invoice.orderNumber || invoice._id} loaded`);
             
-            const loadedCustomer = invoice.customer || invoice.customerId;
+            const loadedCustomer = invoice.partyId || invoice.customer || invoice.customerId;
+            let finalCustomer = tab.customer;
+            
+            if (loadedCustomer) {
+              if (typeof loadedCustomer === 'object') {
+                finalCustomer = { 
+                  id: loadedCustomer._id || loadedCustomer.id, 
+                  name: loadedCustomer.name || 'Unknown' 
+                };
+              } else if (typeof loadedCustomer === 'string' && loadedCustomer !== '000000000000000000000000') {
+                finalCustomer = { id: loadedCustomer, name: 'Unknown' };
+              }
+            }
             
             return {
               ...tab,
               cart: mappedItems,
               linkedInvoiceId: invoice._id || invoice.orderNumber,
-              customer: loadedCustomer ? { id: loadedCustomer._id || loadedCustomer.id, name: loadedCustomer.name || 'Unknown' } : tab.customer
+              customer: finalCustomer
             };
           })
         });

@@ -40,6 +40,7 @@ export const CartSummary = () => {
 
   const [isCustomerModalOpen, setCustomerModalOpen] = useState(false);
   const [isLedgerModalOpen, setLedgerModalOpen] = useState(false);
+  const [pendingAction, setPendingAction] = useState<"sale" | "print" | null>(null);
   const [selectedCustomer, setSelectedCustomer] = useState<DBCustomer | null>(null);
   const [pendingTransaction, setPendingTransaction] = useState<{
     paymentBreakdown: {method: string, amount: number}[];
@@ -113,15 +114,15 @@ export const CartSummary = () => {
         e.preventDefault();
         handlePayAndPrint();
       }
-      // Ctrl + L : Credit Cart / Ledger
+      // Ctrl + L : Credit Cart / Ledger (Fallbacks to Sale)
       if (e.ctrlKey && e.key.toLowerCase() === 'l') {
         e.preventDefault();
-        handleCreditSale();
+        handleCashSale();
       }
       // F2 : Customer Search
       if (e.key === 'F2') {
         e.preventDefault();
-        handleCreditSale(); // Opens same modal for Phase 3 mock
+        setCustomerModalOpen(true);
       }
     };
 
@@ -162,7 +163,12 @@ export const CartSummary = () => {
       return;
     }
 
-    // Process as a cash sale, even if a customer is selected
+    if (selectedCustomer) {
+      setPendingAction("sale");
+      setLedgerModalOpen(true);
+      return;
+    }
+
     processTransaction([{ method: 'cash', amount: grandTotal > 0 ? grandTotal : 0 }], null, false);
   };
 
@@ -172,20 +178,23 @@ export const CartSummary = () => {
       return;
     }
     
-    // Cash sale with printing, keeping the customer assignment if present
+    if (selectedCustomer) {
+      setPendingAction("print");
+      setLedgerModalOpen(true);
+      return;
+    }
+
     processTransaction([{ method: 'cash', amount: grandTotal > 0 ? grandTotal : 0 }], null, true);
   };
 
-  const handleCreditSale = () => {
-    if (isCartEmpty) {
-      toast.error("Cart is empty. Add items before assigning to customer.");
-      return;
-    }
-    if (selectedCustomer) {
-      setLedgerModalOpen(true);
-    } else {
-      setCustomerModalOpen(true);
-    }
+  const handleLedgerSuccess = (receivedAmount: number) => {
+    setLedgerModalOpen(false);
+    const payments = receivedAmount > 0 ? [{ method: 'cash', amount: receivedAmount }] : [];
+    processTransaction(
+      payments, 
+      { id: selectedCustomer!.id, name: selectedCustomer!.name }, 
+      pendingAction === 'print'
+    );
   };
 
   const processTransaction = async (paymentBreakdown: {method: string, amount: number}[] = [], customerObj: {id: string, name: string} | null = null, shouldPrint: boolean = false) => {
@@ -427,47 +436,38 @@ export const CartSummary = () => {
 
       {/* POS Action Buttons Panel rendered to Bottom Bar */}
       {mounted && document.getElementById('pos-action-bar-portal') ? createPortal(
-        <div className="grid grid-cols-4 gap-2 p-2 border-t border-gray-200 dark:border-gray-800 shadow-[0_-10px_30px_-15px_rgba(0,0,0,0.1)] dark:shadow-[0_-10px_30px_-15px_rgba(0,0,0,0.5)]">
+        <div className="flex items-center justify-between gap-6 p-2 border-t border-gray-200 dark:border-gray-800 shadow-[0_-10px_30px_-15px_rgba(0,0,0,0.1)] dark:shadow-[0_-10px_30px_-15px_rgba(0,0,0,0.5)] bg-white dark:bg-gray-900 w-full">
           <button 
             onClick={handleClearCart}
             disabled={isCartEmpty || isProcessing}
             title="Clear Cart (Ctrl+Delete)"
-            className="h-12 flex flex-col items-center justify-center gap-0.5 bg-red-100 dark:bg-red-900/40 border border-red-300 dark:border-red-600/50 rounded-lg text-red-800 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-800/60 transition-all disabled:opacity-40 shadow-sm hover:shadow"
+            className="w-40 h-12 flex items-center justify-center gap-2 bg-red-100 dark:bg-red-900/40 border border-red-300 dark:border-red-600/50 rounded-lg text-red-800 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-800/60 transition-all disabled:opacity-40 shadow-sm hover:shadow"
           >
-            <Trash2 className="h-4 w-4" />
-            <span className="text-[9px] font-black uppercase tracking-widest">Clear</span>
+            <Trash2 className="h-5 w-5" />
+            <span className="text-[11px] font-black uppercase tracking-widest">Clear Cart</span>
           </button>
           
+          <div className="flex-1" />
+
           <button 
             onClick={handlePayAndPrint}
             disabled={isCartEmpty || isProcessing}
             title="Pay & Print (Ctrl+P)"
-            className="h-12 flex flex-col items-center justify-center gap-0.5 bg-gradient-to-br from-[#006970] to-[#008990] dark:from-[#008990] dark:to-[#00A4AB] rounded-lg text-white hover:opacity-90 transition-all shadow-md hover:shadow-lg disabled:opacity-50"
+            className="w-48 h-12 flex items-center justify-center gap-2 bg-gradient-to-br from-[#006970] to-[#008990] dark:from-[#008990] dark:to-[#00A4AB] rounded-lg text-white hover:opacity-90 transition-all shadow-md hover:shadow-lg disabled:opacity-50"
           >
-            <Printer className="h-4 w-4" />
-            <span className="text-[9px] font-black uppercase tracking-widest">Print</span>
+            <Printer className="h-5 w-5" />
+            <span className="text-[11px] font-black uppercase tracking-widest">Print</span>
           </button>
           
           <button 
             onClick={handleCashSale}
             disabled={isCartEmpty || isProcessing}
-            title="Quick Cash Sale (Ctrl+S)"
-            className="h-12 flex flex-col items-center justify-center gap-0.5 bg-teal-100 dark:bg-teal-900/40 border border-teal-300 dark:border-teal-600/50 rounded-lg text-teal-800 dark:text-teal-300 hover:bg-teal-200 dark:hover:bg-teal-800/60 transition-all shadow-sm hover:shadow disabled:opacity-40"
+            title="Sale (Ctrl+S)"
+            className="w-48 h-12 flex items-center justify-center gap-2 bg-teal-100 dark:bg-teal-900/40 border border-teal-300 dark:border-teal-600/50 rounded-lg text-teal-800 dark:text-teal-300 hover:bg-teal-200 dark:hover:bg-teal-800/60 transition-all shadow-sm hover:shadow disabled:opacity-40"
           >
-            <Banknote className="h-4 w-4" />
-            <span className="text-[9px] font-black uppercase tracking-widest">Sale</span>
+            <Banknote className="h-5 w-5" />
+            <span className="text-[11px] font-black uppercase tracking-widest">Sale</span>
           </button>
-          
-          <button 
-            onClick={handleCreditSale}
-            disabled={isCartEmpty || isProcessing}
-            title="Credit Ledger (Ctrl+L)"
-            className="h-12 flex flex-col items-center justify-center gap-0.5 bg-blue-100 dark:bg-blue-900/40 border border-blue-300 dark:border-blue-600/50 rounded-lg text-blue-800 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-800/60 transition-all shadow-sm hover:shadow disabled:opacity-40"
-          >
-            <UserCircle2 className="h-4 w-4" />
-            <span className="text-[9px] font-black uppercase tracking-widest">Credit</span>
-          </button>
-          
         </div>,
         document.getElementById('pos-action-bar-portal')!
       ) : null}
@@ -490,11 +490,7 @@ export const CartSummary = () => {
           customer={selectedCustomer} 
           invoiceTotal={grandTotal} // difference that needs to be paid via ledger
           onClose={() => setLedgerModalOpen(false)} 
-          onSuccess={() => {
-            setLedgerModalOpen(false);
-            // Empty array means 0 paid, creating a pure DUE transaction assigned to the customer
-            processTransaction([], { id: selectedCustomer.id, name: selectedCustomer.name }, false);
-          }}
+          onSuccess={handleLedgerSuccess}
         />
       )}
 

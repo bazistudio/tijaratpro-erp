@@ -9,7 +9,7 @@ interface Props {
   customer: DBCustomer;
   invoiceTotal: number;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (receivedAmount: number) => void;
 }
 
 export const LedgerSettlementModal: React.FC<Props> = ({ customer, invoiceTotal, onClose, onSuccess }) => {
@@ -33,19 +33,11 @@ export const LedgerSettlementModal: React.FC<Props> = ({ customer, invoiceTotal,
   };
 
   const handleSave = () => {
-    // Phase 3 mock: Simulate Ledger Entry
-    console.log("Ledger Entry Simulated:", {
-      customerId: customer.id,
-      invoiceTotal,
-      cashReceived: receivedAmount,
-      creditAdded: invoiceTotal - receivedAmount, // Simplistic representation
-      newOutstanding,
-      customerAdvance
-    });
-
-    toast.success(`Sale saved to ${customer.name}'s Ledger`);
-    toast.success("Invoice Printed");
-    onSuccess();
+    if (newOutstanding > customer.creditLimit) {
+      toast.error(`Exceeds credit limit of Rs ${customer.creditLimit.toLocaleString()}`);
+      return;
+    }
+    onSuccess(receivedAmount);
   };
 
   return (
@@ -107,6 +99,11 @@ export const LedgerSettlementModal: React.FC<Props> = ({ customer, invoiceTotal,
                 Rs {customerAdvance > 0 ? customerAdvance.toLocaleString() : newOutstanding.toLocaleString()}
               </span>
             </div>
+            {newOutstanding > customer.creditLimit && (
+              <div className="mt-2 text-sm text-red-600 dark:text-red-400 font-bold bg-red-50 dark:bg-red-900/20 p-2 rounded border border-red-200 dark:border-red-800/50">
+                Warning: Exceeds credit limit of Rs {customer.creditLimit.toLocaleString()}
+              </div>
+            )}
           </div>
 
         </div>
@@ -120,7 +117,12 @@ export const LedgerSettlementModal: React.FC<Props> = ({ customer, invoiceTotal,
           </button>
           <button 
             onClick={handleSave}
-            className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold shadow-md transition-colors flex justify-center items-center gap-2"
+            disabled={newOutstanding > customer.creditLimit}
+            className={`flex-1 py-3 text-white rounded-lg font-bold shadow-md transition-colors flex justify-center items-center gap-2 ${
+              newOutstanding > customer.creditLimit 
+                ? 'bg-red-400 cursor-not-allowed opacity-70' 
+                : 'bg-blue-600 hover:bg-blue-700'
+            }`}
           >
             <CheckCircle2 className="h-5 w-5" />
             Save Ledger
