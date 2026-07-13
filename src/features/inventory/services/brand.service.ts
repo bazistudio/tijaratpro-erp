@@ -1,0 +1,26 @@
+import axiosInstance from '@/lib/api/axios';
+import { retry } from '@/shared/lib/retry';
+import { RETRY_COUNT } from '../constants/inventory.constants';
+import { ProductBrand } from '../types';
+
+export const brandService = {
+  getBrands: async (): Promise<ProductBrand[]> => {
+    const response = await retry(() => axiosInstance.get('/brands'), RETRY_COUNT);
+    const dtos = response.data.data || response.data || [];
+    return dtos.map((dto: any) => ({
+      id: dto._id,
+      name: dto.name,
+      organizationId: dto.organizationId
+    }));
+  },
+  
+  createBrand: async (data: { name: string, organizationId?: string }): Promise<ProductBrand> => {
+    const response = await axiosInstance.post('/brands', data);
+    const dto = response.data.data;
+    return {
+      id: dto._id,
+      name: dto.name,
+      organizationId: dto.organizationId
+    };
+  }
+};

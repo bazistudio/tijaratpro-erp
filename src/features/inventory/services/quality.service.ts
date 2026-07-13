@@ -1,0 +1,26 @@
+import axiosInstance from '@/lib/api/axios';
+import { retry } from '@/shared/lib/retry';
+import { RETRY_COUNT } from '../constants/inventory.constants';
+import { ProductQuality } from '../types';
+
+export const qualityService = {
+  getQualities: async (): Promise<ProductQuality[]> => {
+    const response = await retry(() => axiosInstance.get('/qualities'), RETRY_COUNT);
+    const dtos = response.data.data || response.data || [];
+    return dtos.map((dto: any) => ({
+      id: dto._id,
+      name: dto.name,
+      organizationId: dto.organizationId
+    }));
+  },
+  
+  createQuality: async (data: { name: string, organizationId?: string }): Promise<ProductQuality> => {
+    const response = await axiosInstance.post('/qualities', data);
+    const dto = response.data.data;
+    return {
+      id: dto._id,
+      name: dto.name,
+      organizationId: dto.organizationId
+    };
+  }
+};

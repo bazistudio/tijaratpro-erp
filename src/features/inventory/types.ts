@@ -17,7 +17,12 @@ export interface PaginationParams {
   page: number;
   limit: number;
   search?: string;
-  category?: string;
+  category?: string; // Legacy
+  categoryId?: string;
+  brandId?: string;
+  companyId?: string;
+  colorId?: string;
+  qualityId?: string;
 }
 
 export enum InventoryAdjustmentType {
@@ -28,10 +33,17 @@ export enum InventoryAdjustmentType {
   RESTOCK = 'RESTOCK'
 }
 
-export interface ProductCategory {
+export interface MasterDataEntity {
   id: string;
   name: string;
+  organizationId?: string;
 }
+
+export interface ProductCategory extends MasterDataEntity {}
+export interface ProductBrand extends MasterDataEntity {}
+export interface ProductCompany extends MasterDataEntity {}
+export interface ProductColor extends MasterDataEntity {}
+export interface ProductQuality extends MasterDataEntity {}
 
 export interface InventoryProduct {
   id: string;
@@ -41,10 +53,17 @@ export interface InventoryProduct {
   category: string;
   categoryId?: string;
   brand?: string;
+  brandId?: string;
+  company?: string;
+  companyId?: string;
+  color?: string;
+  colorId?: string;
+  quality?: string;
+  qualityId?: string;
   description?: string;
   stock: number;
   minStockThreshold: number;
-  price: number;
+  price: number; // Sale price
   purchasePrice?: number;
   unit?: string;
   status: StockStatus;

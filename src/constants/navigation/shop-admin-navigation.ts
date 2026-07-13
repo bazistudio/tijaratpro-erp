@@ -32,9 +32,7 @@ export const shopAdminNavigation: NavigationGroup[] = [
   {
     label: 'Inventory',
     items: [
-      { name: 'Products', href: '/dashboard/shop-admin/products', icon: Tags, permission: 'VIEW_PRODUCTS' },
-      { name: 'Stock', href: '/dashboard/shop-admin/stock', icon: Layers, permission: 'VIEW_INVENTORY' },
-      { name: 'Import', href: '/dashboard/shop-admin/import', icon: FileUp, permission: 'MANAGE_SETTINGS' },
+      { name: 'Products & Stock', href: '/dashboard/shop-admin/inventory', icon: Tags, permission: 'VIEW_PRODUCTS' },
     ],
   },
   {
