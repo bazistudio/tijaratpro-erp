@@ -5,7 +5,7 @@ import { ProductQuality } from '../types';
 
 export const qualityService = {
   getQualities: async (): Promise<ProductQuality[]> => {
-    const response = await retry(() => axiosInstance.get('/qualities'), RETRY_COUNT);
+    const response = await retry(() => axiosInstance.get('/api/v1/qualities'), RETRY_COUNT);
     const dtos = response.data.data || response.data || [];
     return dtos.map((dto: any) => ({
       id: dto._id,
@@ -15,7 +15,7 @@ export const qualityService = {
   },
   
   createQuality: async (data: { name: string, organizationId?: string }): Promise<ProductQuality> => {
-    const response = await axiosInstance.post('/qualities', data);
+    const response = await axiosInstance.post('/api/v1/qualities', data);
     const dto = response.data.data;
     return {
       id: dto._id,

@@ -5,7 +5,7 @@ import { ProductColor } from '../types';
 
 export const colorService = {
   getColors: async (): Promise<ProductColor[]> => {
-    const response = await retry(() => axiosInstance.get('/colors'), RETRY_COUNT);
+    const response = await retry(() => axiosInstance.get('/api/v1/colors'), RETRY_COUNT);
     const dtos = response.data.data || response.data || [];
     return dtos.map((dto: any) => ({
       id: dto._id,
@@ -15,7 +15,7 @@ export const colorService = {
   },
   
   createColor: async (data: { name: string, organizationId?: string }): Promise<ProductColor> => {
-    const response = await axiosInstance.post('/colors', data);
+    const response = await axiosInstance.post('/api/v1/colors', data);
     const dto = response.data.data;
     return {
       id: dto._id,

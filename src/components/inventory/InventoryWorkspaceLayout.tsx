@@ -5,10 +5,12 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { InventoryFilterProvider } from './InventoryFilterContext';
 import { InventoryFilterBar } from './InventoryFilterBar';
+import { AddProductDrawer } from './AddProductDrawer';
 
 export function InventoryWorkspaceLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [formatInMillions, setFormatInMillions] = useState(false);
+  const [isAddProductOpen, setIsAddProductOpen] = useState(false);
 
   // Basic check for which tab is active based on the URL path
   const isProducts = pathname === '/dashboard/shop-admin/inventory';
@@ -70,7 +72,10 @@ export function InventoryWorkspaceLayout({ children }: { children: React.ReactNo
 
             {/* Right Side Actions: Total Volume and Add Product */}
             <div className="flex items-center gap-3 pb-1.5">
-              <button className="px-3 py-1.5 bg-[#006970] hover:bg-[#005a60] text-white text-sm font-medium rounded shadow-sm transition-colors">
+              <button 
+                onClick={() => setIsAddProductOpen(true)}
+                className="px-3 py-1.5 bg-[#006970] hover:bg-[#005a60] text-white text-sm font-medium rounded shadow-sm transition-colors"
+              >
                 + Add Product
               </button>
               
@@ -95,6 +100,11 @@ export function InventoryWorkspaceLayout({ children }: { children: React.ReactNo
         <main className="flex-1 overflow-hidden flex flex-col relative">
           {children}
         </main>
+        
+        <AddProductDrawer 
+          isOpen={isAddProductOpen}
+          onClose={() => setIsAddProductOpen(false)}
+        />
       </div>
     </InventoryFilterProvider>
   );

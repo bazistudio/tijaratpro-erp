@@ -15,7 +15,7 @@ export const productService = {
     if (params.colorId) query.append('colorId', params.colorId);
     if (params.qualityId) query.append('qualityId', params.qualityId);
 
-    const response = await retry(() => axiosInstance.get(`/products?${query.toString()}`), RETRY_COUNT);
+    const response = await retry(() => axiosInstance.get(`/api/v1/products/my-products?${query.toString()}`), RETRY_COUNT);
     const data = response.data;
     
     // The backend might return { data: [], pagination: {} } or { products: [], total: 0 }
@@ -46,5 +46,10 @@ export const productService = {
       })) as InventoryProduct[],
       total,
     };
+  },
+
+  createProduct: async (productData: any): Promise<InventoryProduct> => {
+    const response = await axiosInstance.post('/api/v1/products', productData);
+    return response.data.product;
   }
 };

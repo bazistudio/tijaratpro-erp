@@ -5,7 +5,7 @@ import { ProductBrand } from '../types';
 
 export const brandService = {
   getBrands: async (): Promise<ProductBrand[]> => {
-    const response = await retry(() => axiosInstance.get('/brands'), RETRY_COUNT);
+    const response = await retry(() => axiosInstance.get('/api/v1/brands'), RETRY_COUNT);
     const dtos = response.data.data || response.data || [];
     return dtos.map((dto: any) => ({
       id: dto._id,
@@ -15,7 +15,7 @@ export const brandService = {
   },
   
   createBrand: async (data: { name: string, organizationId?: string }): Promise<ProductBrand> => {
-    const response = await axiosInstance.post('/brands', data);
+    const response = await axiosInstance.post('/api/v1/brands', data);
     const dto = response.data.data;
     return {
       id: dto._id,

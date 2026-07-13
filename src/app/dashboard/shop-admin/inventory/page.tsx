@@ -31,6 +31,9 @@ export default function InventoryProductsPage() {
     )},
     { key: 'category', label: 'Category' },
     { key: 'brand', label: 'Brand' },
+    { key: 'company', label: 'Company' },
+    { key: 'color', label: 'Color' },
+    { key: 'quality', label: 'Quality' },
     { key: 'stock', label: 'Stock', render: (row) => (
       <div className="flex items-center gap-2">
         <span className={`w-2 h-2 rounded-full ${
