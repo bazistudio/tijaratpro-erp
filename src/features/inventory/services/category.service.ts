@@ -32,5 +32,9 @@ export const categoryService = {
       name: dto.name,
       organizationId: dto.organizationId
     };
+  },
+
+  deleteCategory: async (id: string): Promise<void> => {
+    await axiosInstance.delete(`/api/v1/categories/${id}`);
   }
 };

@@ -32,5 +32,9 @@ export const qualityService = {
       name: dto.name,
       organizationId: dto.organizationId
     };
+  },
+
+  deleteQuality: async (id: string): Promise<void> => {
+    await axiosInstance.delete(`/api/v1/qualities/${id}`);
   }
 };

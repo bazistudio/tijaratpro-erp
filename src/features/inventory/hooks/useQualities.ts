@@ -14,23 +14,25 @@ export const useQualities = (options?: { enabled?: boolean }) => {
   });
 
   const createQuality = useMutation({
-    mutationFn: (data: { name: string; organizationId?: string }) => 
+    mutationFn: (data: { name: string; organizationId?: string }) =>
       qualityService.createQuality(data),
-    onSuccess: (newQuality) => {
-      queryClient.setQueryData(['qualities', orgId], (old: any[] = []) => {
-        return [...old, newQuality];
-      });
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['qualities', orgId] });
     },
   });
 
   const updateQuality = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: { name: string } }) => 
+    mutationFn: ({ id, data }: { id: string; data: { name: string } }) =>
       qualityService.updateQuality(id, data),
-    onSuccess: (updatedQuality) => {
-      queryClient.setQueryData(['qualities', orgId], (old: any[] = []) => 
-        old.map((quality: any) => quality.id === updatedQuality.id ? updatedQuality : quality)
-      );
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['qualities', orgId] });
+    },
+  });
+
+  const deleteQuality = useMutation({
+    mutationFn: (id: string) => qualityService.deleteQuality(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['qualities', orgId] });
     },
   });
 
@@ -42,5 +44,7 @@ export const useQualities = (options?: { enabled?: boolean }) => {
     isCreating: createQuality.isPending,
     updateQuality: updateQuality.mutateAsync,
     isUpdating: updateQuality.isPending,
+    deleteQuality: deleteQuality.mutateAsync,
+    isDeleting: deleteQuality.isPending,
   };
 };

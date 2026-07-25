@@ -14,23 +14,25 @@ export const useColors = (options?: { enabled?: boolean }) => {
   });
 
   const createColor = useMutation({
-    mutationFn: (data: { name: string; organizationId?: string }) => 
+    mutationFn: (data: { name: string; organizationId?: string }) =>
       colorService.createColor(data),
-    onSuccess: (newColor) => {
-      queryClient.setQueryData(['colors', orgId], (old: any[] = []) => {
-        return [...old, newColor];
-      });
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['colors', orgId] });
     },
   });
 
   const updateColor = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: { name: string } }) => 
+    mutationFn: ({ id, data }: { id: string; data: { name: string } }) =>
       colorService.updateColor(id, data),
-    onSuccess: (updatedColor) => {
-      queryClient.setQueryData(['colors', orgId], (old: any[] = []) => 
-        old.map((color: any) => color.id === updatedColor.id ? updatedColor : color)
-      );
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['colors', orgId] });
+    },
+  });
+
+  const deleteColor = useMutation({
+    mutationFn: (id: string) => colorService.deleteColor(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['colors', orgId] });
     },
   });
 
@@ -42,5 +44,7 @@ export const useColors = (options?: { enabled?: boolean }) => {
     isCreating: createColor.isPending,
     updateColor: updateColor.mutateAsync,
     isUpdating: updateColor.isPending,
+    deleteColor: deleteColor.mutateAsync,
+    isDeleting: deleteColor.isPending,
   };
 };

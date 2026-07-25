@@ -14,23 +14,25 @@ export const useCompanies = (options?: { enabled?: boolean }) => {
   });
 
   const createCompany = useMutation({
-    mutationFn: (data: { name: string; organizationId?: string }) => 
+    mutationFn: (data: { name: string; organizationId?: string }) =>
       companyService.createCompany(data),
-    onSuccess: (newCompany) => {
-      queryClient.setQueryData(['companies', orgId], (old: any[] = []) => {
-        return [...old, newCompany];
-      });
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['companies', orgId] });
     },
   });
 
   const updateCompany = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: { name: string } }) => 
+    mutationFn: ({ id, data }: { id: string; data: { name: string } }) =>
       companyService.updateCompany(id, data),
-    onSuccess: (updatedCompany) => {
-      queryClient.setQueryData(['companies', orgId], (old: any[] = []) => 
-        old.map((company: any) => company.id === updatedCompany.id ? updatedCompany : company)
-      );
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['companies', orgId] });
+    },
+  });
+
+  const deleteCompany = useMutation({
+    mutationFn: (id: string) => companyService.deleteCompany(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['companies', orgId] });
     },
   });
 
@@ -42,5 +44,7 @@ export const useCompanies = (options?: { enabled?: boolean }) => {
     isCreating: createCompany.isPending,
     updateCompany: updateCompany.mutateAsync,
     isUpdating: updateCompany.isPending,
+    deleteCompany: deleteCompany.mutateAsync,
+    isDeleting: deleteCompany.isPending,
   };
 };

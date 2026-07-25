@@ -14,23 +14,25 @@ export const useBrands = (options?: { enabled?: boolean }) => {
   });
 
   const createBrand = useMutation({
-    mutationFn: (data: { name: string; organizationId?: string }) => 
+    mutationFn: (data: { name: string; organizationId?: string }) =>
       brandService.createBrand(data),
-    onSuccess: (newBrand) => {
-      queryClient.setQueryData(['brands', orgId], (old: any[] = []) => {
-        return [...old, newBrand];
-      });
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['brands', orgId] });
     },
   });
 
   const updateBrand = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: { name: string } }) => 
+    mutationFn: ({ id, data }: { id: string; data: { name: string } }) =>
       brandService.updateBrand(id, data),
-    onSuccess: (updatedBrand) => {
-      queryClient.setQueryData(['brands', orgId], (old: any[] = []) => 
-        old.map((brand: any) => brand.id === updatedBrand.id ? updatedBrand : brand)
-      );
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['brands', orgId] });
+    },
+  });
+
+  const deleteBrand = useMutation({
+    mutationFn: (id: string) => brandService.deleteBrand(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['brands', orgId] });
     },
   });
 
@@ -42,5 +44,7 @@ export const useBrands = (options?: { enabled?: boolean }) => {
     isCreating: createBrand.isPending,
     updateBrand: updateBrand.mutateAsync,
     isUpdating: updateBrand.isPending,
+    deleteBrand: deleteBrand.mutateAsync,
+    isDeleting: deleteBrand.isPending,
   };
 };

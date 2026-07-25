@@ -14,23 +14,25 @@ export const useCategories = (options?: { enabled?: boolean }) => {
   });
 
   const createCategory = useMutation({
-    mutationFn: (data: { name: string; organizationId?: string }) => 
+    mutationFn: (data: { name: string; organizationId?: string }) =>
       categoryService.createCategory(data),
-    onSuccess: (newCategory) => {
-      queryClient.setQueryData(['categories', orgId], (old: any[] = []) => {
-        return [...old, newCategory];
-      });
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories', orgId] });
     },
   });
 
   const updateCategory = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: { name: string } }) => 
+    mutationFn: ({ id, data }: { id: string; data: { name: string } }) =>
       categoryService.updateCategory(id, data),
-    onSuccess: (updatedCategory) => {
-      queryClient.setQueryData(['categories', orgId], (old: any[] = []) => 
-        old.map((category: any) => category.id === updatedCategory.id ? updatedCategory : category)
-      );
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['categories', orgId] });
+    },
+  });
+
+  const deleteCategory = useMutation({
+    mutationFn: (id: string) => categoryService.deleteCategory(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['categories', orgId] });
     },
   });
 
@@ -42,5 +44,7 @@ export const useCategories = (options?: { enabled?: boolean }) => {
     isCreating: createCategory.isPending,
     updateCategory: updateCategory.mutateAsync,
     isUpdating: updateCategory.isPending,
+    deleteCategory: deleteCategory.mutateAsync,
+    isDeleting: deleteCategory.isPending,
   };
 };

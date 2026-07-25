@@ -32,5 +32,9 @@ export const brandService = {
       name: dto.name,
       organizationId: dto.organizationId
     };
+  },
+
+  deleteBrand: async (id: string): Promise<void> => {
+    await axiosInstance.delete(`/api/v1/brands/${id}`);
   }
 };

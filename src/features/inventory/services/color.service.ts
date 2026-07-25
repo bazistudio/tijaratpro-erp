@@ -32,5 +32,9 @@ export const colorService = {
       name: dto.name,
       organizationId: dto.organizationId
     };
+  },
+
+  deleteColor: async (id: string): Promise<void> => {
+    await axiosInstance.delete(`/api/v1/colors/${id}`);
   }
 };
