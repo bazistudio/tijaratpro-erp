@@ -1,11 +1,14 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { categoryService } from '../services/category.service';
+import { useAuthStore } from '@/lib/auth/core/auth.store';
 
 export const useCategories = (options?: { enabled?: boolean }) => {
   const queryClient = useQueryClient();
+  const { user } = useAuthStore();
+  const orgId = user?.organizationId || 'default';
 
   const { data: categories = [], isLoading, error } = useQuery({
-    queryKey: ['categories'],
+    queryKey: ['categories', orgId],
     queryFn: () => categoryService.getCategories(),
     enabled: options?.enabled !== false,
   });
@@ -13,8 +16,21 @@ export const useCategories = (options?: { enabled?: boolean }) => {
   const createCategory = useMutation({
     mutationFn: (data: { name: string; organizationId?: string }) => 
       categoryService.createCategory(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['categories'] });
+    onSuccess: (newCategory) => {
+      queryClient.setQueryData(['categories', orgId], (old: any[] = []) => {
+        return [...old, newCategory];
+      });
+      queryClient.invalidateQueries({ queryKey: ['categories', orgId] });
+    },
+  });
+
+  const updateCategory = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: { name: string } }) => 
+      categoryService.updateCategory(id, data),
+    onSuccess: (updatedCategory) => {
+      queryClient.setQueryData(['categories', orgId], (old: any[] = []) => 
+        old.map((category: any) => category.id === updatedCategory.id ? updatedCategory : category)
+      );
     },
   });
 
@@ -24,5 +40,7 @@ export const useCategories = (options?: { enabled?: boolean }) => {
     error,
     createCategory: createCategory.mutateAsync,
     isCreating: createCategory.isPending,
+    updateCategory: updateCategory.mutateAsync,
+    isUpdating: updateCategory.isPending,
   };
 };

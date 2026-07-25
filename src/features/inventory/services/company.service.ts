@@ -8,7 +8,7 @@ export const companyService = {
     const response = await retry(() => axiosInstance.get('/api/v1/companies'), RETRY_COUNT);
     const dtos = response.data.data || response.data || [];
     return dtos.map((dto: any) => ({
-      id: dto._id,
+      id: dto.uuid || dto._id,
       name: dto.name,
       organizationId: dto.organizationId
     }));
@@ -18,7 +18,17 @@ export const companyService = {
     const response = await axiosInstance.post('/api/v1/companies', data);
     const dto = response.data.data;
     return {
-      id: dto._id,
+      id: dto.uuid || dto._id,
+      name: dto.name,
+      organizationId: dto.organizationId
+    };
+  },
+
+  updateCompany: async (id: string, data: { name: string }): Promise<ProductCompany> => {
+    const response = await axiosInstance.put(`/api/v1/companies/${id}`, data);
+    const dto = response.data.data;
+    return {
+      id: dto.uuid || dto._id,
       name: dto.name,
       organizationId: dto.organizationId
     };

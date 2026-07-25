@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { X, ChevronDown, ChevronUp } from 'lucide-react';
+import { X, Package } from 'lucide-react';
 import { DynamicMasterSelect } from './master-data/DynamicMasterSelect';
 import { useProducts } from '@/features/inventory/hooks/useProducts';
 
@@ -39,10 +39,9 @@ export function AddProductDrawer({ isOpen, onClose }: AddProductDrawerProps) {
     imeiTracking: false,
     batchTracking: false,
     expiryTracking: false,
-    costMethod: 'FIFO'
+    costMethod: 'Average Cost'
   });
 
-  const [showAdvanced, setShowAdvanced] = useState(false);
 
   // Load remembered master data on open
   useEffect(() => {
@@ -65,6 +64,15 @@ export function AddProductDrawer({ isOpen, onClose }: AddProductDrawerProps) {
       }
     }
   }, [isOpen]);
+
+  // Add ESC key listener
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    if (isOpen) window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -113,36 +121,33 @@ export function AddProductDrawer({ isOpen, onClose }: AddProductDrawerProps) {
   const margin = (Number(formData.price) || 0) - (Number(formData.purchasePrice) || 0);
 
   return (
-    <>
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+      onClick={onClose}
+    >
       <div 
-        className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm transition-opacity" 
-        onClick={onClose}
-      />
-      
-      <div className="fixed inset-y-0 right-0 z-50 w-full max-w-[900px] bg-white dark:bg-gray-900 shadow-xl flex flex-col transition-transform transform translate-x-0">
+        className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-[1050px] h-[750px] max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+        onClick={(e) => e.stopPropagation()}
+      >
         
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50">
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Add New Product</h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Create inventory item</p>
-          </div>
+        <div className="flex items-center justify-end px-4 pt-4 pb-0">
           <button 
             onClick={onClose}
-            className="p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-200 rounded-full dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white transition-colors"
+            className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 transition-colors p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Scrollable Body */}
-        <div className="flex-1 overflow-y-auto p-6">
+        {/* Body */}
+        <div className="flex-1 overflow-y-auto px-6 pb-6 pt-2 flex flex-col">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             
-            {/* Left Column */}
-            <div className="flex flex-col gap-6">
+            {/* LEFT COLUMN */}
+            <div className="flex flex-col gap-8">
               
-              {/* Section 1: Basic Information */}
+              {/* Section 1: Basic Information (Includes Pricing) */}
               <section>
                 <h3 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider mb-4 border-b border-gray-200 dark:border-gray-800 pb-2">1. Basic Information</h3>
                 
@@ -160,6 +165,44 @@ export function AddProductDrawer({ isOpen, onClose }: AddProductDrawerProps) {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Purchase Price</label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <span className="text-gray-500 sm:text-sm">Rs.</span>
+                        </div>
+                        <input
+                          type="number"
+                          value={formData.purchasePrice}
+                          onChange={(e) => handleChange('purchasePrice', e.target.value)}
+                          placeholder="0.00"
+                          className="block w-full pl-9 pr-2 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-[#006970] focus:border-[#006970] dark:bg-gray-800 dark:text-white sm:text-sm"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Sale Price *</label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <span className="text-gray-500 sm:text-sm">Rs.</span>
+                        </div>
+                        <input
+                          type="number"
+                          value={formData.price}
+                          onChange={(e) => handleChange('price', e.target.value)}
+                          placeholder="0.00"
+                          className="block w-full pl-9 pr-2 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-[#006970] focus:border-[#006970] dark:bg-gray-800 dark:text-white sm:text-sm"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  {margin > 0 && (
+                    <div className="mt-0.5 text-sm text-green-600 dark:text-green-400 font-medium text-right">
+                      Margin: Rs. {margin.toLocaleString()}
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Product Code</label>
                       <div className="flex">
                         <input
@@ -173,7 +216,7 @@ export function AddProductDrawer({ isOpen, onClose }: AddProductDrawerProps) {
                           onClick={handleGenerateCode}
                           className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-r-md bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-600"
                         >
-                          Generate
+                          Gen
                         </button>
                       </div>
                     </div>
@@ -194,65 +237,21 @@ export function AddProductDrawer({ isOpen, onClose }: AddProductDrawerProps) {
                     <textarea
                       value={formData.description}
                       onChange={(e) => handleChange('description', e.target.value)}
-                      rows={2}
-                      className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-[#006970] focus:border-[#006970] dark:bg-gray-800 dark:text-white sm:text-sm"
+                      rows={4}
+                      className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-[#006970] focus:border-[#006970] dark:bg-gray-800 dark:text-white sm:text-sm resize-none"
                     />
                   </div>
                 </div>
               </section>
-
-              {/* Section 4: Pricing */}
-              <section>
-                <h3 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider mb-4 border-b border-gray-200 dark:border-gray-800 pb-2">4. Pricing</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Purchase Price</label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <span className="text-gray-500 sm:text-sm">Rs.</span>
-                      </div>
-                      <input
-                        type="number"
-                        value={formData.purchasePrice}
-                        onChange={(e) => handleChange('purchasePrice', e.target.value)}
-                        placeholder="0.00"
-                        className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-[#006970] focus:border-[#006970] dark:bg-gray-800 dark:text-white sm:text-sm"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Sale Price *</label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <span className="text-gray-500 sm:text-sm">Rs.</span>
-                      </div>
-                      <input
-                        type="number"
-                        value={formData.price}
-                        onChange={(e) => handleChange('price', e.target.value)}
-                        placeholder="0.00"
-                        className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-[#006970] focus:border-[#006970] dark:bg-gray-800 dark:text-white sm:text-sm"
-                      />
-                    </div>
-                  </div>
-                </div>
-                {margin > 0 && (
-                  <div className="mt-2 text-sm text-green-600 dark:text-green-400 font-medium text-right">
-                    Margin: Rs. {margin.toLocaleString()}
-                  </div>
-                )}
-              </section>
-
             </div>
 
-            {/* Right Column */}
-            <div className="flex flex-col gap-6">
+            {/* RIGHT COLUMN */}
+            <div className="flex flex-col gap-8">
               
               {/* Section 2: Product Classification */}
               <section>
                 <h3 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider mb-4 border-b border-gray-200 dark:border-gray-800 pb-2">2. Product Classification</h3>
                 <div className="space-y-4">
-                  
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category *</label>
@@ -263,7 +262,6 @@ export function AddProductDrawer({ isOpen, onClose }: AddProductDrawerProps) {
                       <DynamicMasterSelect showAddButton hideAllOption entity="brand" value={formData.brandId} onChange={(v) => handleChange('brandId', v)} />
                     </div>
                   </div>
-
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Company</label>
@@ -274,116 +272,111 @@ export function AddProductDrawer({ isOpen, onClose }: AddProductDrawerProps) {
                       <DynamicMasterSelect showAddButton hideAllOption entity="color" value={formData.colorId} onChange={(v) => handleChange('colorId', v)} />
                     </div>
                   </div>
-
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Quality</label>
                       <DynamicMasterSelect showAddButton hideAllOption entity="quality" value={formData.qualityId} onChange={(v) => handleChange('qualityId', v)} />
                     </div>
                   </div>
-
                 </div>
               </section>
 
               {/* Section 3: Inventory */}
               <section>
                 <h3 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider mb-4 border-b border-gray-200 dark:border-gray-800 pb-2">3. Inventory</h3>
-                <div className="grid grid-cols-3 gap-4 mb-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Opening Stock *</label>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Open Stock *</label>
+                      <input
+                        type="number"
+                        value={formData.quantity}
+                        onChange={(e) => handleChange('quantity', e.target.value)}
+                        placeholder="0"
+                        className="block w-full px-2 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-[#006970] focus:border-[#006970] dark:bg-gray-800 dark:text-white sm:text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Unit</label>
+                      <select
+                        value={formData.unit}
+                        onChange={(e) => handleChange('unit', e.target.value)}
+                        className="block w-full px-2 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-[#006970] focus:border-[#006970] dark:bg-gray-800 dark:text-white sm:text-sm"
+                      >
+                        <option>Piece</option>
+                        <option>Box</option>
+                        <option>Kg</option>
+                        <option>Meter</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Min Alert</label>
+                      <input
+                        type="number"
+                        value={formData.minStockThreshold}
+                        onChange={(e) => handleChange('minStockThreshold', e.target.value)}
+                        placeholder="2"
+                        className="block w-full px-2 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-[#006970] focus:border-[#006970] dark:bg-gray-800 dark:text-white sm:text-sm"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex items-center pt-1">
                     <input
-                      type="number"
-                      value={formData.quantity}
-                      onChange={(e) => handleChange('quantity', e.target.value)}
-                      placeholder="0"
-                      className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-[#006970] focus:border-[#006970] dark:bg-gray-800 dark:text-white sm:text-sm"
+                      id="trackInventory"
+                      type="checkbox"
+                      checked={formData.trackInventory}
+                      onChange={(e) => handleChange('trackInventory', e.target.checked)}
+                      className="h-4 w-4 text-[#006970] focus:ring-[#006970] border-gray-300 rounded dark:border-gray-600 dark:bg-gray-700"
                     />
+                    <label htmlFor="trackInventory" className="ml-2 block text-sm text-gray-900 dark:text-gray-300">
+                      Track Inventory
+                    </label>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Unit</label>
-                    <select
-                      value={formData.unit}
-                      onChange={(e) => handleChange('unit', e.target.value)}
-                      className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-[#006970] focus:border-[#006970] dark:bg-gray-800 dark:text-white sm:text-sm"
-                    >
-                      <option>Piece</option>
-                      <option>Box</option>
-                      <option>Kg</option>
-                      <option>Meter</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Min Stock Alert</label>
-                    <input
-                      type="number"
-                      value={formData.minStockThreshold}
-                      onChange={(e) => handleChange('minStockThreshold', e.target.value)}
-                      placeholder="2"
-                      className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-[#006970] focus:border-[#006970] dark:bg-gray-800 dark:text-white sm:text-sm"
-                    />
-                  </div>
-                </div>
-                
-                <div className="flex items-center">
-                  <input
-                    id="trackInventory"
-                    type="checkbox"
-                    checked={formData.trackInventory}
-                    onChange={(e) => handleChange('trackInventory', e.target.checked)}
-                    className="h-4 w-4 text-[#006970] focus:ring-[#006970] border-gray-300 rounded dark:border-gray-600 dark:bg-gray-700"
-                  />
-                  <label htmlFor="trackInventory" className="ml-2 block text-sm text-gray-900 dark:text-gray-300">
-                    Track Inventory
-                  </label>
                 </div>
               </section>
 
-              {/* Section 5: Tracking Options (Advanced) */}
-              <section className="bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-                <button
-                  onClick={() => setShowAdvanced(!showAdvanced)}
-                  className="w-full flex items-center justify-between px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                >
-                  <div className="flex items-center">
-                    {showAdvanced ? <ChevronUp className="w-4 h-4 mr-2" /> : <ChevronDown className="w-4 h-4 mr-2" />}
-                    Advanced Inventory Settings
-                  </div>
-                </button>
-                
-                {showAdvanced && (
-                  <div className="p-4 border-t border-gray-200 dark:border-gray-700 grid grid-cols-2 gap-4">
-                    <div className="space-y-3">
-                      <div className="flex items-center">
-                        <input type="checkbox" checked={formData.serialTracking} onChange={(e) => handleChange('serialTracking', e.target.checked)} className="h-4 w-4 text-[#006970] rounded border-gray-300" />
-                        <label className="ml-2 text-sm text-gray-700 dark:text-gray-300">Serial Number Tracking</label>
-                      </div>
-                      <div className="flex items-center">
-                        <input type="checkbox" checked={formData.imeiTracking} onChange={(e) => handleChange('imeiTracking', e.target.checked)} className="h-4 w-4 text-[#006970] rounded border-gray-300" />
-                        <label className="ml-2 text-sm text-gray-700 dark:text-gray-300">IMEI Tracking</label>
-                      </div>
-                      <div className="flex items-center">
-                        <input type="checkbox" checked={formData.batchTracking} onChange={(e) => handleChange('batchTracking', e.target.checked)} className="h-4 w-4 text-[#006970] rounded border-gray-300" />
-                        <label className="ml-2 text-sm text-gray-700 dark:text-gray-300">Batch Tracking</label>
-                      </div>
-                      <div className="flex items-center">
-                        <input type="checkbox" checked={formData.expiryTracking} onChange={(e) => handleChange('expiryTracking', e.target.checked)} className="h-4 w-4 text-[#006970] rounded border-gray-300" />
-                        <label className="ml-2 text-sm text-gray-700 dark:text-gray-300">Expiry Tracking</label>
-                      </div>
+              {/* Section 4: Advanced Inventory Settings */}
+              <section>
+                <h3 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider mb-4 border-b border-gray-200 dark:border-gray-800 pb-2">4. Advanced Settings</h3>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="flex items-center">
+                      <input type="checkbox" id="serialTracking" checked={formData.serialTracking} onChange={(e) => handleChange('serialTracking', e.target.checked)} className="h-4 w-4 text-[#006970] rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700" />
+                      <label htmlFor="serialTracking" className="ml-2 text-sm text-gray-700 dark:text-gray-300">Serial Tracking</label>
                     </div>
-                    <div>
+                    <div className="flex items-center">
+                      <input type="checkbox" id="imeiTracking" checked={formData.imeiTracking} onChange={(e) => handleChange('imeiTracking', e.target.checked)} className="h-4 w-4 text-[#006970] rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700" />
+                      <label htmlFor="imeiTracking" className="ml-2 text-sm text-gray-700 dark:text-gray-300">IMEI Tracking</label>
+                    </div>
+                    <div className="flex items-center">
+                      <input type="checkbox" id="batchTracking" checked={formData.batchTracking} onChange={(e) => handleChange('batchTracking', e.target.checked)} className="h-4 w-4 text-[#006970] rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700" />
+                      <label htmlFor="batchTracking" className="ml-2 text-sm text-gray-700 dark:text-gray-300">Batch Tracking</label>
+                    </div>
+                    <div className="flex items-center">
+                      <input type="checkbox" id="expiryTracking" checked={formData.expiryTracking} onChange={(e) => handleChange('expiryTracking', e.target.checked)} className="h-4 w-4 text-[#006970] rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700" />
+                      <label htmlFor="expiryTracking" className="ml-2 text-sm text-gray-700 dark:text-gray-300">Expiry Tracking</label>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="col-span-2 mt-2">
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Cost Method</label>
                       <select
                         value={formData.costMethod}
                         onChange={(e) => handleChange('costMethod', e.target.value)}
-                        className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-[#006970] focus:border-[#006970] dark:bg-gray-800 dark:text-white sm:text-sm"
+                        className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-[#006970] focus:border-[#006970] dark:bg-gray-800 dark:text-white sm:text-sm mb-1.5"
                       >
-                        <option>FIFO</option>
-                        <option>LIFO</option>
-                        <option>Average Cost</option>
+                        <option value="Average Cost">Average Cost (Recommended)</option>
+                        <option value="FIFO">FIFO</option>
+                        <option value="LIFO">LIFO</option>
                       </select>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {formData.costMethod === 'Average Cost' && "Uses the average purchase cost of all available stock. Best for most local retail shops."}
+                        {formData.costMethod === 'FIFO' && "Uses the oldest purchase cost first. Best for expiry-based inventory and strict inventory accounting."}
+                        {formData.costMethod === 'LIFO' && "Uses the latest purchase cost first. Advanced option for specialized accounting."}
+                      </p>
                     </div>
                   </div>
-                )}
+                </div>
               </section>
 
             </div>
@@ -407,6 +400,6 @@ export function AddProductDrawer({ isOpen, onClose }: AddProductDrawerProps) {
           </button>
         </div>
       </div>
-    </>
+    </div>
   );
 }

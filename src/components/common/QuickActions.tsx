@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { PlusCircle, ShoppingCart, Package, Receipt, Wrench, UserPlus, ChevronDown } from 'lucide-react';
+import { useInventoryUIStore } from '@/features/inventory/store/inventory-ui.store';
 
 export const QuickActions = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -35,14 +36,16 @@ export const QuickActions = () => {
             Create New
           </div>
 
-          <Link
-            href="/dashboard/shop-admin/products/new"
-            className="group flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-            onClick={() => setIsOpen(false)}
+          <button
+            className="w-full text-left group flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+            onClick={() => {
+              setIsOpen(false);
+              useInventoryUIStore.getState().setAddProductOpen(true);
+            }}
           >
             <Package className="mr-3 h-4 w-4 text-gray-400 group-hover:text-[#006970]" />
             Add Product
-          </Link>
+          </button>
           <Link
             href="/dashboard/shop-admin/expenses/new"
             className="group flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"

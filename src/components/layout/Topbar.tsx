@@ -10,6 +10,7 @@ import { ThemeToggle } from './ThemeToggle';
 import { ShopSwitcher } from './ShopSwitcher';
 import { selectForceSync, selectStatus } from '@/features/inventory/core/inventory.selectors';
 import { useExpensesStore } from '@/features/expenses';
+import { useInventoryUIStore } from '@/features/inventory/store/inventory-ui.store';
 
 interface TopbarProps {
   setMobileMenuOpen: (isOpen: boolean) => void;
@@ -52,13 +53,13 @@ export const Topbar = ({ setMobileMenuOpen }: TopbarProps) => {
             <span className="sm:hidden">Sale</span>
           </Link>
           {/* Add Product Button */}
-          <Link
-            href="/dashboard/shop-admin/products/new"
+          <button
+            onClick={() => useInventoryUIStore.getState().setAddProductOpen(true)}
             title="Add Product"
             className="hidden md:flex items-center p-2 text-gray-700 bg-white dark:bg-gray-800 dark:text-gray-200 border border-gray-300 dark:border-gray-700 rounded-lg shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
           >
             <Plus className="h-5 w-5 text-[#006970] dark:text-emerald-400" />
-          </Link>
+          </button>
 
           {/* Sync Inventory Button */}
           <button
