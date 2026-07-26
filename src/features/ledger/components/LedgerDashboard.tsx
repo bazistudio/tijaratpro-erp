@@ -49,7 +49,7 @@ export const LedgerDashboard: React.FC = () => {
           <ArrowLeft className="w-4 h-4" />
           Back to Directory
         </button>
-        <LedgerBook />
+        <LedgerBook initialParty={selectedParty} />
       </div>
     );
   }

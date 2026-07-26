@@ -487,6 +487,10 @@ export const usePosStore = create<PosStore>()(
             method = 'credit';
           }
 
+          // Use the explicitly passed customer as the authoritative source.
+          // Fall back to session.customer if no customer was passed.
+          const effectiveCustomer = customer ?? session.customer;
+
           const payload = {
             items: [
               ...session.cart.map(item => ({
@@ -500,7 +504,7 @@ export const usePosStore = create<PosStore>()(
                 price: item.unitPrice
               }))
             ],
-            customerId: session.customer?.id === 'walk-in' ? undefined : session.customer?.id,
+            customerId: effectiveCustomer?.id === 'walk-in' ? undefined : effectiveCustomer?.id,
             paymentMethod: method,
             transactionType: session.transactionType,
             taxRate: 0,

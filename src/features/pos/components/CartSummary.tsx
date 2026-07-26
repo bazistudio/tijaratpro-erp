@@ -328,7 +328,7 @@ export const CartSummary = () => {
                   if (tab.id !== activeTabId) return tab;
                   return {
                     ...tab,
-                    customer: customer ? { id: customer.id, name: customer.name } : { id: 'walk-in', name: 'Walk-In Customer' }
+                    customer: customer ? { id: customer.id, name: customer.name } : undefined
                   };
                 })
               });
@@ -479,6 +479,17 @@ export const CartSummary = () => {
           onClose={() => setCustomerModalOpen(false)} 
           onSelect={(customer) => {
             setSelectedCustomer(customer);
+            // Also update the store's session.customer so completeTransaction picks it up correctly
+            const { saleTabs, activeTabId } = usePosStore.getState();
+            usePosStore.setState({
+              saleTabs: saleTabs.map(tab => {
+                if (tab.id !== activeTabId) return tab;
+                return {
+                  ...tab,
+                  customer: customer ? { id: customer.id, name: customer.name } : undefined
+                };
+              })
+            });
             setCustomerModalOpen(false);
             setLedgerModalOpen(true);
           }} 
