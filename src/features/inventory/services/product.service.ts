@@ -24,26 +24,39 @@ export const productService = {
     const total = data.pagination?.total || data.total || 0;
     
     return {
-      products: items.map((p: any) => ({
-        id: p._id,
-        name: p.name,
-        sku: p.sku || '',
-        category: p.category?.name || 'Uncategorized',
-        categoryId: p.categoryId,
-        brand: p.brand?.name || '',
-        brandId: p.brandId,
-        company: p.company?.name || '',
-        companyId: p.companyId,
-        color: p.color?.name || '',
-        colorId: p.colorId,
-        quality: p.quality?.name || '',
-        qualityId: p.qualityId,
-        stock: p.currentStock || 0,
-        minStockThreshold: p.minStock || 0,
-        price: p.salePrice || 0,
-        purchasePrice: p.purchasePrice || 0,
-        status: p.currentStock > (p.minStock || 0) ? 'HEALTHY' : p.currentStock > 0 ? 'LOW_STOCK' : 'OUT_OF_STOCK',
-      })) as InventoryProduct[],
+      products: items.map((p: any) => {
+        // Backend now provides flat *Name fields (categoryName, brandName, etc.)
+        // Fall back to old nested approach for backwards compatibility
+        const cat = p.categoryName || p.categoryId?.name || p.category?.name || 'Uncategorized';
+        const brand = p.brandName || p.brandId?.name || p.brand?.name || '';
+        const company = p.companyName || p.companyId?.name || p.company?.name || '';
+        const color = p.colorName || p.colorId?.name || p.color?.name || '';
+        const quality = p.qualityName || p.qualityId?.name || p.quality?.name || '';
+        
+        const stock = p.quantity ?? p.currentStock ?? 0;
+        const minStock = p.minStock ?? p.minimumStock ?? 0;
+        
+        return {
+          id: p._id,
+          name: p.name,
+          sku: p.sku || '',
+          category: cat,
+          categoryId: p.categoryId,
+          brand: brand,
+          brandId: p.brandId,
+          company: company,
+          companyId: p.companyId,
+          color: color,
+          colorId: p.colorId,
+          quality: quality,
+          qualityId: p.qualityId,
+          stock: stock,
+          minStockThreshold: minStock,
+          price: p.price ?? p.salePrice ?? 0,
+          purchasePrice: p.purchasePrice ?? 0,
+          status: stock > minStock ? 'HEALTHY' : stock > 0 ? 'LOW_STOCK' : 'OUT_OF_STOCK',
+        };
+      }) as InventoryProduct[],
       total,
     };
   },
