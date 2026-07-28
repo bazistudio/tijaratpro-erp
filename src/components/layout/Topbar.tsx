@@ -22,10 +22,10 @@ export const Topbar = ({ setMobileMenuOpen }: TopbarProps) => {
   const isSyncing = inventoryStatus === 'loading';
 
   return (
-    <header className="sticky top-0 z-[60] flex h-12 flex-shrink-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 transition-colors duration-200">
+    <header className="sticky top-0 z-[var(--z-fixed)] flex h-12 flex-shrink-0 bg-surface/80 backdrop-blur-md border-b border-border transition-colors duration-fast">
       <button
         type="button"
-        className="border-r border-gray-200 dark:border-gray-800 px-4 text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#006970] lg:hidden"
+        className="border-r border-border px-4 text-text-secondary focus:outline-none focus:ring-2 focus:ring-inset focus:ring-focus-ring lg:hidden"
         onClick={() => setMobileMenuOpen(true)}
       >
         <span className="sr-only">Open sidebar</span>
@@ -46,7 +46,7 @@ export const Topbar = ({ setMobileMenuOpen }: TopbarProps) => {
           {/* Fixed Sale Button */}
           <Link
             href="/dashboard/shop-admin/pos"
-            className="flex items-center gap-2 rounded-full bg-[#006970] px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[#005a60] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#006970] transition-colors"
+            className="flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring transition-colors"
           >
             <ShoppingCart className="h-4 w-4" />
             <span className="hidden sm:inline">New Sale</span>
@@ -56,9 +56,9 @@ export const Topbar = ({ setMobileMenuOpen }: TopbarProps) => {
           <button
             onClick={() => useInventoryUIStore.getState().setAddProductOpen(true)}
             title="Add Product"
-            className="hidden md:flex items-center p-2 text-gray-700 bg-white dark:bg-gray-800 dark:text-gray-200 border border-gray-300 dark:border-gray-700 rounded-lg shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            className="hidden md:flex items-center p-2 text-text-secondary bg-surface border border-border rounded-md shadow-sm hover:bg-surface-hover transition-colors"
           >
-            <Plus className="h-5 w-5 text-[#006970] dark:text-emerald-400" />
+            <Plus className="h-5 w-5 text-primary" />
           </button>
 
           {/* Sync Inventory Button */}
@@ -66,29 +66,29 @@ export const Topbar = ({ setMobileMenuOpen }: TopbarProps) => {
             onClick={() => forceSync()}
             disabled={isSyncing}
             title="Sync Inventory"
-            className="hidden md:flex items-center p-2 text-gray-700 bg-white dark:bg-gray-800 dark:text-gray-200 border border-gray-300 dark:border-gray-700 rounded-lg shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
+            className="hidden md:flex items-center p-2 text-text-secondary bg-surface border border-border rounded-md shadow-sm hover:bg-surface-hover transition-colors disabled:opacity-disabled"
           >
-            <RefreshCw className={`h-5 w-5 text-blue-600 dark:text-blue-400 ${isSyncing ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-5 w-5 text-info ${isSyncing ? 'animate-spin' : ''}`} />
           </button>
 
           {/* Add Expense Button */}
           <button
             onClick={() => useExpensesStore.getState().setGlobalModalOpen(true)}
             title="Add Expense"
-            className="hidden md:flex items-center p-2 text-gray-700 bg-white dark:bg-gray-800 dark:text-gray-200 border border-gray-300 dark:border-gray-700 rounded-lg shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            className="hidden md:flex items-center p-2 text-text-secondary bg-surface border border-border rounded-md shadow-sm hover:bg-surface-hover transition-colors"
           >
-            <ReceiptText className="h-5 w-5 text-rose-600 dark:text-rose-400" />
+            <ReceiptText className="h-5 w-5 text-danger" />
           </button>
 
           {/* Download / Open App */}
           <DesktopAppButton />
           <button
             type="button"
-            className="relative rounded-full bg-white dark:bg-gray-900 p-2 text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-[#006970] focus:ring-offset-2 transition-colors border border-transparent dark:border-gray-700 hidden sm:block"
+            className="relative rounded-full bg-surface p-2 text-text-muted hover:text-text-primary hover:bg-surface-hover focus:outline-none focus:ring-2 focus:ring-focus-ring focus:ring-offset-2 transition-colors border border-transparent hidden sm:block"
           >
             <span className="sr-only">View notifications</span>
             <Bell className="h-5 w-5" aria-hidden="true" />
-            <span className="absolute top-1.5 right-1.5 block h-2 w-2 rounded-full  ring-2 ring-white dark:ring-gray-900" />
+            <span className="absolute top-1.5 right-1.5 block h-2 w-2 rounded-full ring-2 ring-surface bg-danger" />
           </button>
 
           {/* Theme Toggle & User Profile Menu */}

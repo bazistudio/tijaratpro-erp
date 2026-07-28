@@ -41,12 +41,12 @@ export const ThemeToggle = () => {
     <button
       onClick={toggleTheme}
       title="Toggle Dark Mode"
-      className="flex items-center justify-center w-[10px] h-[10px] mr-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 focus:outline-none transition-colors overflow-hidden"
+      className="flex items-center justify-center p-1.5 rounded-full text-text-muted hover:text-text-primary hover:bg-surface-hover focus:outline-none transition-colors"
     >
       {isDark ? (
-        <Sun style={{ width: '10px', height: '10px' }} />
+        <Sun className="w-4 h-4" />
       ) : (
-        <Moon style={{ width: '10px', height: '10px' }} />
+        <Moon className="w-4 h-4" />
       )}
       <span className="sr-only">Toggle theme</span>
     </button>

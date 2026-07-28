@@ -42,11 +42,7 @@ export const DesktopAppButton = () => {
   return (
     <button
       onClick={handleAction}
-      className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-colors border ${
-        appState === 'OPEN' 
-          ? 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800'
-          : 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-300 dark:border-indigo-800'
-      }`}
+      className="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-colors border border-border bg-surface text-text-primary hover:bg-surface-hover shadow-sm"
     >
       {appState === 'OPEN' ? (
         <>

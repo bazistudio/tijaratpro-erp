@@ -214,7 +214,7 @@ export const SearchInput = ({ placeholder = "Search products, customers, invoice
     
     if (bestMatch) {
       return (
-        <span className="ml-2 text-[10px] uppercase tracking-wider bg-[#006970]/10 text-[#006970] dark:bg-emerald-500/10 dark:text-emerald-400 px-1.5 py-0.5 rounded border border-[#006970]/20 dark:border-emerald-500/20">
+        <span className="ml-2 text-[10px] uppercase tracking-wider bg-primary/10 text-primary px-1.5 py-0.5 rounded border border-primary/20">
           Matched {bestMatch.label}
         </span>
       );
@@ -227,26 +227,26 @@ export const SearchInput = ({ placeholder = "Search products, customers, invoice
 
   return (
     <div className="relative flex w-full min-w-0 md:ml-0 max-w-2xl" ref={dropdownRef}>
-      <div className="w-full flex items-center bg-gray-100 dark:bg-gray-800 rounded-full border border-transparent focus-within:border-[#006970] dark:focus-within:border-[#008990] focus-within:bg-white dark:focus-within:bg-gray-700 focus-within:ring-2 focus-within:ring-[#006970] transition-all shadow-sm">
+      <div className="w-full flex items-center bg-surface-hover rounded-full border border-border focus-within:border-primary focus-within:bg-surface focus-within:ring-2 focus-within:ring-focus-ring transition-all shadow-sm">
         <label htmlFor="search-field" className="sr-only">
           Search
         </label>
-        <div className="relative flex-grow text-gray-400 focus-within:text-gray-600 dark:focus-within:text-gray-300 flex items-center">
+        <div className="relative flex-grow text-text-muted focus-within:text-text-primary flex items-center">
           <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
             {isLoading ? (
-              <Loader2 className="h-5 w-5 animate-spin text-[#006970]" aria-hidden="true" />
+              <Loader2 className="h-5 w-5 animate-spin text-primary" aria-hidden="true" />
             ) : (
               <Search className="h-5 w-5" aria-hidden="true" />
             )}
           </div>
           {category === 'invoice' && (
-            <span className="absolute inset-y-0 left-10 flex items-center pr-1 text-sm font-medium text-gray-400 dark:text-gray-500 select-none">
+            <span className="absolute inset-y-0 left-10 flex items-center pr-1 text-sm font-medium text-text-muted select-none">
               ORD-
             </span>
           )}
           <input
             id="search-field"
-            className={`block h-10 w-full bg-transparent border-0 py-2 ${category === 'invoice' ? 'pl-20' : 'pl-10'} pr-3 text-gray-900 dark:text-gray-100 placeholder-gray-500 focus:outline-none sm:text-sm`}
+            className={`block h-10 w-full bg-transparent border-0 py-2 ${category === 'invoice' ? 'pl-20' : 'pl-10'} pr-3 text-text-primary placeholder-text-muted focus:outline-none sm:text-sm`}
             placeholder={category === 'invoice' ? '000027' : placeholder}
             type="search"
             name="search"
@@ -259,11 +259,11 @@ export const SearchInput = ({ placeholder = "Search products, customers, invoice
         </div>
         
         {/* Category Dropdown Toggle */}
-        <div className="relative flex-shrink-0 border-l border-gray-200 dark:border-gray-700 h-6 mx-2"></div>
+        <div className="relative flex-shrink-0 border-l border-border h-6 mx-2"></div>
         <button
           type="button"
           onClick={() => { setIsCategoryOpen(!isCategoryOpen); setIsFocused(true); }}
-          className="flex items-center gap-1 pr-4 pl-2 h-10 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white focus:outline-none"
+          className="flex items-center gap-1 pr-4 pl-2 h-10 text-sm font-medium text-text-secondary hover:text-text-primary focus:outline-none"
         >
           {activeCategoryLabel} <ChevronDown className="h-4 w-4" />
         </button>
@@ -271,13 +271,13 @@ export const SearchInput = ({ placeholder = "Search products, customers, invoice
 
       {/* Categories Dropdown Menu */}
       {isCategoryOpen && (
-        <div className="absolute top-12 right-0 w-48 bg-white dark:bg-gray-900 rounded-xl shadow-lg border border-gray-200 dark:border-gray-800 overflow-hidden z-[60]">
+        <div className="absolute top-12 right-0 w-48 bg-surface rounded-md shadow-dropdown border border-border overflow-hidden z-[var(--z-dropdown)]">
           <div className="py-1">
             {CATEGORIES.map(cat => (
               <button
                 key={cat.id}
                 type="button"
-                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 ${category === cat.id ? 'text-[#006970] dark:text-[#008990] font-semibold bg-gray-50 dark:bg-gray-800/50' : 'text-gray-700 dark:text-gray-300'}`}
+                className={`w-full text-left px-4 py-2 text-sm hover:bg-surface-hover ${category === cat.id ? 'text-primary font-semibold bg-surface-hover' : 'text-text-secondary'}`}
                 onClick={() => {
                   setCategory(cat.id);
                   setIsCategoryOpen(false);
@@ -293,18 +293,18 @@ export const SearchInput = ({ placeholder = "Search products, customers, invoice
 
       {/* Dropdown UI for results */}
       {isFocused && query.trim().length >= 2 && !isCategoryOpen && (
-        <div className="absolute top-12 left-0 w-full bg-white dark:bg-gray-900 rounded-xl shadow-lg border border-gray-200 dark:border-gray-800 overflow-hidden z-50">
+        <div className="absolute top-12 left-0 w-full bg-surface rounded-md shadow-dropdown border border-border overflow-hidden z-[var(--z-popover)]">
           <div className="max-h-[70vh] overflow-y-auto p-2">
             
             {error && (
-              <div className="p-4 text-sm text-red-500 text-center">{error}</div>
+              <div className="p-4 text-sm text-danger text-center">{error}</div>
             )}
 
             {!isLoading && !hasResults && !error && (
-              <div className="p-8 text-center text-gray-500 dark:text-gray-400">
+              <div className="p-8 text-center text-text-muted">
                 <p className="text-sm mb-4">No results found for "{query}"</p>
                 <div className="flex flex-col gap-2 text-xs">
-                  <p className="text-gray-400">Suggestions:</p>
+                  <p className="text-text-muted">Suggestions:</p>
                   <p>• Try searching by SKU</p>
                   <p>• Try customer phone</p>
                   <p>• Try invoice number</p>
@@ -315,7 +315,7 @@ export const SearchInput = ({ placeholder = "Search products, customers, invoice
             {/* Products */}
             {results.products.length > 0 && (
               <div className="mb-2">
-                <div className="px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-2">
+                <div className="px-3 py-2 text-xs font-semibold text-text-muted uppercase tracking-wider flex items-center gap-2">
                   <Package className="h-4 w-4" /> Products
                 </div>
                 <div className="space-y-1">
@@ -328,10 +328,10 @@ export const SearchInput = ({ placeholder = "Search products, customers, invoice
                         id={`search-item-${globalIdx}`}
                         key={product._id}
                         onClick={(e) => handleProductSelect(product, e)}
-                        className={`w-full text-left flex items-center justify-between px-3 py-2 rounded-lg transition-colors group ${isSelected ? 'bg-gray-100 dark:bg-gray-800 ring-1 ring-[#006970]' : 'hover:bg-gray-100 dark:hover:bg-gray-800'}`}
+                        className={`w-full text-left flex items-center justify-between px-3 py-2 rounded-md transition-colors group ${isSelected ? 'bg-surface-hover ring-1 ring-focus-ring' : 'hover:bg-surface-hover'}`}
                       >
                         <div>
-                          <p className="text-sm font-medium text-gray-900 dark:text-gray-100 group-hover:text-[#006970] dark:group-hover:text-[#008990] flex items-center">
+                          <p className="text-sm font-medium text-text-primary group-hover:text-primary flex items-center">
                             {product.name}
                             {getMatchBadge(product, query, [
                               { key: 'name', label: 'Name' },

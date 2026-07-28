@@ -79,10 +79,12 @@
   /* =========================
      Radius
      ========================= */
+  --radius-xs: 4px;
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 14px;
   --radius-xl: 18px;
+  --radius-full: 9999px;
 
   /* =========================
      Shadows
@@ -98,9 +100,19 @@
   --shadow-hover: var(--shadow-md);
 
   /* =========================
-     Animation
+     Animation & Motion
      ========================= */
   --animate-slide-in-right: slide-in-right 0.25s ease-out;
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+  --duration-slow: 350ms;
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* =========================
+     Opacity
+     ========================= */
+  --opacity-disabled: 0.5;
+  --opacity-overlay: 0.6;
 
   /* =========================
      Transitions
@@ -266,10 +278,12 @@
   --color-disabled-border: var(--color-disabled-border);
 
   /* Radius */
+  --radius-xs: var(--radius-xs);
   --radius-sm: var(--radius-sm);
   --radius-md: var(--radius-md);
   --radius-lg: var(--radius-lg);
   --radius-xl: var(--radius-xl);
+  --radius-full: var(--radius-full);
 
   /* Shadows */
   --shadow-xs: var(--shadow-xs);
@@ -282,8 +296,16 @@
   --shadow-modal: var(--shadow-modal);
   --shadow-hover: var(--shadow-hover);
 
-  /* Animations */
+  /* Animations & Motion */
   --animate-slide-in-right: var(--animate-slide-in-right);
+  --duration-fast: var(--duration-fast);
+  --duration-normal: var(--duration-normal);
+  --duration-slow: var(--duration-slow);
+  --ease-standard: var(--ease-standard);
+
+  /* Opacity */
+  --opacity-disabled: var(--opacity-disabled);
+  --opacity-overlay: var(--opacity-overlay);
 
   /* Transitions */
   --transition-fast: var(--transition-fast);

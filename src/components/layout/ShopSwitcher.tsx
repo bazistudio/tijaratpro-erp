@@ -105,23 +105,23 @@ export const ShopSwitcher = () => {
       <button
         disabled={isLoading}
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#006970] dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-700 transition-colors"
+        className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-text-secondary bg-surface border border-border rounded-md hover:bg-surface-hover focus:outline-none focus:ring-2 focus:ring-focus-ring transition-colors"
       >
         {isLoading ? (
-          <Loader2 className="w-4 h-4 text-gray-500 animate-spin" />
+          <Loader2 className="w-4 h-4 text-text-muted animate-spin" />
         ) : (
-          <Building className="w-4 h-4 text-gray-500" />
+          <Building className="w-4 h-4 text-text-muted" />
         )}
         <span className="truncate max-w-[120px]">
           {viewMode === 'organization' ? 'All Shops' : activeShop?.name || 'Loading...'}
         </span>
-        <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDown className={`w-4 h-4 text-text-muted transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 w-56 mt-2 origin-top-right bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none dark:bg-gray-800 dark:ring-gray-700 z-50">
+        <div className="absolute right-0 w-56 mt-2 origin-top-right bg-surface rounded-md shadow-dropdown border border-border focus:outline-none z-[var(--z-dropdown)]">
           <div className="py-1">
-            <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100 dark:border-gray-700">
+            <div className="px-4 py-2 text-xs font-semibold text-text-muted uppercase tracking-wider border-b border-border">
               {activeOrganization?.name || 'Current Organization'}
             </div>
             
@@ -129,8 +129,8 @@ export const ShopSwitcher = () => {
               onClick={handleSelectAllShops}
               className={`w-full flex items-center px-4 py-2 text-sm text-left ${
                 viewMode === 'organization' 
-                  ? 'bg-blue-50 text-[#006970] font-medium dark:bg-gray-700 dark:text-emerald-400' 
-                  : 'text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700'
+                  ? 'bg-surface-hover text-primary font-medium' 
+                  : 'text-text-secondary hover:bg-surface-hover'
               }`}
             >
               <Building className="w-4 h-4 mr-3" />
@@ -138,19 +138,19 @@ export const ShopSwitcher = () => {
             </button>
             
             {shops.length === 0 ? (
-               <div className="px-4 py-3 text-sm text-gray-500 text-center flex items-center justify-center">
+               <div className="px-4 py-3 text-sm text-text-muted text-center flex items-center justify-center">
                  <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Loading shops...
                </div>
             ) : (
-              <div className="border-t border-gray-100 dark:border-gray-700 mt-1 max-h-60 overflow-y-auto">
+              <div className="border-t border-border mt-1 max-h-60 overflow-y-auto">
                 {shops.map((shop) => (
                   <button
                     key={shop._id}
                     onClick={() => handleSelectShop(shop)}
                     className={`w-full flex items-center px-4 py-2 text-sm text-left ${
                       activeShop?._id === shop._id
-                        ? 'bg-blue-50 text-[#006970] font-medium dark:bg-gray-700 dark:text-emerald-400'
-                        : 'text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700'
+                        ? 'bg-surface-hover text-primary font-medium'
+                        : 'text-text-secondary hover:bg-surface-hover'
                     }`}
                   >
                     <Store className="w-4 h-4 mr-3 shrink-0" />

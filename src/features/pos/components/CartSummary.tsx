@@ -416,11 +416,11 @@ export const CartSummary = () => {
                     e.currentTarget.blur();
                   }
                 }}
-                className="text-xl lg:text-2xl font-black tabular-nums tracking-tight bg-transparent focus:outline-none w-28 text-right no-spinners border-b border-[#006970]/50"
+                className="text-xl lg:text-2xl font-black tabular-nums tracking-tight bg-transparent focus:outline-none w-28 text-right no-spinners border-b border-primary/50"
               />
             ) : (
               <span 
-                className="text-xl lg:text-2xl font-black tabular-nums tracking-tight cursor-pointer hover:opacity-80 transition-opacity border-b-2 border-dashed border-transparent hover:border-[#006970]/50 pb-0.5"
+                className="text-xl lg:text-2xl font-black tabular-nums tracking-tight cursor-pointer hover:opacity-80 transition-opacity border-b-2 border-dashed border-transparent hover:border-primary/50 pb-0.5"
                 onClick={() => {
                   setEditedTotal(Math.abs(grandTotal).toString());
                   setIsEditingTotal(true);
@@ -436,12 +436,12 @@ export const CartSummary = () => {
 
       {/* POS Action Buttons Panel rendered to Bottom Bar */}
       {mounted && document.getElementById('pos-action-bar-portal') ? createPortal(
-        <div className="flex items-center justify-between gap-6 p-2 border-t border-gray-200 dark:border-gray-800 shadow-[0_-10px_30px_-15px_rgba(0,0,0,0.1)] dark:shadow-[0_-10px_30px_-15px_rgba(0,0,0,0.5)] bg-white dark:bg-gray-900 w-full">
+        <div className="flex items-center justify-between gap-6 p-2 border-t border-border shadow-md bg-surface w-full">
           <button 
             onClick={handleClearCart}
             disabled={isCartEmpty || isProcessing}
             title="Clear Cart (Ctrl+Delete)"
-            className="w-40 h-12 flex items-center justify-center gap-2 bg-red-100 dark:bg-red-900/40 border border-red-300 dark:border-red-600/50 rounded-lg text-red-800 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-800/60 transition-all disabled:opacity-40 shadow-sm hover:shadow"
+            className="w-40 h-12 flex items-center justify-center gap-2 bg-surface-hover border border-border rounded-md text-danger hover:bg-danger/10 transition-all disabled:opacity-disabled shadow-sm hover:shadow"
           >
             <Trash2 className="h-5 w-5" />
             <span className="text-[11px] font-black uppercase tracking-widest">Clear Cart</span>
@@ -453,7 +453,7 @@ export const CartSummary = () => {
             onClick={handlePayAndPrint}
             disabled={isCartEmpty || isProcessing}
             title="Pay & Print (Ctrl+P)"
-            className="w-48 h-12 flex items-center justify-center gap-2 bg-gradient-to-br from-[#006970] to-[#008990] dark:from-[#008990] dark:to-[#00A4AB] rounded-lg text-white hover:opacity-90 transition-all shadow-md hover:shadow-lg disabled:opacity-50"
+            className="w-48 h-12 flex items-center justify-center gap-2 bg-primary rounded-md text-white hover:bg-primary-hover transition-all shadow-md hover:shadow-lg disabled:opacity-disabled"
           >
             <Printer className="h-5 w-5" />
             <span className="text-[11px] font-black uppercase tracking-widest">Print</span>
@@ -463,7 +463,7 @@ export const CartSummary = () => {
             onClick={handleCashSale}
             disabled={isCartEmpty || isProcessing}
             title="Sale (Ctrl+S)"
-            className="w-48 h-12 flex items-center justify-center gap-2 bg-teal-100 dark:bg-teal-900/40 border border-teal-300 dark:border-teal-600/50 rounded-lg text-teal-800 dark:text-teal-300 hover:bg-teal-200 dark:hover:bg-teal-800/60 transition-all shadow-sm hover:shadow disabled:opacity-40"
+            className="w-48 h-12 flex items-center justify-center gap-2 bg-secondary/10 border border-secondary/30 rounded-md text-secondary hover:bg-secondary/20 transition-all shadow-sm hover:shadow disabled:opacity-disabled"
           >
             <Banknote className="h-5 w-5" />
             <span className="text-[11px] font-black uppercase tracking-widest">Sale</span>
