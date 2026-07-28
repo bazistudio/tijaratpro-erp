@@ -105,7 +105,7 @@ export const ShopAdminDashboard = () => {
           <select 
             value={filter} 
             onChange={(e) => setFilter(e.target.value as any)}
-            className="px-3 py-1.5 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 rounded-lg text-sm font-medium"
+            className="px-3 py-1.5 border border-border bg-surface rounded-lg text-sm font-medium text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring cursor-pointer transition-colors hover:bg-surface-hover"
           >
             <option value="today">Today</option>
             <option value="week">This Week</option>
@@ -117,18 +117,18 @@ export const ShopAdminDashboard = () => {
 
       {/* Inventory Brain */}
       <section aria-labelledby="inventory-heading">
-        <div className="rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 shadow-sm p-5 sm:p-6">
+        <div className="rounded-xl bg-surface border border-border shadow-card p-5 sm:p-6">
           <StockWidget />
         </div>
       </section>
 
       {/* Placeholders for Phase 4 + 5 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white dark:bg-gray-900 rounded-2xl min-h-[280px] border border-gray-100 dark:border-gray-800 flex items-center justify-center text-gray-400 text-sm">
+        <div className="bg-surface rounded-xl min-h-[280px] border border-border flex items-center justify-center text-text-muted text-sm">
           {/* Phase 4: AlertsPanel */}
           [Alerts Panel — Phase 4]
         </div>
-        <div className="bg-white dark:bg-gray-900 rounded-2xl min-h-[280px] border border-gray-100 dark:border-gray-800 flex items-center justify-center text-gray-400 text-sm">
+        <div className="bg-surface rounded-xl min-h-[280px] border border-border flex items-center justify-center text-text-muted text-sm">
           {/* Phase 5: OutstandingBalances */}
           [Outstanding Balances — Phase 5]
         </div>

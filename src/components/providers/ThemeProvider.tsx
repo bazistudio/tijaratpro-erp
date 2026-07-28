@@ -72,7 +72,24 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   // ── Preview: instant visual feedback without saving ────────────────────
   const previewTheme = useCallback(
     (partial: Partial<Theme>) => {
-      applyTheme({ ...theme, ...partial });
+      // Deep merge colors to preserve nested `text` object when only brand colors change
+      const merged: Partial<Theme> = {
+        ...theme,
+        ...partial,
+        colors: {
+          ...(theme?.colors ?? {}),
+          ...(partial.colors ?? {}),
+          text: {
+            ...(theme?.colors?.text ?? {}),
+            ...(partial.colors?.text ?? {}),
+          },
+        },
+        typography: {
+          ...(theme?.typography ?? { mode: 'auto' }),
+          ...(partial.typography ?? {}),
+        },
+      };
+      applyTheme(merged);
     },
     [theme]
   );

@@ -50,7 +50,7 @@ export const SupplierProfile: React.FC<SupplierProfileProps> = ({ id }) => {
     openPreview({ html, documentType: 'PurchaseInvoice', referenceId: p.purchaseNumber, title: 'Purchase Invoice' });
   };
 
-  const { rawTimeline, refetch: refetchLedger } = useLedger(detail?.supplier ? {
+  const { rawTimeline, refetchLedger } = useLedger(detail?.supplier ? {
     id: detail.supplier.id,
     type: 'SUPPLIER',
     name: detail.supplier.name,
@@ -78,13 +78,17 @@ export const SupplierProfile: React.FC<SupplierProfileProps> = ({ id }) => {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin w-8 h-8 border-4 border-[#006970] border-t-transparent rounded-full"></div>
+        <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full"></div>
       </div>
     );
   }
 
   if (!detail || !detail.supplier) {
-    return <div>Supplier not found</div>;
+    return (
+      <div className="flex justify-center items-center h-64 text-text-muted text-sm">
+        Supplier not found
+      </div>
+    );
   }
 
   const { supplier, stats } = detail;
@@ -126,11 +130,11 @@ export const SupplierProfile: React.FC<SupplierProfileProps> = ({ id }) => {
       <div className="flex items-center gap-4">
         <button 
           onClick={() => router.push('/dashboard/shop-admin/suppliers')}
-          className="p-2 hover:bg-white dark:hover:bg-gray-800 rounded-full transition-colors bg-gray-50/50 shadow-sm"
+          className="p-1.5 hover:bg-surface-hover rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
         >
-          <ArrowLeft className="w-5 h-5 text-[#006970] dark:text-[#00B4BB]" />
+          <ArrowLeft className="w-5 h-5 text-text-secondary" />
         </button>
-        <h1 className="text-2xl font-black text-gray-900 dark:text-white tracking-tight">Supplier Profile</h1>
+        <h1 className="text-2xl font-black text-text-primary tracking-tight">Supplier Profile</h1>
       </div>
 
       {/* Wide Profile Header */}
@@ -185,14 +189,14 @@ export const SupplierProfile: React.FC<SupplierProfileProps> = ({ id }) => {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-        <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 border border-gray-100 dark:border-gray-800 shadow-sm relative overflow-hidden group">
-          <div className="absolute right-0 top-0 w-24 h-24 bg-blue-500/5 dark:bg-blue-500/10 rounded-bl-full transition-transform group-hover:scale-110"></div>
+        <div className="bg-surface rounded-xl p-5 border border-border shadow-card relative overflow-hidden group">
+          <div className="absolute right-0 top-0 w-20 h-20 bg-primary/5 rounded-bl-full transition-transform group-hover:scale-110"></div>
           <div className="relative">
-            <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-xl flex items-center justify-center mb-4">
-              <DollarSign className="w-6 h-6" />
+            <div className="w-10 h-10 bg-primary/10 text-primary rounded-lg flex items-center justify-center mb-3">
+              <DollarSign className="w-5 h-5" />
             </div>
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Total Purchases</p>
-            <p className="text-3xl font-black text-gray-900 dark:text-white tabular-nums tracking-tight">Rs {stats.totalPurchases.toLocaleString()}</p>
+            <p className="text-xs font-bold text-text-muted uppercase tracking-widest mb-1">Total Purchases</p>
+            <p className="text-2xl font-black text-text-primary tabular-nums tracking-tight">Rs {stats.totalPurchases.toLocaleString()}</p>
           </div>
         </div>
 

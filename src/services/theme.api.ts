@@ -9,6 +9,12 @@ export interface ThemeColors {
   surface: string;
   primary: string;
   secondary: string;
+  text?: {
+    primary: string;
+    secondary: string;
+    muted: string;
+    disabled: string;
+  };
 }
 
 export interface ThemeBranding {
@@ -16,8 +22,13 @@ export interface ThemeBranding {
   favicon: string;
 }
 
+export interface ThemeTypography {
+  mode: 'auto' | 'custom';
+}
+
 export interface Theme {
   mode: 'light' | 'dark' | 'system';
+  typography?: ThemeTypography;
   colors: ThemeColors;
   branding: ThemeBranding;
   source: 'organization' | 'branch';
@@ -26,6 +37,7 @@ export interface Theme {
 
 export interface ThemeUpdatePayload {
   mode?: Theme['mode'];
+  typography?: Partial<ThemeTypography>;
   colors?: Partial<ThemeColors>;
 }
 

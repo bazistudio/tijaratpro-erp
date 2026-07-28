@@ -7,56 +7,64 @@ interface KPICardProps {
   isLoading?: boolean;
 }
 
+/** Skeleton placeholder */
+const KPICardSkeleton = () => (
+  <div className="flex flex-col bg-surface rounded-xl p-5 shadow-card border border-border animate-pulse">
+    <div className="flex items-start justify-between mb-4 gap-3">
+      <div className="h-3.5 w-28 bg-surface-hover rounded-full" />
+      <div className="h-9 w-9 bg-surface-hover rounded-lg flex-shrink-0" />
+    </div>
+    <div className="h-7 w-32 bg-surface-hover rounded-md mb-2" />
+    <div className="h-5 w-20 bg-surface-hover rounded-full" />
+  </div>
+);
+
 export const KPICard = ({ data, isLoading = false }: KPICardProps) => {
-  if (isLoading) {
-    return (
-      <div className="flex flex-col bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-800 animate-pulse">
-        <div className="flex items-center justify-between mb-4">
-          <div className="h-4 w-24 bg-gray-200 dark:bg-gray-800 rounded"></div>
-          <div className="h-10 w-10 bg-gray-200 dark:bg-gray-800 rounded-lg"></div>
-        </div>
-        <div className="h-8 w-32 bg-gray-200 dark:bg-gray-800 rounded mb-2"></div>
-        <div className="h-4 w-16 bg-gray-200 dark:bg-gray-800 rounded"></div>
-      </div>
-    );
-  }
+  if (isLoading) return <KPICardSkeleton />;
 
   const { title, value, trend, icon, timeframe = 'vs last month', onClick } = data;
-  
+
   const isPositive = trend > 0;
   const isNegative = trend < 0;
-  const isNeutral = trend === 0;
+
+  const trendVariant = isPositive
+    ? 'bg-success/10 text-success'
+    : isNegative
+    ? 'bg-danger/10 text-danger'
+    : 'bg-surface-hover text-text-muted';
 
   return (
-    <div 
+    <div
       onClick={onClick}
-      className={`flex flex-col bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-800 transition-all duration-200 ${
-        onClick ? 'cursor-pointer hover:shadow-md hover:border-[#006970]/30 dark:hover:border-[#00B4BB]/30 active:scale-[0.98]' : 'hover:shadow-md'
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={onClick ? (e) => e.key === 'Enter' && onClick() : undefined}
+      className={`group flex flex-col bg-surface rounded-xl p-5 shadow-card border border-border transition-all duration-fast ${
+        onClick
+          ? 'cursor-pointer hover:shadow-hover hover:border-primary/30 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring'
+          : 'hover:shadow-hover'
       }`}
     >
-      <div className="flex items-start justify-between mb-4 gap-4">
-        <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+      {/* Header row: label + icon */}
+      <div className="flex items-start justify-between mb-3 gap-3">
+        <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wider leading-tight">
           {title}
         </h3>
-        <div className="flex items-center justify-center h-10 w-10 rounded-lg bg-[#006970]/10 text-[#006970] dark:bg-[#00B4BB]/10 dark:text-[#00B4BB] flex-shrink-0">
+        <div className="flex items-center justify-center h-9 w-9 rounded-lg bg-primary/10 text-primary flex-shrink-0 transition-colors group-hover:bg-primary/15">
           {icon}
         </div>
       </div>
-      
-      <div className="flex flex-col gap-1">
-        <div className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white break-words">
-          {value}
-        </div>
-        
-        <div className="flex items-center gap-2 mt-1 flex-wrap">
+
+      {/* Value */}
+      <div className="text-2xl font-bold text-text-primary break-words leading-tight">
+        {value}
+      </div>
+
+      {/* Trend + timeframe */}
+      <div className="flex items-center gap-2 mt-2 flex-wrap">
+        {trend !== undefined && (
           <span
-            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
-              isPositive
-                ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400'
-                : isNegative
-                ? 'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400'
-                : 'bg-gray-50 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
-            }`}
+            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${trendVariant}`}
           >
             {isPositive ? (
               <ArrowUpRight className="h-3 w-3" />
@@ -67,10 +75,8 @@ export const KPICard = ({ data, isLoading = false }: KPICardProps) => {
             )}
             {Math.abs(trend)}%
           </span>
-          <span className="text-xs text-gray-500 dark:text-gray-400">
-            {timeframe}
-          </span>
-        </div>
+        )}
+        <span className="text-xs text-text-muted">{timeframe}</span>
       </div>
     </div>
   );

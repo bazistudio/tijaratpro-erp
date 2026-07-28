@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Menu, Bell, ShoppingCart, PackagePlus, ReceiptText, RefreshCw, Plus } from 'lucide-react';
+import { Menu, Bell, ShoppingCart, Plus, ReceiptText, RefreshCw } from 'lucide-react';
 import { UserMenu } from './UserMenu';
 import { SearchInput } from '../common/SearchInput';
 import { DesktopAppButton } from './DesktopAppButton';
@@ -16,83 +16,103 @@ interface TopbarProps {
   setMobileMenuOpen: (isOpen: boolean) => void;
 }
 
+/** Shared icon-button style for topbar action buttons */
+const topbarIconBtn =
+  'hidden md:inline-flex items-center justify-center w-9 h-9 rounded-md border border-border bg-surface text-text-muted hover:bg-surface-hover hover:text-text-primary transition-colors duration-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring';
+
 export const Topbar = ({ setMobileMenuOpen }: TopbarProps) => {
   const forceSync = selectForceSync();
   const inventoryStatus = selectStatus();
   const isSyncing = inventoryStatus === 'loading';
 
   return (
-    <header className="sticky top-0 z-[var(--z-fixed)] flex h-12 flex-shrink-0 bg-surface/80 backdrop-blur-md border-b border-border transition-colors duration-fast">
+    <header className="sticky top-0 z-[var(--z-fixed)] flex h-12 flex-shrink-0 bg-surface/90 backdrop-blur-md border-b border-border transition-colors duration-fast">
+      {/* Mobile menu toggle */}
       <button
         type="button"
-        className="border-r border-border px-4 text-text-secondary focus:outline-none focus:ring-2 focus:ring-inset focus:ring-focus-ring lg:hidden"
+        className="border-r border-border px-4 text-text-muted hover:text-text-primary hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring lg:hidden transition-colors duration-fast"
         onClick={() => setMobileMenuOpen(true)}
+        aria-label="Open sidebar"
       >
-        <span className="sr-only">Open sidebar</span>
-        <Menu className="h-6 w-6" aria-hidden="true" />
+        <Menu className="h-5 w-5" aria-hidden="true" />
       </button>
 
-      <div className="flex flex-1 items-center justify-between px-4 sm:px-6 lg:px-8 min-w-0">
-        
-        <div className="flex flex-1 min-w-0 max-w-3xl items-center gap-4">
-          <SearchInput placeholder="Search products, customers, invoices..." />
+      <div className="flex flex-1 items-center justify-between px-3 sm:px-4 lg:px-6 gap-3 min-w-0">
+        {/* Left: Search + ShopSwitcher */}
+        <div className="flex flex-1 min-w-0 max-w-2xl items-center gap-3">
+          <SearchInput placeholder="Search products, customers, invoices…" />
           <div className="hidden md:block">
             <ShopSwitcher />
           </div>
         </div>
-        
-        <div className="ml-4 flex flex-shrink-0 items-center gap-2 md:gap-4">
-          
-          {/* Fixed Sale Button */}
+
+        {/* Right: Action cluster */}
+        <div className="flex flex-shrink-0 items-center gap-1.5">
+          {/* New Sale CTA */}
           <Link
             href="/dashboard/shop-admin/pos"
-            className="flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring transition-colors"
+            className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-primary-hover active:bg-primary-active focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-1 transition-all duration-fast"
           >
-            <ShoppingCart className="h-4 w-4" />
+            <ShoppingCart className="h-3.5 w-3.5" aria-hidden="true" />
             <span className="hidden sm:inline">New Sale</span>
-            <span className="sm:hidden">Sale</span>
           </Link>
-          {/* Add Product Button */}
+
+          {/* Add Product */}
           <button
+            type="button"
             onClick={() => useInventoryUIStore.getState().setAddProductOpen(true)}
             title="Add Product"
-            className="hidden md:flex items-center p-2 text-text-secondary bg-surface border border-border rounded-md shadow-sm hover:bg-surface-hover transition-colors"
+            aria-label="Add product"
+            className={topbarIconBtn}
           >
-            <Plus className="h-5 w-5 text-primary" />
+            <Plus className="h-4 w-4 text-primary" aria-hidden="true" />
           </button>
 
-          {/* Sync Inventory Button */}
+          {/* Sync Inventory */}
           <button
+            type="button"
             onClick={() => forceSync()}
             disabled={isSyncing}
             title="Sync Inventory"
-            className="hidden md:flex items-center p-2 text-text-secondary bg-surface border border-border rounded-md shadow-sm hover:bg-surface-hover transition-colors disabled:opacity-disabled"
+            aria-label="Sync inventory"
+            className={`${topbarIconBtn} disabled:opacity-disabled`}
           >
-            <RefreshCw className={`h-5 w-5 text-info ${isSyncing ? 'animate-spin' : ''}`} />
+            <RefreshCw
+              className={`h-4 w-4 text-info ${isSyncing ? 'animate-spin' : ''}`}
+              aria-hidden="true"
+            />
           </button>
 
-          {/* Add Expense Button */}
-          <button
-            onClick={() => useExpensesStore.getState().setGlobalModalOpen(true)}
-            title="Add Expense"
-            className="hidden md:flex items-center p-2 text-text-secondary bg-surface border border-border rounded-md shadow-sm hover:bg-surface-hover transition-colors"
-          >
-            <ReceiptText className="h-5 w-5 text-danger" />
-          </button>
-
-          {/* Download / Open App */}
-          <DesktopAppButton />
+          {/* Add Expense */}
           <button
             type="button"
-            className="relative rounded-full bg-surface p-2 text-text-muted hover:text-text-primary hover:bg-surface-hover focus:outline-none focus:ring-2 focus:ring-focus-ring focus:ring-offset-2 transition-colors border border-transparent hidden sm:block"
+            onClick={() => useExpensesStore.getState().setGlobalModalOpen(true)}
+            title="Add Expense"
+            aria-label="Add expense"
+            className={topbarIconBtn}
           >
-            <span className="sr-only">View notifications</span>
-            <Bell className="h-5 w-5" aria-hidden="true" />
-            <span className="absolute top-1.5 right-1.5 block h-2 w-2 rounded-full ring-2 ring-surface bg-danger" />
+            <ReceiptText className="h-4 w-4 text-danger" aria-hidden="true" />
           </button>
 
-          {/* Theme Toggle & User Profile Menu */}
-          <div className="flex items-center gap-1">
+          {/* Desktop App */}
+          <DesktopAppButton />
+
+          {/* Notifications */}
+          <button
+            type="button"
+            aria-label="View notifications"
+            className="relative hidden sm:inline-flex items-center justify-center w-9 h-9 rounded-md text-text-muted hover:text-text-primary hover:bg-surface-hover transition-colors duration-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+          >
+            <Bell className="h-4 w-4" aria-hidden="true" />
+            {/* Notification dot */}
+            <span
+              className="absolute top-1.5 right-1.5 block h-2 w-2 rounded-full ring-2 ring-surface bg-danger"
+              aria-hidden="true"
+            />
+          </button>
+
+          {/* Theme & User */}
+          <div className="flex items-center gap-1 border-l border-border pl-1.5 ml-0.5">
             <ThemeToggle />
             <UserMenu />
           </div>

@@ -18,23 +18,38 @@ export const SettingsSidebar: React.FC = () => {
   const pathname = usePathname();
 
   return (
-    <div className="w-64 flex-shrink-0">
-      <nav className="flex flex-col gap-1">
+    <div className="w-56 flex-shrink-0">
+      <nav className="flex flex-col gap-0.5" aria-label="Settings navigation">
         {navItems.map((item) => {
           const Icon = item.icon;
-          const isActive = pathname === item.href || pathname?.startsWith(item.href + '/');
-          
+          const isActive =
+            item.href === '/dashboard/shop-admin/settings'
+              ? pathname === item.href
+              : pathname?.startsWith(item.href);
+
           return (
             <Link
               key={item.name}
               href={item.href}
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
-                isActive 
-                  ? 'bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400' 
-                  : 'text-neutral-600 hover:bg-neutral-50 dark:text-neutral-400 dark:hover:bg-neutral-800/50 hover:text-neutral-900 dark:hover:text-white'
+              aria-current={isActive ? 'page' : undefined}
+              className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring ${
+                isActive
+                  ? 'bg-primary/10 text-primary'
+                  : 'text-text-secondary hover:bg-surface-hover hover:text-text-primary'
               }`}
             >
-              <Icon className={`w-5 h-5 ${isActive ? 'text-blue-600 dark:text-blue-500' : 'text-neutral-400'}`} />
+              {/* Active indicator bar */}
+              {isActive && (
+                <span
+                  className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-primary"
+                  aria-hidden="true"
+                />
+              )}
+              <Icon
+                className={`w-4 h-4 flex-shrink-0 transition-colors duration-fast ${
+                  isActive ? 'text-primary' : 'text-text-muted group-hover:text-text-primary'
+                }`}
+              />
               {item.name}
             </Link>
           );

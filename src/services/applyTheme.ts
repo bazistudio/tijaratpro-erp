@@ -1,4 +1,5 @@
-import type { Theme, ThemeColors } from '@/services/theme.api';
+import { generateAutoTextColors } from '@/lib/utils/color';
+import type { Theme, ThemeColors, ThemeTypography } from '@/services/theme.api';
 
 /**
  * Default theme values that mirror globals.css tokens.
@@ -6,6 +7,9 @@ import type { Theme, ThemeColors } from '@/services/theme.api';
  */
 export const DEFAULT_THEME: Omit<Theme, 'source' | 'themeVersion'> = {
   mode: 'light',
+  typography: {
+    mode: 'auto',
+  },
   colors: {
     background: '#f8fafc',
     surface: '#ffffff',
@@ -30,6 +34,7 @@ export const DEFAULT_THEME: Omit<Theme, 'source' | 'themeVersion'> = {
 export function applyTheme(theme: Partial<Theme>): void {
   const root = document.documentElement;
   const colors: Partial<ThemeColors> = theme.colors || {};
+  const typography: Partial<ThemeTypography> = theme.typography || { mode: 'auto' };
 
   // --- Brand layer (identity) ---
   if (colors.primary) {
@@ -46,6 +51,27 @@ export function applyTheme(theme: Partial<Theme>): void {
   // --- Surface layer ---
   if (colors.background) root.style.setProperty('--color-background', colors.background);
   if (colors.surface)    root.style.setProperty('--color-surface', colors.surface);
+
+  // --- Typography layer ---
+  // Default to 'auto' if the DB record predates V1.1 (typography field missing)
+  const typographyMode = typography.mode ?? 'auto';
+
+  if (typographyMode === 'auto') {
+    const bg = colors.background || DEFAULT_THEME.colors.background;
+    const autoTextColors = generateAutoTextColors(bg);
+    root.style.setProperty('--color-text-primary', autoTextColors.primary);
+    root.style.setProperty('--color-text-secondary', autoTextColors.secondary);
+    root.style.setProperty('--color-text-muted', autoTextColors.muted);
+    root.style.setProperty('--color-text-disabled', autoTextColors.disabled);
+  } else {
+    // Custom mode — apply stored overrides if present, else fall back to auto
+    const bg = colors.background || DEFAULT_THEME.colors.background;
+    const fallback = generateAutoTextColors(bg);
+    root.style.setProperty('--color-text-primary',   colors.text?.primary   || fallback.primary);
+    root.style.setProperty('--color-text-secondary', colors.text?.secondary || fallback.secondary);
+    root.style.setProperty('--color-text-muted',     colors.text?.muted     || fallback.muted);
+    root.style.setProperty('--color-text-disabled',  colors.text?.disabled  || fallback.disabled);
+  }
 
   // --- Sidebar active inherits brand primary automatically via var(--brand-primary) ---
   // No extra work needed here.
@@ -65,6 +91,10 @@ export function resetTheme(): void {
     '--brand-accent',
     '--color-background',
     '--color-surface',
+    '--color-text-primary',
+    '--color-text-secondary',
+    '--color-text-muted',
+    '--color-text-disabled',
   ];
   propsToReset.forEach((prop) => root.style.removeProperty(prop));
 }

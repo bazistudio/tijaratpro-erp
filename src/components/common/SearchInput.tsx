@@ -339,11 +339,11 @@ export const SearchInput = ({ placeholder = "Search products, customers, invoice
                               { key: 'barcode', label: 'Barcode' }
                             ])}
                           </p>
-                          <p className="text-xs text-gray-500">{product.sku || product.barcode}</p>
+                          <p className="text-xs text-text-muted">{product.sku || product.barcode}</p>
                         </div>
                         <div className="flex flex-col items-end gap-1">
                           <span 
-                            className="text-sm font-bold text-[#006970] dark:text-[#008990] cursor-pointer select-none"
+                            className="text-sm font-bold text-primary cursor-pointer select-none"
                             onMouseDown={(e) => { e.stopPropagation(); setRevealedPriceId(product._id); }}
                             onMouseUp={(e) => { e.stopPropagation(); setRevealedPriceId(null); }}
                             onMouseLeave={(e) => { e.stopPropagation(); setRevealedPriceId(null); }}
@@ -354,7 +354,7 @@ export const SearchInput = ({ placeholder = "Search products, customers, invoice
                           >
                             Rs {revealedPriceId === product._id ? (product.purchasePrice ?? product.costPrice ?? 0) : (product.price ?? product.salePrice ?? 0)}
                           </span>
-                          <span className="text-xs font-semibold bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 px-2 py-1 rounded">
+                          <span className="text-xs font-semibold bg-surface-hover text-text-secondary px-2 py-0.5 rounded-md border border-border">
                             Qty: {product.quantity}
                           </span>
                         </div>
@@ -368,7 +368,7 @@ export const SearchInput = ({ placeholder = "Search products, customers, invoice
             {/* Customers */}
             {results.customers.length > 0 && (
               <div className="mb-2">
-                <div className="px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-2">
+                <div className="px-3 py-2 text-xs font-semibold text-text-muted uppercase tracking-wider flex items-center gap-2">
                   <Users className="h-4 w-4" /> Customers
                 </div>
                 <div className="space-y-1">
@@ -381,7 +381,7 @@ export const SearchInput = ({ placeholder = "Search products, customers, invoice
                         key={customer._id}
                         href={`/dashboard/shop-admin/customers/${customer._id}`}
                         onClick={handleLinkClick}
-                        className={`flex items-center justify-between px-3 py-2 rounded-lg transition-colors group ${isSelected ? 'bg-gray-100 dark:bg-gray-800 ring-1 ring-[#006970]' : 'hover:bg-gray-100 dark:hover:bg-gray-800'}`}
+                        className={`flex items-center justify-between px-3 py-2 rounded-md transition-colors group ${isSelected ? 'bg-surface-hover ring-1 ring-focus-ring' : 'hover:bg-surface-hover'}`}
                       >
                         <div>
                           <p className="text-sm font-medium text-gray-900 dark:text-gray-100 group-hover:text-[#006970] dark:group-hover:text-[#008990] flex items-center">
@@ -392,7 +392,7 @@ export const SearchInput = ({ placeholder = "Search products, customers, invoice
                               { key: 'email', label: 'Email' }
                             ])}
                           </p>
-                          <p className="text-xs text-gray-500">{customer.phone}</p>
+                          <p className="text-xs text-text-muted">{customer.phone}</p>
                         </div>
                       </Link>
                     );
@@ -404,7 +404,7 @@ export const SearchInput = ({ placeholder = "Search products, customers, invoice
             {/* Suppliers */}
             {results.suppliers.length > 0 && (
               <div className="mb-2">
-                <div className="px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-2">
+                <div className="px-3 py-2 text-xs font-semibold text-text-muted uppercase tracking-wider flex items-center gap-2">
                   <Truck className="h-4 w-4" /> Suppliers
                 </div>
                 <div className="space-y-1">
@@ -417,10 +417,10 @@ export const SearchInput = ({ placeholder = "Search products, customers, invoice
                         key={supplier._id}
                         href={`/dashboard/shop-admin/suppliers/${supplier._id}`}
                         onClick={handleLinkClick}
-                        className={`flex items-center justify-between px-3 py-2 rounded-lg transition-colors group ${isSelected ? 'bg-gray-100 dark:bg-gray-800 ring-1 ring-[#006970]' : 'hover:bg-gray-100 dark:hover:bg-gray-800'}`}
+                        className={`flex items-center justify-between px-3 py-2 rounded-md transition-colors group ${isSelected ? 'bg-surface-hover ring-1 ring-focus-ring' : 'hover:bg-surface-hover'}`}
                       >
                         <div>
-                          <p className="text-sm font-medium text-gray-900 dark:text-gray-100 group-hover:text-[#006970] dark:group-hover:text-[#008990] flex items-center">
+                          <p className="text-sm font-medium text-text-primary group-hover:text-primary flex items-center">
                             {supplier.name}
                             {getMatchBadge(supplier, query, [
                               { key: 'name', label: 'Name' },
@@ -429,7 +429,7 @@ export const SearchInput = ({ placeholder = "Search products, customers, invoice
                               { key: 'email', label: 'Email' }
                             ])}
                           </p>
-                          <p className="text-xs text-gray-500">{supplier.companyName || supplier.phone}</p>
+                          <p className="text-xs text-text-muted">{supplier.companyName || supplier.phone}</p>
                         </div>
                       </Link>
                     );
@@ -441,7 +441,7 @@ export const SearchInput = ({ placeholder = "Search products, customers, invoice
             {/* Invoices */}
             {results.invoices.length > 0 && (
               <div className="mb-2">
-                <div className="px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-2">
+                <div className="px-3 py-2 text-xs font-semibold text-text-muted uppercase tracking-wider flex items-center gap-2">
                   <FileText className="h-4 w-4" /> Invoices
                 </div>
                 <div className="space-y-1">
@@ -454,7 +454,7 @@ export const SearchInput = ({ placeholder = "Search products, customers, invoice
                         key={invoice._id}
                         href={`/dashboard/shop-admin/history?invoice=${invoice._id}`}
                         onClick={handleLinkClick}
-                        className={`flex items-center justify-between px-3 py-2 rounded-lg transition-colors group ${isSelected ? 'bg-gray-100 dark:bg-gray-800 ring-1 ring-[#006970]' : 'hover:bg-gray-100 dark:hover:bg-gray-800'}`}
+                        className={`flex items-center justify-between px-3 py-2 rounded-md transition-colors group ${isSelected ? 'bg-surface-hover ring-1 ring-focus-ring' : 'hover:bg-surface-hover'}`}
                       >
                         <div>
                           <p className="text-sm font-medium text-gray-900 dark:text-gray-100 group-hover:text-[#006970] dark:group-hover:text-[#008990] flex items-center">
@@ -468,10 +468,10 @@ export const SearchInput = ({ placeholder = "Search products, customers, invoice
                             {typeof invoice.customerId === 'object' && invoice.customerId !== null ? invoice.customerId.name : 'Walk-in'}
                           </p>
                         </div>
-                        <span className={`text-xs font-semibold px-2 py-1 rounded ${
-                          invoice.status === 'paid' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
-                          invoice.status === 'pending' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' :
-                          'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
+                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-md border ${
+                          invoice.status === 'paid' ? 'bg-success/10 text-success border-success/20' :
+                          invoice.status === 'pending' ? 'bg-warning/10 text-warning border-warning/20' :
+                          'bg-surface-hover text-text-muted border-border'
                         }`}>
                           {invoice.status}
                         </span>

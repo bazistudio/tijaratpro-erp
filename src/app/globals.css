@@ -65,6 +65,7 @@
   --color-text-primary: #0f172a;
   --color-text-secondary: #475569;
   --color-text-muted: #94a3b8;
+  --color-text-disabled: #94a3b8;
 
   /* =========================
      UI & States
@@ -269,6 +270,7 @@
   --color-text-primary: var(--color-text-primary);
   --color-text-secondary: var(--color-text-secondary);
   --color-text-muted: var(--color-text-muted);
+  --color-text-disabled: var(--color-text-disabled);
 
   /* UI States */
   --color-focus-ring: var(--color-focus-ring);

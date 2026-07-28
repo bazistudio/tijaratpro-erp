@@ -60,9 +60,9 @@ export const SubscriptionsTable = () => {
   }
 
   return (
-    <div className="bg-white shadow rounded-lg p-6">
+    <div className="bg-surface shadow-card rounded-xl border border-border p-6">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-semibold text-gray-800">Active Subscriptions</h2>
+        <h2 className="text-xl font-semibold text-text-primary">Active Subscriptions</h2>
       </div>
 
       <SubscriptionFilters 
@@ -75,57 +75,57 @@ export const SubscriptionsTable = () => {
       {isLoading ? (
         <div className="animate-pulse space-y-4">
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-12 bg-gray-100 rounded"></div>
+            <div key={i} className="h-12 bg-surface-hover rounded"></div>
           ))}
         </div>
       ) : data?.data?.length === 0 ? (
-        <div className="text-center py-12 border-2 border-dashed border-gray-200 rounded-lg">
-          <p className="text-gray-500 mb-2">No subscriptions found.</p>
+        <div className="text-center py-12 border-2 border-dashed border-border rounded-lg">
+          <p className="text-text-muted mb-2">No subscriptions found.</p>
         </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+        <div className="overflow-x-auto custom-scrollbar">
+          <table className="min-w-full divide-y divide-border">
+            <thead className="bg-surface-hover">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Owner</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Package</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Start Date</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Expiry</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Remaining</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">Owner</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">Package</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">Status</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">Start Date</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">Expiry</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">Remaining</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-text-muted uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-surface divide-y divide-border">
               {data?.data?.map((sub: Subscription) => (
-                <tr key={sub._id} className="hover:bg-gray-50">
+                <tr key={sub._id} className="hover:bg-surface-hover">
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">{sub.ownerType}</div>
-                    <div className="text-xs text-gray-500">{typeof sub.ownerId === 'string' ? sub.ownerId : sub.ownerId?._id || 'Unknown'}</div>
+                    <div className="text-sm font-medium text-text-primary">{sub.ownerType}</div>
+                    <div className="text-xs text-text-muted">{typeof sub.ownerId === 'string' ? sub.ownerId : sub.ownerId?._id || 'Unknown'}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
+                    <div className="text-sm text-text-primary">
                       {typeof sub.packageId === 'string' ? 'Package ID' : sub.packageId?.name || 'Unknown'}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <SubscriptionStatusBadge status={sub.status} />
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-text-muted">
                     {new Date(sub.startDate).toLocaleDateString()}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-text-muted">
                     {new Date(sub.expiryDate).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className={`text-sm font-medium ${sub.remainingDays <= 7 ? 'text-red-600' : 'text-gray-900'}`}>
+                    <div className={`text-sm font-medium ${sub.remainingDays <= 7 ? 'text-danger' : 'text-text-primary'}`}>
                       {sub.remainingDays} Days
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <button 
                       onClick={() => setSelectedSubId(sub._id)}
-                      className="text-blue-600 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded transition-colors"
+                      className="text-primary hover:text-primary-hover bg-primary/10 hover:bg-primary/20 px-3 py-1.5 rounded transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
                     >
                       Manage
                     </button>
@@ -138,22 +138,22 @@ export const SubscriptionsTable = () => {
       )}
 
       {data?.pagination && data.pagination.pages > 1 && (
-        <div className="mt-4 flex items-center justify-between border-t border-gray-200 pt-4 px-2">
-          <div className="text-sm text-gray-500">
-            Showing <span className="font-medium">{((page - 1) * limit) + 1}</span> to <span className="font-medium">{Math.min(page * limit, data.pagination.total)}</span> of <span className="font-medium">{data.pagination.total}</span> results
+        <div className="mt-4 flex items-center justify-between border-t border-border pt-4 px-2">
+          <div className="text-sm text-text-muted">
+            Showing <span className="font-medium text-text-primary">{((page - 1) * limit) + 1}</span> to <span className="font-medium text-text-primary">{Math.min(page * limit, data.pagination.total)}</span> of <span className="font-medium text-text-primary">{data.pagination.total}</span> results
           </div>
           <div className="flex space-x-2">
             <button 
               onClick={() => setPage(p => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="px-3 py-1 border rounded text-sm disabled:opacity-50 hover:bg-gray-50"
+              className="px-3 py-1 border border-border rounded text-sm text-text-secondary disabled:opacity-50 hover:bg-surface-hover hover:text-text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
             >
               Previous
             </button>
             <button 
               onClick={() => setPage(p => Math.min(data.pagination.pages, p + 1))}
               disabled={page === data.pagination.pages}
-              className="px-3 py-1 border rounded text-sm disabled:opacity-50 hover:bg-gray-50"
+              className="px-3 py-1 border border-border rounded text-sm text-text-secondary disabled:opacity-50 hover:bg-surface-hover hover:text-text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
             >
               Next
             </button>
