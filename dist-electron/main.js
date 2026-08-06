@@ -446,7 +446,7 @@ var init_api = __esm({
   "electron/services/api.ts"() {
     "use strict";
     import_axios = __toESM(require("axios"));
-    API_BASE_URL = process.env.API_BASE_URL || "http://localhost:4000/api";
+    API_BASE_URL = process.env.API_BASE_URL || "http://localhost:4000/api/v1";
     apiClient = import_axios.default.create({
       baseURL: API_BASE_URL,
       timeout: 5e3
