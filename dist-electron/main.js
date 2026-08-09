@@ -622,72 +622,79 @@ var updater_exports = {};
 __export(updater_exports, {
   setupUpdater: () => setupUpdater
 });
+function performGracefulQuitAndInstall() {
+  import_electron14.app.removeAllListeners("window-all-closed");
+  const windows = import_electron14.BrowserWindow.getAllWindows();
+  windows.forEach((win) => {
+    if (!win.isDestroyed()) {
+      win.close();
+    }
+  });
+  try {
+    syncEngine.stop();
+    closeDb();
+  } catch (err) {
+    logger.error("Error shutting down resources for auto-update:", err);
+  }
+  import_electron_updater2.autoUpdater.quitAndInstall(false, true);
+}
 function setupUpdater(mainWindow2) {
+  import_electron_updater2.autoUpdater.logger = logger;
   import_electron_updater2.autoUpdater.autoDownload = true;
   import_electron_updater2.autoUpdater.autoInstallOnAppQuit = true;
-  import_electron_updater2.autoUpdater.on("checking-for-update", () => {
-    logger.info("Checking for updates...");
-  });
-  import_electron_updater2.autoUpdater.on("update-available", (info) => {
-    logger.info(`Update available: ${info.version}`);
-  });
-  import_electron_updater2.autoUpdater.on("update-not-available", () => {
-    logger.info("App is up to date.");
-  });
-  import_electron_updater2.autoUpdater.on("error", (err) => {
-    logger.error(`
---- Update Error ---
-Current version: ${import_electron14.app.getVersion()}
-Error: ${err.message}
-Stack Trace:
-${err.stack || "None"}
---------------------
-`);
-  });
-  import_electron_updater2.autoUpdater.on("download-progress", (progressObj) => {
-    const percent = Math.round(progressObj.percent);
-    logger.info(`Downloading update... ${percent}%`);
-  });
-  import_electron_updater2.autoUpdater.on("update-downloaded", (info) => {
-    logger.info(`Update downloaded: ${info.version}`);
-    import_electron14.dialog.showMessageBox(mainWindow2, {
-      type: "info",
-      title: "TijaratPro Update Ready",
-      message: "A new version has been downloaded and is ready to install.",
-      buttons: ["Install Now", "Later"],
-      defaultId: 0,
-      cancelId: 1
-    }).then(({ response }) => {
-      if (response === 0) {
-        import_electron14.app.removeAllListeners("window-all-closed");
-        const windows = import_electron14.BrowserWindow.getAllWindows();
-        windows.forEach((win) => win.close());
-        try {
-          syncEngine.stop();
-          closeDb();
-        } catch (err) {
+  if (!isUpdaterInitialized) {
+    isUpdaterInitialized = true;
+    import_electron_updater2.autoUpdater.on("checking-for-update", () => {
+      logger.info("Updater: Checking for updates...");
+    });
+    import_electron_updater2.autoUpdater.on("update-available", (info) => {
+      logger.info(`Updater: Update available: version ${info.version}`);
+    });
+    import_electron_updater2.autoUpdater.on("update-not-available", () => {
+      logger.info("Updater: App is up to date.");
+    });
+    import_electron_updater2.autoUpdater.on("error", (err) => {
+      logger.error(`Updater Error (App version: ${import_electron14.app.getVersion()}): ${err.message}`);
+      if (err.stack) {
+        logger.error(`Updater Stack Trace: ${err.stack}`);
+      }
+    });
+    import_electron_updater2.autoUpdater.on("download-progress", (progressObj) => {
+      const percent = Math.round(progressObj.percent);
+      logger.info(`Updater: Downloading update... ${percent}%`);
+    });
+    import_electron_updater2.autoUpdater.on("update-downloaded", (info) => {
+      logger.info(`Updater: Update downloaded: version ${info.version}`);
+      import_electron14.dialog.showMessageBox(mainWindow2, {
+        type: "info",
+        title: "TijaratPro Update Ready",
+        message: `A new version (${info.version}) of TijaratPro has been downloaded and is ready to install.`,
+        buttons: ["Install Now", "Later"],
+        defaultId: 0,
+        cancelId: 1
+      }).then(({ response }) => {
+        if (response === 0) {
+          performGracefulQuitAndInstall();
         }
-        import_electron_updater2.autoUpdater.quitAndInstall(false, true);
-      }
+      });
     });
+  }
+  if (import_electron14.ipcMain.listenerCount("updater:check") > 0) {
+    import_electron14.ipcMain.removeHandler("updater:check");
+  }
+  import_electron14.ipcMain.handle("updater:check", () => {
+    logger.info("Updater: Manual update check requested via IPC");
+    return import_electron_updater2.autoUpdater.checkForUpdatesAndNotify();
   });
-  if (!import_electron14.ipcMain.listenerCount("updater:check")) {
-    import_electron14.ipcMain.handle("updater:check", () => {
-      return import_electron_updater2.autoUpdater.checkForUpdatesAndNotify();
-    });
+  if (import_electron14.ipcMain.listenerCount("updater:install") > 0) {
+    import_electron14.ipcMain.removeHandler("updater:install");
   }
-  if (!import_electron14.ipcMain.listenerCount("updater:install")) {
-    import_electron14.ipcMain.handle("updater:install", () => {
-      try {
-        syncEngine.stop();
-        closeDb();
-      } catch (err) {
-      }
-      import_electron_updater2.autoUpdater.quitAndInstall(false, true);
-    });
-  }
+  import_electron14.ipcMain.handle("updater:install", () => {
+    logger.info("Updater: Manual update installation requested via IPC");
+    performGracefulQuitAndInstall();
+  });
 }
-var import_electron_updater2, import_electron14;
+var import_electron_updater2, import_electron14, isUpdaterInitialized;
 var init_updater = __esm({
   "electron/updater.ts"() {
     "use strict";
@@ -696,6 +703,7 @@ var init_updater = __esm({
     init_logger();
     init_syncEngine();
     init_db();
+    isUpdaterInitialized = false;
   }
 });
 
@@ -1735,8 +1743,16 @@ SQLite Path: ${import_path10.default.join(import_electron15.app.getPath("userDat
       }
     };
     loadDashboard();
-    const { setupUpdater: setupUpdater2 } = (init_updater(), __toCommonJS(updater_exports));
-    setupUpdater2(mainWindow);
+    if (!isDev4) {
+      const { setupUpdater: setupUpdater2 } = (init_updater(), __toCommonJS(updater_exports));
+      setupUpdater2(mainWindow);
+      const { autoUpdater: autoUpdater3 } = require("electron-updater");
+      setTimeout(() => {
+        autoUpdater3.checkForUpdatesAndNotify().catch((err) => {
+          logger.error(`Automatic update check failed: ${err}`);
+        });
+      }, 3e3);
+    }
     mainWindow.webContents.on("devtools-opened", () => {
       mainWindow?.webContents.closeDevTools();
     });
@@ -1806,12 +1822,6 @@ SQLite Path: ${import_path10.default.join(import_electron15.app.getPath("userDat
           setTimeout(() => {
             initBackupScheduler();
           }, 5e3);
-          if (!isDev4) {
-            const { autoUpdater: autoUpdater3 } = require("electron-updater");
-            autoUpdater3.checkForUpdatesAndNotify().catch((err) => {
-              logger.error(`Update check failed: ${err}`);
-            });
-          }
         }
       }
     }, FADE_INTERVAL);

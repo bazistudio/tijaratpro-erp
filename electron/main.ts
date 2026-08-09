@@ -228,9 +228,18 @@ SQLite Path: ${path.join(app.getPath('userData'), 'tijarat_local.db')}
     
     loadDashboard();
     
-    // Setup auto-updater in production only
-    const { setupUpdater } = require('./updater');
-    setupUpdater(mainWindow);
+          if (!isDev) {
+            const { setupUpdater } = require('./updater');
+            setupUpdater(mainWindow!);
+
+            const { autoUpdater } = require('electron-updater');
+            // Check for updates in background after startup completes (3 sec delay)
+            setTimeout(() => {
+              autoUpdater.checkForUpdatesAndNotify().catch((err: any) => {
+                logger.error(`Automatic update check failed: ${err}`);
+              });
+            }, 3000);
+          }
 
     // DevTools Production Lock
     mainWindow.webContents.on("devtools-opened", () => {
@@ -321,18 +330,10 @@ SQLite Path: ${path.join(app.getPath('userData'), 'tijarat_local.db')}
           setAppReadyForUse(true);
           setupTray(mainWindow!);
           
-          // Defer non-critical background services
+          // Backup scheduler deferred
           setTimeout(() => {
             initBackupScheduler();
           }, 5000);
-
-          if (!isDev) {
-            const { autoUpdater } = require('electron-updater');
-            // Check for updates immediately in background without blocking UI
-            autoUpdater.checkForUpdatesAndNotify().catch((err: any) => {
-              logger.error(`Update check failed: ${err}`);
-            });
-          }
         }
       }
     }, FADE_INTERVAL);

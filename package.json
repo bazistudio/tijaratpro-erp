@@ -8,13 +8,14 @@
     "dev:electron": "tsup --watch --onSuccess \"electron dist-electron/main.js\"",
     "dev:all": "concurrently \"npm run dev\" \"npm run dev:electron\"",
     "build": "next build",
+    "build:export": "cross-env NEXT_EXPORT=true next build",
     "build:electron": "tsup",
     "start": "next start",
     "lint": "eslint",
     "postinstall": "electron-rebuild -f -w better-sqlite3",
-    "pack": "npm run build && npm run build:electron && electron-builder --dir",
-    "dist": "npm run build && npm run build:electron && electron-builder --publish never",
-    "release": "npm run build && npm run build:electron && electron-builder --publish always"
+    "pack": "npm run build:export && npm run build:electron && electron-builder --dir",
+    "dist": "npm run build:export && npm run build:electron && electron-builder --publish never",
+    "release": "npm run build:export && npm run build:electron && electron-builder --publish always"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",
@@ -54,8 +55,8 @@
     "publish": [
       {
         "provider": "github",
-        "owner": "tijaratpro",
-        "repo": "desktop-app"
+        "owner": "bazistudio",
+        "repo": "tijaratpro-erp"
       }
     ],
     "directories": {
@@ -75,7 +76,7 @@
       "icon": "build/icon.ico"
     },
     "nsis": {
-      "artifactName": "\\ Setup \\.\\",
+      "artifactName": "${productName}-Setup-${version}.${ext}",
       "oneClick": false,
       "perMachine": false,
       "allowToChangeInstallationDirectory": true,
@@ -92,7 +93,7 @@
       "installerSidebar": "build/sidebar.bmp"
     },
     "executableName": "TijaratPro",
-    "artifactName": "\\-\\-\\-\\.\\",
+    "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
     "compression": "maximum",
     "fileAssociations": [
       {
@@ -133,7 +134,7 @@
       "icon": "build/icon.png"
     },
     "portable": {
-      "artifactName": "\\ Portable.\\"
+      "artifactName": "${productName}-Portable-${version}.${ext}"
     }
   },
   "devDependencies": {

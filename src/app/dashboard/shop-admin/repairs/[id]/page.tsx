@@ -1,9 +1,10 @@
-'use client';
+import RepairProfileClient from './client-page';
 
-import { use } from 'react';
-import { RepairProfile } from '@/features/repairs/components/RepairProfile';
+export async function generateStaticParams() {
+  return [{ id: 'index' }];
+}
 
 export default function RepairProfilePage({ params }: { params: Promise<{ id: string }> }) {
-  const resolvedParams = use(params);
-  return <RepairProfile repairId={resolvedParams.id} />;
+  return <RepairProfileClient params={params} />;
 }
+
