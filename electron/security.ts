@@ -18,15 +18,15 @@ const CSP = isDev
       "frame-src 'self'",
     ].join("; ")
   : [
-      "default-src 'self'",
-      "script-src 'self'", // Removed unsafe-inline and unsafe-eval
+      "default-src 'self' app:",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval'", // Next.js App Router static exports require unsafe-inline/eval for static bundle evaluation & hydration
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-      "font-src 'self' https://fonts.gstatic.com",
-      "img-src 'self' data: blob: https:",
-      "connect-src 'self' https:", // Removed localhost
-      "media-src 'self'",
+      "font-src 'self' data: https://fonts.gstatic.com",
+      "img-src 'self' data: blob: https: app:",
+      "connect-src 'self' app: http://localhost:* https://localhost:* ws://localhost:* wss://localhost:* https:",
+      "media-src 'self' app:",
       "object-src 'none'",
-      "frame-src 'none'", // No iframes in prod
+      "frame-src 'none'",
     ].join("; ");
 
 // --------------------------------------------------------------------------
@@ -49,7 +49,8 @@ export function setupSecurity(): void {
       const allowed =
         navigationUrl.startsWith("http://localhost:3000") ||
         navigationUrl.startsWith("http://127.0.0.1:3000") ||
-        navigationUrl.startsWith("file://");
+        navigationUrl.startsWith("file://") ||
+        navigationUrl.startsWith("app://");
 
       if (!allowed) {
         logger.warn(`[security] Blocked navigation to: ${navigationUrl}`);

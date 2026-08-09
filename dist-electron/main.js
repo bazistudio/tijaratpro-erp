@@ -710,6 +710,8 @@ var init_updater = __esm({
 // electron/main.ts
 var import_electron15 = require("electron");
 var import_path10 = __toESM(require("path"));
+var import_url = require("url");
+var import_fs4 = __toESM(require("fs"));
 
 // electron/window.ts
 var import_electron3 = require("electron");
@@ -951,18 +953,16 @@ var CSP = isDev2 ? [
   "object-src 'none'",
   "frame-src 'self'"
 ].join("; ") : [
-  "default-src 'self'",
-  "script-src 'self'",
-  // Removed unsafe-inline and unsafe-eval
+  "default-src 'self' app:",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+  // Next.js App Router static exports require unsafe-inline/eval for static bundle evaluation & hydration
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-  "font-src 'self' https://fonts.gstatic.com",
-  "img-src 'self' data: blob: https:",
-  "connect-src 'self' https:",
-  // Removed localhost
-  "media-src 'self'",
+  "font-src 'self' data: https://fonts.gstatic.com",
+  "img-src 'self' data: blob: https: app:",
+  "connect-src 'self' app: http://localhost:* https://localhost:* ws://localhost:* wss://localhost:* https:",
+  "media-src 'self' app:",
   "object-src 'none'",
   "frame-src 'none'"
-  // No iframes in prod
 ].join("; ");
 var ALLOWED_PERMISSIONS = /* @__PURE__ */ new Set([
   "clipboard-read",
@@ -972,7 +972,7 @@ var ALLOWED_PERMISSIONS = /* @__PURE__ */ new Set([
 function setupSecurity() {
   import_electron4.app.on("web-contents-created", (_event, contents) => {
     contents.on("will-navigate", (event, navigationUrl) => {
-      const allowed = navigationUrl.startsWith("http://localhost:3000") || navigationUrl.startsWith("http://127.0.0.1:3000") || navigationUrl.startsWith("file://");
+      const allowed = navigationUrl.startsWith("http://localhost:3000") || navigationUrl.startsWith("http://127.0.0.1:3000") || navigationUrl.startsWith("file://") || navigationUrl.startsWith("app://");
       if (!allowed) {
         logger.warn(`[security] Blocked navigation to: ${navigationUrl}`);
         event.preventDefault();
@@ -1581,6 +1581,19 @@ function destroyTray() {
 init_notifications();
 init_backupManager();
 var import_electron_store6 = __toESM(require("electron-store"));
+import_electron15.protocol.registerSchemesAsPrivileged([
+  {
+    scheme: "app",
+    privileges: {
+      standard: true,
+      secure: true,
+      allowServiceWorkers: true,
+      supportFetchAPI: true,
+      corsEnabled: true,
+      stream: true
+    }
+  }
+]);
 var isDev4 = !import_electron15.app.isPackaged;
 var NEXT_DEV_URL = "http://127.0.0.1:3000";
 var mainWindow = null;
@@ -1641,6 +1654,29 @@ if (crashStore2.get("gpuCrashes") >= 3) {
 }
 import_electron15.app.whenReady().then(async () => {
   const startupStart = performance.now();
+  import_electron15.protocol.handle("app", (request) => {
+    const url = new URL(request.url);
+    let decodedPath = decodeURIComponent(url.pathname);
+    if (decodedPath === "/" || decodedPath === "") {
+      decodedPath = "/index.html";
+    }
+    const outDir = import_path10.default.normalize(import_path10.default.join(__dirname, "../out"));
+    let targetPath = import_path10.default.normalize(import_path10.default.join(outDir, decodedPath));
+    if (!targetPath.startsWith(outDir)) {
+      logger.warn(`[protocol] Blocked path traversal attempt: ${targetPath}`);
+      return new Response("Access Denied", { status: 403 });
+    }
+    if (!import_fs4.default.existsSync(targetPath)) {
+      if (import_fs4.default.existsSync(`${targetPath}.html`)) {
+        targetPath = `${targetPath}.html`;
+      } else if (import_fs4.default.existsSync(import_path10.default.join(targetPath, "index.html"))) {
+        targetPath = import_path10.default.join(targetPath, "index.html");
+      } else {
+        targetPath = import_path10.default.join(outDir, "index.html");
+      }
+    }
+    return import_electron15.net.fetch((0, import_url.pathToFileURL)(targetPath).toString());
+  });
   const sysMem = process.getSystemMemoryInfo ? process.getSystemMemoryInfo() : null;
   const cpus = require("os").cpus();
   const displays = import_electron15.screen.getAllDisplays();
@@ -1701,6 +1737,14 @@ SQLite Path: ${import_path10.default.join(import_electron15.app.getPath("userDat
   syncEngine.start();
   mainWindow = createWindow();
   logger.info("Main window created");
+  mainWindow.webContents.on("did-fail-load", (_event, errorCode, errorDescription, validatedURL) => {
+    logger.error(`[renderer] did-fail-load code=${errorCode} desc=${errorDescription} url=${validatedURL}`);
+  });
+  mainWindow.webContents.on("console-message", (_event, level, message, line, sourceId) => {
+    if (level >= 2) {
+      logger.warn(`[renderer console] ${message} (${sourceId}:${line})`);
+    }
+  });
   if (isDev4) {
     let loaded = false;
     for (let i = 0; i < 30; i++) {
@@ -1721,14 +1765,13 @@ SQLite Path: ${import_path10.default.join(import_electron15.app.getPath("userDat
     }
   } else {
     updateSplashStatus(splash, "Loading TijaratPro...");
-    const indexPath = import_path10.default.join(__dirname, "../out/index.html");
     let loadRetries = 0;
     const maxRetries = 2;
     const loadDashboard = async () => {
       try {
-        await mainWindow.loadFile(indexPath);
+        await mainWindow.loadURL("app://localhost");
       } catch (err) {
-        logger.error(`Failed to load index.html: ${err}`);
+        logger.error(`Failed to load app://localhost: ${err}`);
         if (loadRetries < maxRetries) {
           loadRetries++;
           logger.info(`Retrying load (${loadRetries}/${maxRetries})...`);
@@ -1753,19 +1796,23 @@ SQLite Path: ${import_path10.default.join(import_electron15.app.getPath("userDat
         });
       }, 3e3);
     }
-    mainWindow.webContents.on("devtools-opened", () => {
-      mainWindow?.webContents.closeDevTools();
-    });
-    mainWindow.webContents.on("before-input-event", (event, input) => {
-      const isF12 = input.key === "F12";
-      const isInspect = input.control && input.shift && input.key.toLowerCase() === "i";
-      const isMacInspect = input.meta && input.alt && input.key.toLowerCase() === "i";
-      const isF5 = input.key === "F5";
-      const isCtrlR = (input.control || input.meta) && input.key.toLowerCase() === "r";
-      if (isF12 || isInspect || isMacInspect || isF5 || isCtrlR) {
-        event.preventDefault();
-      }
-    });
+    if (process.env.OPEN_DEVTOOLS === "true") {
+      mainWindow.webContents.openDevTools({ mode: "detach" });
+    } else {
+      mainWindow.webContents.on("devtools-opened", () => {
+        mainWindow?.webContents.closeDevTools();
+      });
+      mainWindow.webContents.on("before-input-event", (event, input) => {
+        const isF12 = input.key === "F12";
+        const isInspect = input.control && input.shift && input.key.toLowerCase() === "i";
+        const isMacInspect = input.meta && input.alt && input.key.toLowerCase() === "i";
+        const isF5 = input.key === "F5";
+        const isCtrlR = (input.control || input.meta) && input.key.toLowerCase() === "r";
+        if (isF12 || isInspect || isMacInspect || isF5 || isCtrlR) {
+          event.preventDefault();
+        }
+      });
+    }
   }
   mainWindow.webContents.on("render-process-gone", (event, details) => {
     logger.error(`Render process gone: ${details.reason}`);

@@ -1,5 +1,7 @@
-import { app, BrowserWindow, shell, ipcMain, Menu, dialog, screen } from "electron";
+import { app, BrowserWindow, shell, ipcMain, Menu, dialog, screen, protocol, net } from "electron";
 import path from "path";
+import { pathToFileURL } from "url";
+import fs from "fs";
 import { createWindow } from "./window";
 import { setupSecurity } from "./security";
 import { initDb } from "./db/index";
@@ -13,6 +15,24 @@ import { initSettings } from "./services/settingsManager";
 import { setupNotifications } from "./notifications";
 import { initBackupScheduler } from "./services/backupManager";
 import Store from 'electron-store';
+
+// --------------------------------------------------------------------------
+// Custom Protocol Scheme Registration
+// Must be called before app is ready
+// --------------------------------------------------------------------------
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: "app",
+    privileges: {
+      standard: true,
+      secure: true,
+      allowServiceWorkers: true,
+      supportFetchAPI: true,
+      corsEnabled: true,
+      stream: true,
+    },
+  },
+]);
 
 // --------------------------------------------------------------------------
 // Environment helpers
@@ -100,6 +120,37 @@ if ((crashStore.get('gpuCrashes') as number) >= 3) {
 
 app.whenReady().then(async () => {
   const startupStart = performance.now();
+
+  // Handle custom app:// scheme for static exported Next.js files
+  protocol.handle("app", (request) => {
+    const url = new URL(request.url);
+    let decodedPath = decodeURIComponent(url.pathname);
+    if (decodedPath === "/" || decodedPath === "") {
+      decodedPath = "/index.html";
+    }
+
+    const outDir = path.normalize(path.join(__dirname, "../out"));
+    let targetPath = path.normalize(path.join(outDir, decodedPath));
+
+    // Security check: prevent path traversal attacks
+    if (!targetPath.startsWith(outDir)) {
+      logger.warn(`[protocol] Blocked path traversal attempt: ${targetPath}`);
+      return new Response("Access Denied", { status: 403 });
+    }
+
+    if (!fs.existsSync(targetPath)) {
+      if (fs.existsSync(`${targetPath}.html`)) {
+        targetPath = `${targetPath}.html`;
+      } else if (fs.existsSync(path.join(targetPath, "index.html"))) {
+        targetPath = path.join(targetPath, "index.html");
+      } else {
+        // Fallback to index.html for SPA client-side routing
+        targetPath = path.join(outDir, "index.html");
+      }
+    }
+
+    return net.fetch(pathToFileURL(targetPath).toString());
+  });
   
   const sysMem = process.getSystemMemoryInfo ? process.getSystemMemoryInfo() : null;
   const cpus = require('os').cpus();
@@ -178,6 +229,17 @@ SQLite Path: ${path.join(app.getPath('userData'), 'tijarat_local.db')}
   mainWindow = createWindow();
   logger.info('Main window created');
 
+  // Renderer process diagnostic event listeners
+  mainWindow.webContents.on("did-fail-load", (_event, errorCode, errorDescription, validatedURL) => {
+    logger.error(`[renderer] did-fail-load code=${errorCode} desc=${errorDescription} url=${validatedURL}`);
+  });
+
+  mainWindow.webContents.on("console-message", (_event, level, message, line, sourceId) => {
+    if (level >= 2) {
+      logger.warn(`[renderer console] ${message} (${sourceId}:${line})`);
+    }
+  });
+
   // 3. Load the web content
   if (isDev) {
     // In development: connect to the running `next dev` server
@@ -202,16 +264,15 @@ SQLite Path: ${path.join(app.getPath('userData'), 'tijarat_local.db')}
     }
   } else {
     updateSplashStatus(splash, "Loading TijaratPro...");
-    const indexPath = path.join(__dirname, "../out/index.html");
     
     let loadRetries = 0;
     const maxRetries = 2;
 
     const loadDashboard = async () => {
       try {
-        await mainWindow!.loadFile(indexPath);
+        await mainWindow!.loadURL("app://localhost");
       } catch (err) {
-        logger.error(`Failed to load index.html: ${err}`);
+        logger.error(`Failed to load app://localhost: ${err}`);
         if (loadRetries < maxRetries) {
           loadRetries++;
           logger.info(`Retrying load (${loadRetries}/${maxRetries})...`);
@@ -228,35 +289,39 @@ SQLite Path: ${path.join(app.getPath('userData'), 'tijarat_local.db')}
     
     loadDashboard();
     
-          if (!isDev) {
-            const { setupUpdater } = require('./updater');
-            setupUpdater(mainWindow!);
+    if (!isDev) {
+      const { setupUpdater } = require('./updater');
+      setupUpdater(mainWindow!);
 
-            const { autoUpdater } = require('electron-updater');
-            // Check for updates in background after startup completes (3 sec delay)
-            setTimeout(() => {
-              autoUpdater.checkForUpdatesAndNotify().catch((err: any) => {
-                logger.error(`Automatic update check failed: ${err}`);
-              });
-            }, 3000);
-          }
+      const { autoUpdater } = require('electron-updater');
+      // Check for updates in background after startup completes (3 sec delay)
+      setTimeout(() => {
+        autoUpdater.checkForUpdatesAndNotify().catch((err: any) => {
+          logger.error(`Automatic update check failed: ${err}`);
+        });
+      }, 3000);
+    }
 
-    // DevTools Production Lock
-    mainWindow.webContents.on("devtools-opened", () => {
-      mainWindow?.webContents.closeDevTools();
-    });
+    // DevTools Production Lock (allowed only if explicitly requested via OPEN_DEVTOOLS=true)
+    if (process.env.OPEN_DEVTOOLS === 'true') {
+      mainWindow.webContents.openDevTools({ mode: "detach" });
+    } else {
+      mainWindow.webContents.on("devtools-opened", () => {
+        mainWindow?.webContents.closeDevTools();
+      });
 
-    mainWindow.webContents.on("before-input-event", (event, input) => {
-      const isF12 = input.key === "F12";
-      const isInspect = input.control && input.shift && input.key.toLowerCase() === "i";
-      const isMacInspect = input.meta && input.alt && input.key.toLowerCase() === "i";
-      const isF5 = input.key === "F5";
-      const isCtrlR = (input.control || input.meta) && input.key.toLowerCase() === "r";
-      
-      if (isF12 || isInspect || isMacInspect || isF5 || isCtrlR) {
-        event.preventDefault();
-      }
-    });
+      mainWindow.webContents.on("before-input-event", (event, input) => {
+        const isF12 = input.key === "F12";
+        const isInspect = input.control && input.shift && input.key.toLowerCase() === "i";
+        const isMacInspect = input.meta && input.alt && input.key.toLowerCase() === "i";
+        const isF5 = input.key === "F5";
+        const isCtrlR = (input.control || input.meta) && input.key.toLowerCase() === "r";
+        
+        if (isF12 || isInspect || isMacInspect || isF5 || isCtrlR) {
+          event.preventDefault();
+        }
+      });
+    }
   }
 
   // Handle renderer crashes to prevent permanent black screen
