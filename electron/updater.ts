@@ -31,6 +31,12 @@ export function setupUpdater(mainWindow: BrowserWindow) {
   autoUpdater.autoDownload = true;
   autoUpdater.autoInstallOnAppQuit = true;
 
+  // Override feed URL to use our secure Cloud Run backend instead of direct GitHub API
+  autoUpdater.setFeedURL({
+    provider: "generic",
+    url: "https://tijaratpro-api-598374253827.asia-south1.run.app/api/v1/updates"
+  });
+
   if (!isUpdaterInitialized) {
     isUpdaterInitialized = true;
 
