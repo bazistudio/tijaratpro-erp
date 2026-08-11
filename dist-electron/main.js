@@ -642,6 +642,10 @@ function setupUpdater(mainWindow2) {
   import_electron_updater2.autoUpdater.logger = logger;
   import_electron_updater2.autoUpdater.autoDownload = true;
   import_electron_updater2.autoUpdater.autoInstallOnAppQuit = true;
+  import_electron_updater2.autoUpdater.setFeedURL({
+    provider: "generic",
+    url: "https://tijaratpro-api-598374253827.asia-south1.run.app/api/v1/updates"
+  });
   if (!isUpdaterInitialized) {
     isUpdaterInitialized = true;
     import_electron_updater2.autoUpdater.on("checking-for-update", () => {

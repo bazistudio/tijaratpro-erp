@@ -128,7 +128,7 @@ export const AddShopModal: React.FC<AddShopModalProps> = ({ isOpen, onClose, onS
             <button
               type="submit"
               disabled={loading}
-              className="flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-[#006970] rounded-md hover:bg-[#005a60] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#006970] disabled:opacity-70"
+              className="flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-primary rounded-md hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-70"
             >
               {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               Create Shop

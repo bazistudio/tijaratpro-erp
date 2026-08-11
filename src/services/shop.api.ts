@@ -21,5 +21,9 @@ export const shopApi = {
   getAllShops: async () => {
     const response = await axiosInstance.get<{ success: boolean; data: ShopData[]; message: string }>('/api/v1/shops');
     return response.data;
+  },
+  getShops: async () => {
+    const response = await axiosInstance.get<{ success: boolean; data: ShopData[]; message: string }>('/api/v1/shops');
+    return response.data;
   }
 };
