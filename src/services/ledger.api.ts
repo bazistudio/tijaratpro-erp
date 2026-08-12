@@ -10,12 +10,14 @@ export interface LedgerTimelineEntry {
   description: string;
   debitAccount: string;
   creditAccount: string;
+  items?: any[];
 }
 
 export interface PaymentAllocationData {
   _id: string;
   paymentEntryId: string;
   invoiceId: string;
+  orderNumber?: string;
   amountAllocated: number;
   createdAt: string;
 }
@@ -25,6 +27,8 @@ export interface OpenInvoiceData {
   orderNumber: string;
   totalAmount: number;
   paidAmount: number;
+  dueAmount?: number;
+  grandTotal?: number;
   remainingAmount: number;
   paymentStatus: 'pending' | 'partially_paid';
   createdAt: string;

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useLedger } from '../hooks/useLedger';
-import { Download, FileText, ArrowDownRight, ArrowUpRight, CheckCircle2, Clock, Printer, ChevronDown, ChevronUp } from 'lucide-react';
+import { Download, FileText, ArrowDownRight, ArrowUpRight, CheckCircle2, Clock, Printer, ChevronDown, ChevronUp, BookOpen, Layers } from 'lucide-react';
 import { format } from 'date-fns';
 import { usePrintStore } from '@/lib/printer';
 import { usePrinterStore } from '@/features/settings/printer/store/printer.store';
@@ -37,6 +37,7 @@ export const LedgerBook: React.FC<LedgerBookProps> = ({ initialParty, readonly }
   const { openPreview } = usePrintStore();
   const { settings, shopHeader, fetchSettings } = usePrinterStore();
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
+  const [showAccountingDetails, setShowAccountingDetails] = useState<boolean>(false);
 
   React.useEffect(() => {
     if (!settings || !shopHeader) {
@@ -60,17 +61,20 @@ export const LedgerBook: React.FC<LedgerBookProps> = ({ initialParty, readonly }
     openPreview({ html, documentType: 'PaymentReceipt', referenceId: entry.id, title: `Payment Receipt - ${entry.transactionId}` });
   };
 
-  const handlePrintLedger = (full: boolean) => {
-    if (!settings || !shopHeader || !selectedParty) return;
-  };
-
   if (!selectedParty) return null;
 
   const isCredit = selectedParty.balance < 0;
   const balanceStr = Math.abs(selectedParty.balance).toLocaleString();
-  const balanceLabel = isCredit ? 'Advance (CR)' : (selectedParty.balance > 0 ? 'Outstanding (DR)' : 'Settled');
-  
-  const outstandingInvoicesTotal = openInvoices.reduce((sum, inv) => sum + inv.remainingAmount, 0);
+  const balanceHeading = selectedParty.balance > 0 
+    ? `${selectedParty.type === 'CUSTOMER' ? 'Customer owes you' : 'You owe supplier'}` 
+    : isCredit 
+      ? 'Advance Balance' 
+      : 'Account Settled';
+
+  const outstandingInvoicesTotal = openInvoices.reduce((sum, inv) => {
+    const amt = inv.dueAmount ?? inv.remainingAmount ?? Math.max(0, (inv.grandTotal || 0) - (inv.paidAmount || 0));
+    return sum + (isNaN(amt) ? 0 : amt);
+  }, 0);
 
   return (
     <div className="space-y-6">
@@ -81,26 +85,35 @@ export const LedgerBook: React.FC<LedgerBookProps> = ({ initialParty, readonly }
             <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider">{selectedParty.type} LEDGER</p>
           </div>
           
-          <div className="flex flex-wrap gap-4">
-            <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg border border-gray-100 dark:border-gray-700 min-w-[140px]">
-              <p className="text-xs text-gray-500 font-bold mb-1">Current Balance</p>
-              <p className={`text-xl font-black ${isCredit ? 'text-green-600 dark:text-green-400' : selectedParty.balance > 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-white'}`}>
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg border border-gray-100 dark:border-gray-700 min-w-[160px]">
+              <p className="text-xs text-gray-500 font-bold mb-1">{balanceHeading}</p>
+              <p className={`text-2xl font-black ${isCredit ? 'text-green-600 dark:text-green-400' : selectedParty.balance > 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-white'}`}>
                 Rs {balanceStr}
               </p>
-              <p className="text-[10px] font-bold text-gray-400">{balanceLabel}</p>
+              <p className="text-[10px] font-bold text-gray-400">
+                {isCredit ? 'CR' : selectedParty.balance > 0 ? 'DR' : '0.00'}
+              </p>
             </div>
             
-            <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg border border-gray-100 dark:border-gray-700 min-w-[140px]">
+            <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg border border-gray-100 dark:border-gray-700 min-w-[160px]">
               <p className="text-xs text-gray-500 font-bold mb-1">Open Invoices Due</p>
-              <p className="text-xl font-black text-orange-600 dark:text-orange-400">
+              <p className="text-2xl font-black text-orange-600 dark:text-orange-400">
                 Rs {outstandingInvoicesTotal.toLocaleString()}
               </p>
               <p className="text-[10px] font-bold text-gray-400">{openInvoices.length} Active Invoice(s)</p>
             </div>
 
-            <button className="h-full px-6 bg-[#006970] hover:bg-[#005a60] text-white font-bold rounded-lg shadow-md transition-colors flex flex-col items-center justify-center gap-1">
-              <span className="text-lg">Record</span>
-              <span className="text-sm">Payment</span>
+            <button 
+              onClick={() => setShowAccountingDetails(!showAccountingDetails)}
+              className={`px-4 py-3 rounded-lg border font-bold text-sm flex items-center gap-2 transition-all ${
+                showAccountingDetails 
+                  ? 'bg-blue-600 text-white border-blue-600 shadow-md' 
+                  : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              <Layers className="w-4 h-4" />
+              {showAccountingDetails ? 'Hide DR/CR Details' : 'Accounting Details'}
             </button>
           </div>
         </div>
@@ -140,7 +153,7 @@ export const LedgerBook: React.FC<LedgerBookProps> = ({ initialParty, readonly }
                   const html = printFormatter.formatLedgerStatement(selectedParty, timeline, settings, shopHeader, 'Filtered Ledger');
                   openPreview({ html, documentType: 'Generic', referenceId: 'ledger', title: 'Ledger Statement' });
                 }}
-                className="p-2 border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 active:scale-95 active:bg-blue-600 active:text-white dark:hover:bg-gray-700 dark:active:bg-blue-600 transition-all flex items-center gap-2"
+                className="p-2 border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 active:scale-95 transition-all flex items-center gap-2"
                 title="Print Filtered Ledger"
               >
                 <Printer className="w-4 h-4" />
@@ -151,7 +164,7 @@ export const LedgerBook: React.FC<LedgerBookProps> = ({ initialParty, readonly }
                   const html = printFormatter.formatLedgerStatement(selectedParty, timeline, settings, shopHeader, 'Filtered Ledger');
                   downloadHtmlAsPdf(html, `Ledger_${selectedParty.name.replace(/\s+/g, '_')}_Filtered`);
                 }}
-                className="p-2 border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 active:scale-95 active:bg-blue-600 active:text-white dark:hover:bg-gray-700 dark:active:bg-blue-600 transition-all flex items-center gap-2"
+                className="p-2 border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 active:scale-95 transition-all flex items-center gap-2"
                 title="Export Filtered Ledger PDF"
               >
                 <Download className="w-4 h-4" />
@@ -163,20 +176,32 @@ export const LedgerBook: React.FC<LedgerBookProps> = ({ initialParty, readonly }
         <div className="w-full relative min-h-[400px] overflow-x-auto lg:overflow-visible">
           {isLedgerLoading ? (
             <div className="absolute inset-0 flex items-center justify-center bg-white/50 dark:bg-gray-800/50">
-              <div className="animate-spin w-8 h-8 border-4  border-t-transparent rounded-full"></div>
+              <div className="animate-spin w-8 h-8 border-4 border-[#006970] border-t-transparent rounded-full"></div>
             </div>
           ) : (
             <table className="w-full text-sm text-left">
               <thead className="bg-gray-100 dark:bg-gray-900 text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">
-                <tr>
-                  <th className="px-6 py-3 font-semibold">Date</th>
-                  <th className="px-6 py-3 font-semibold">Reference</th>
-                  <th className="px-6 py-3 font-semibold hidden md:table-cell">Details</th>
-                  <th className="px-6 py-3 font-semibold text-right">Debit</th>
-                  <th className="px-6 py-3 font-semibold text-right">Credit</th>
-                  <th className="px-6 py-3 font-semibold text-right">Balance</th>
-                  <th className="px-6 py-3 font-semibold text-center">Actions</th>
-                </tr>
+                {showAccountingDetails ? (
+                  <tr>
+                    <th className="px-6 py-3 font-semibold">Date</th>
+                    <th className="px-6 py-3 font-semibold">Reference</th>
+                    <th className="px-6 py-3 font-semibold hidden md:table-cell">Account / Details</th>
+                    <th className="px-6 py-3 font-semibold text-right">Debit (DR)</th>
+                    <th className="px-6 py-3 font-semibold text-right">Credit (CR)</th>
+                    <th className="px-6 py-3 font-semibold text-right">Running Balance</th>
+                    <th className="px-6 py-3 font-semibold text-center">Actions</th>
+                  </tr>
+                ) : (
+                  <tr>
+                    <th className="px-6 py-3 font-semibold">Date</th>
+                    <th className="px-6 py-3 font-semibold">Reference / Item</th>
+                    <th className="px-6 py-3 font-semibold text-right">Total Sale</th>
+                    <th className="px-6 py-3 font-semibold text-right">Paid</th>
+                    <th className="px-6 py-3 font-semibold text-right">Balance Due</th>
+                    <th className="px-6 py-3 font-semibold text-center">Status</th>
+                    <th className="px-6 py-3 font-semibold text-center">Actions</th>
+                  </tr>
+                )}
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
                 {timeline.map((entry) => {
@@ -188,20 +213,102 @@ export const LedgerBook: React.FC<LedgerBookProps> = ({ initialParty, readonly }
                   const showCredit = isCustomer ? isPayment : !isPayment;
                   const entryAllocations = isPayment ? allocations.filter(a => a.paymentEntryId === entry.id) : [];
 
+                  if (showAccountingDetails) {
+                    return (
+                      <React.Fragment key={entry.id}>
+                        <tr 
+                          className={`hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-colors ${isPayment || entry.items?.length > 0 ? 'cursor-pointer' : ''}`}
+                          onClick={() => {
+                            if (isPayment || entry.items?.length > 0) toggleRow(entry.id);
+                          }}
+                        >
+                          <td className="px-6 py-4 whitespace-nowrap text-gray-500 flex items-center gap-2">
+                            {(isPayment || entry.items?.length > 0) && (
+                              <button className="text-gray-400 hover:text-blue-500 focus:outline-none">
+                                {expandedRows[entry.id] ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                              </button>
+                            )}
+                            {format(new Date(entry.timestamp), 'dd MMM yyyy, hh:mm a')}
+                          </td>
+                          <td className="px-6 py-4 font-bold text-gray-900 dark:text-white">
+                            <div className="flex items-center gap-2">
+                              {isPayment ? <ArrowDownRight className="w-4 h-4 text-green-500" /> : <FileText className="w-4 h-4 text-orange-500" />}
+                              {highlightText(entry.transactionId, searchQuery)}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 hidden md:table-cell">
+                            <span className="text-gray-900 dark:text-gray-200">
+                              {highlightText(entry.debitAccount || entry.description, searchQuery)}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-right font-semibold text-gray-900 dark:text-white">
+                            {showDebit ? `Rs ${amount.toLocaleString()}` : '-'}
+                          </td>
+                          <td className="px-6 py-4 text-right font-semibold text-gray-900 dark:text-white">
+                            {showCredit ? `Rs ${amount.toLocaleString()}` : '-'}
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            <span className={`font-bold ${bal < 0 ? 'text-green-600' : 'text-gray-900 dark:text-white'}`}>
+                              {Math.abs(bal).toLocaleString()} {bal < 0 ? 'CR' : 'DR'}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-center">
+                            {isPayment && (
+                              <button 
+                                onClick={(e) => handlePrintReceipt(e, entry)}
+                                className="p-1.5 text-neutral-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded transition-colors"
+                                title="Print Receipt"
+                              >
+                                <Printer className="w-4 h-4" />
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+
+                        {expandedRows[entry.id] && isPayment && entryAllocations.length > 0 && (
+                          <tr className="bg-gray-50/50 dark:bg-gray-800/20">
+                            <td colSpan={7} className="px-6 py-4 border-l-4 border-green-500">
+                              <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Settled Invoices</h4>
+                              <div className="space-y-2">
+                                {entryAllocations.map(alloc => (
+                                  <div key={alloc._id} className="flex justify-between items-center bg-white dark:bg-gray-800 p-2 rounded border border-gray-100 dark:border-gray-700">
+                                    <span className="font-medium text-sm text-gray-900 dark:text-white">{alloc.orderNumber}</span>
+                                    <span className="text-sm font-bold text-blue-600">Rs {alloc.amountAllocated.toLocaleString()}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+
+                        {expandedRows[entry.id] && !isPayment && entry.items?.length > 0 && (
+                          <tr className="bg-gray-50/50 dark:bg-gray-800/20">
+                            <td colSpan={7} className="px-10 py-4 border-l-4 border-orange-500">
+                              <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Invoice Items</h4>
+                              <div className="space-y-1">
+                                <div className="font-bold text-gray-500 mb-1 flex justify-between border-b border-gray-200 dark:border-gray-700 pb-1 text-xs">
+                                  <span>Item</span>
+                                  <span>Amount</span>
+                                </div>
+                                {entry.items.map((item: any, idx: number) => (
+                                  <div key={idx} className="flex justify-between text-xs text-gray-700 dark:text-gray-300">
+                                    <span>{item.qty || item.quantity}x {item.productId?.name || 'Item'}</span>
+                                    <span>Rs {((item.qty || item.quantity) * item.price).toLocaleString()}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </React.Fragment>
+                    );
+                  }
+
+                  // Standard Operational View (Phase C - Simplified view for shop owners)
                   return (
                     <React.Fragment key={entry.id}>
-                      <tr 
-                        className={`hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-colors ${isPayment || entry.items?.length > 0 ? 'cursor-pointer' : ''}`}
-                        onClick={() => {
-                          if (isPayment || entry.items?.length > 0) toggleRow(entry.id);
-                        }}
-                      >
-                        <td className="px-6 py-4 whitespace-nowrap text-gray-500 flex items-center gap-2">
-                          {(isPayment || entry.items?.length > 0) && (
-                            <button className="text-gray-400 hover:text-blue-500 focus:outline-none">
-                              {expandedRows[entry.id] ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                            </button>
-                          )}
+                      <tr className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap text-gray-500">
                           {format(new Date(entry.timestamp), 'dd MMM yyyy, hh:mm a')}
                         </td>
                         <td className="px-6 py-4 font-bold text-gray-900 dark:text-white">
@@ -210,32 +317,29 @@ export const LedgerBook: React.FC<LedgerBookProps> = ({ initialParty, readonly }
                             {highlightText(entry.transactionId, searchQuery)}
                           </div>
                         </td>
-                        <td className="px-6 py-4 hidden md:table-cell">
-                          <span className="text-gray-900 dark:text-gray-200">
-                            {highlightText(
-                              entry.description?.match(/(credit|cash) (sale|purchase) -/i) 
-                                ? (entry.description.toLowerCase().includes('credit') ? 'Credit' : 'Cash') 
-                                : entry.description, 
-                              searchQuery
-                            )}
-                          </span>
-                        </td>
                         <td className="px-6 py-4 text-right font-semibold text-gray-900 dark:text-white">
-                          {showDebit ? `Rs ${amount.toLocaleString()}` : '-'}
+                          {isPayment ? '-' : `Rs ${amount.toLocaleString()}`}
                         </td>
-                        <td className="px-6 py-4 text-right font-semibold text-gray-900 dark:text-white">
-                          {showCredit ? `Rs ${amount.toLocaleString()}` : '-'}
+                        <td className="px-6 py-4 text-right font-semibold text-green-600 dark:text-green-400">
+                          {isPayment ? `Rs ${amount.toLocaleString()}` : (showCredit ? `Rs ${amount.toLocaleString()}` : '-')}
                         </td>
-                        <td className="px-6 py-4 text-right">
-                          <span className={`font-bold ${bal < 0 ? 'text-green-600' : 'text-gray-900 dark:text-white'}`}>
-                            {Math.abs(bal).toLocaleString()} {bal < 0 ? 'CR' : 'DR'}
+                        <td className="px-6 py-4 text-right font-bold text-red-600 dark:text-red-400">
+                          {!isPayment && showDebit ? `Rs ${amount.toLocaleString()}` : '-'}
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                            isPayment 
+                              ? 'bg-green-50 text-green-700 border border-green-200' 
+                              : 'bg-blue-50 text-blue-700 border border-blue-200'
+                          }`}>
+                            {isPayment ? 'Payment' : 'Sale Invoice'}
                           </span>
                         </td>
                         <td className="px-6 py-4 text-center">
                           {isPayment && (
                             <button 
                               onClick={(e) => handlePrintReceipt(e, entry)}
-                              className="p-1.5 text-neutral-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded tooltip-trigger transition-colors"
+                              className="p-1.5 text-neutral-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded transition-colors"
                               title="Print Receipt"
                             >
                               <Printer className="w-4 h-4" />
@@ -243,48 +347,12 @@ export const LedgerBook: React.FC<LedgerBookProps> = ({ initialParty, readonly }
                           )}
                         </td>
                       </tr>
-
-                      {expandedRows[entry.id] && isPayment && entryAllocations.length > 0 && (
-                        <tr className="bg-gray-50/50 dark:bg-gray-800/20">
-                          <td colSpan={7} className="px-6 py-4 border-l-4 ">
-                            <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Settled Invoices</h4>
-                            <div className="space-y-2">
-                              {entryAllocations.map(alloc => (
-                                <div key={alloc._id} className="flex justify-between items-center bg-white dark:bg-gray-800 p-2 rounded border border-gray-100 dark:border-gray-700">
-                                  <span className="font-medium text-sm text-gray-900 dark:text-white">{alloc.orderNumber}</span>
-                                  <span className="text-sm font-bold text-blue-600">Rs {alloc.amountAllocated.toLocaleString()}</span>
-                                </div>
-                              ))}
-                            </div>
-                          </td>
-                        </tr>
-                      )}
-
-                      {expandedRows[entry.id] && !isPayment && entry.items?.length > 0 && (
-                        <tr className="bg-gray-50/50 dark:bg-gray-800/20">
-                          <td colSpan={7} className="px-10 py-4 border-l-4 border-orange-500">
-                            <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Invoice Items</h4>
-                            <div className="space-y-1">
-                              <div className="font-bold text-gray-500 mb-1 flex justify-between border-b border-gray-200 dark:border-gray-700 pb-1 text-xs">
-                                <span>Item</span>
-                                <span>Amount</span>
-                              </div>
-                              {entry.items.map((item: any, idx: number) => (
-                                <div key={idx} className="flex justify-between text-xs text-gray-700 dark:text-gray-300">
-                                  <span>{item.qty || item.quantity}x {item.productId?.name || 'Item'}</span>
-                                  <span>Rs {((item.qty || item.quantity) * item.price).toLocaleString()}</span>
-                                </div>
-                              ))}
-                            </div>
-                          </td>
-                        </tr>
-                      )}
                     </React.Fragment>
                   );
                 })}
                 {timeline.length === 0 && !isLedgerLoading && (
                   <tr>
-                    <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
+                    <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
                       No transactions found for this party.
                     </td>
                   </tr>

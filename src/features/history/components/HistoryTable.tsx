@@ -21,8 +21,9 @@ export const HistoryTable: React.FC = () => {
     switch (status) {
       case 'paid': return <span className="px-2 py-1 bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-full text-xs font-semibold">Paid</span>;
       case 'pending': return <span className="px-2 py-1 bg-orange-50 text-orange-600 border border-orange-200 rounded-full text-xs font-semibold">Pending</span>;
+      case 'partially_paid':
       case 'partial': return <span className="px-2 py-1 bg-blue-50 text-blue-600 border border-blue-200 rounded-full text-xs font-semibold">Partial</span>;
-      default: return null;
+      default: return <span className="px-2 py-1 bg-gray-50 text-gray-600 border border-gray-200 rounded-full text-xs font-semibold capitalize">{status}</span>;
     }
   };
 

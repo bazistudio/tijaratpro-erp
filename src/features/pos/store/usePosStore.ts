@@ -506,6 +506,7 @@ export const usePosStore = create<PosStore>()(
             ],
             customerId: effectiveCustomer?.id === 'walk-in' ? undefined : effectiveCustomer?.id,
             paymentMethod: method,
+            paymentBreakdown: paymentBreakdown && paymentBreakdown.length > 0 ? paymentBreakdown : undefined,
             transactionType: session.transactionType,
             taxRate: 0,
             discount: session.invoiceDiscountValue || 0,
