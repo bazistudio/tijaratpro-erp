@@ -23,8 +23,15 @@ export const VALID_ROUTES = [
   // Reports
   '/dashboard/shop-admin/history',
   
-  // Settings
+  // Settings & Profile
   '/dashboard/shop-admin/settings',
+  '/dashboard/shop-admin/profile',
+
+  // Operations & Kitchen
+  '/dashboard/shop-admin/kds',
+
+  // Marketing
+  '/dashboard/shop-admin/marketing',
 
   // Dev-only
   '/dashboard/shop-admin/audit',

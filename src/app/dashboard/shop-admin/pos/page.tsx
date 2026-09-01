@@ -5,6 +5,7 @@ import { PosHeader } from '@/features/pos/components/PosHeader';
 import { SaleTabNavigation } from '@/features/pos/components/SaleTabNavigation';
 import { SaleWorkspace } from '@/features/pos/components/SaleWorkspace';
 import { ReturnOverflowModal } from '@/features/pos/components/ReturnOverflowModal';
+import { InvoiceReceipt } from '@/features/pos/components/invoice/InvoiceReceipt';
 import { usePosStore } from '@/features/pos/store/usePosStore';
 import { toast } from 'react-hot-toast';
 import { useOrganizationStore } from '@/store/useOrganizationStore';
@@ -55,6 +56,7 @@ export default function POSPage() {
       <PosHeader />
       <SaleWorkspace />
       <ReturnOverflowModal />
+      <InvoiceReceipt />
     </div>
   );
 }

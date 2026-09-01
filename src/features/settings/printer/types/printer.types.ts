@@ -50,16 +50,21 @@ export interface UnifiedInvoice {
     name: string;
     phone?: string;
   };
+  cashier?: string;
   items: {
     name: string;
     qty: number;
     price: number;
     total: number;
+    imei?: string;
   }[];
   subtotal: number;
   discount: number;
   tax: number;
   total: number;
   paymentMethod: string;
+  tendered?: number;
+  change?: number;
   shop: ShopHeader;
+  returnPolicy?: string;
 }

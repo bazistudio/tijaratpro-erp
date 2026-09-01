@@ -8,6 +8,8 @@ import toast from 'react-hot-toast';
 import { CreditCustomerModal } from './modals/CreditCustomerModal';
 import { LedgerSettlementModal } from './modals/LedgerSettlementModal';
 import { PaymentModal } from './modals/PaymentModal';
+import { MultiPaymentModal } from './MultiPaymentModal';
+import { DiscountModal } from './DiscountModal';
 import { DBCustomer } from '@/types/db.types';
 import { CustomerSelector } from './CustomerSelector';
 import { createPortal } from 'react-dom';
@@ -18,6 +20,7 @@ import { usePrintStore } from '@/lib/printer';
 import { usePrinterStore } from '@/features/settings/printer/store/printer.store';
 import { printFormatter } from '@/features/settings/printer/utils/printFormatter';
 import { GlobalLoadingOverlay } from '@/components/ui/GlobalLoadingOverlay';
+import { Percent, Tag } from 'lucide-react';
 
 export const CartSummary = () => {
   const [mounted, setMounted] = useState(false);
@@ -40,6 +43,8 @@ export const CartSummary = () => {
 
   const [isCustomerModalOpen, setCustomerModalOpen] = useState(false);
   const [isLedgerModalOpen, setLedgerModalOpen] = useState(false);
+  const [isMultiPaymentOpen, setMultiPaymentOpen] = useState(false);
+  const [isDiscountModalOpen, setDiscountModalOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<"sale" | "print" | null>(null);
   const [selectedCustomer, setSelectedCustomer] = useState<DBCustomer | null>(null);
   const [pendingTransaction, setPendingTransaction] = useState<{
@@ -169,7 +174,8 @@ export const CartSummary = () => {
       return;
     }
 
-    processTransaction([{ method: 'cash', amount: grandTotal > 0 ? grandTotal : 0 }], null, false);
+    setPendingAction("sale");
+    setMultiPaymentOpen(true);
   };
 
   const handlePayAndPrint = () => {
@@ -184,7 +190,16 @@ export const CartSummary = () => {
       return;
     }
 
-    processTransaction([{ method: 'cash', amount: grandTotal > 0 ? grandTotal : 0 }], null, true);
+    setPendingAction("print");
+    setMultiPaymentOpen(true);
+  };
+
+  const handleMultiPaymentConfirm = async (
+    paymentBreakdown: { method: string; amount: number }[],
+    shouldPrint: boolean = false
+  ) => {
+    setMultiPaymentOpen(false);
+    await processTransaction(paymentBreakdown, null, shouldPrint || pendingAction === 'print');
   };
 
   const handleLedgerSuccess = (receivedAmount: number) => {
@@ -328,7 +343,7 @@ export const CartSummary = () => {
                   if (tab.id !== activeTabId) return tab;
                   return {
                     ...tab,
-                    customer: customer ? { id: customer.id, name: customer.name } : undefined
+                    customer: customer ? { id: customer.id, name: customer.name } : null
                   };
                 })
               });
@@ -367,7 +382,18 @@ export const CartSummary = () => {
         </div>
 
         <div className="flex justify-between items-center mb-3 pb-3 border-b border-gray-200 dark:border-gray-800 border-dashed">
-          <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Invoice Discount</span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Invoice Discount</span>
+            <button
+              type="button"
+              onClick={() => setDiscountModalOpen(true)}
+              title="Open Discount Presets"
+              className="p-1 rounded bg-primary/10 hover:bg-primary/20 text-primary transition-colors text-[10px] font-bold flex items-center gap-0.5"
+            >
+              <Tag className="h-3 w-3" />
+              <span>Presets</span>
+            </button>
+          </div>
           <div className="flex items-center gap-1 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-gray-50 dark:bg-gray-800">
             <input 
               type="number"
@@ -399,7 +425,9 @@ export const CartSummary = () => {
             <span className="text-sm mr-1 text-gray-400 dark:text-gray-500 font-bold mb-0.5">Rs</span>
             {isEditingTotal ? (
               <input 
-                ref={(input) => input && input.select()}
+                ref={(input) => {
+                  if (input) input.select();
+                }}
                 type="number"
                 value={editedTotal}
                 onChange={(e) => setEditedTotal(e.target.value)}
@@ -486,7 +514,7 @@ export const CartSummary = () => {
                 if (tab.id !== activeTabId) return tab;
                 return {
                   ...tab,
-                  customer: customer ? { id: customer.id, name: customer.name } : undefined
+                  customer: customer ? { id: customer.id, name: customer.name } : null
                 };
               })
             });
@@ -505,19 +533,27 @@ export const CartSummary = () => {
         />
       )}
 
-      {pendingTransaction && selectedCustomer && (
-        <CreditLimitWarningModal
-          customer={selectedCustomer}
-          projectedBalance={pendingTransaction.projectedBalance}
-          onCancel={() => setPendingTransaction(null)}
-          onProceed={() => {
-            executeTransaction(pendingTransaction.paymentBreakdown, pendingTransaction.customerObj, pendingTransaction.shouldPrint);
-            setPendingTransaction(null);
-          }}
-          onLimitUpdated={(updatedCustomer) => setSelectedCustomer(updatedCustomer)}
+      {isDiscountModalOpen && (
+        <DiscountModal
+          isOpen={isDiscountModalOpen}
+          onClose={() => setDiscountModalOpen(false)}
         />
       )}
-      
+
+      {isMultiPaymentOpen && (
+        <MultiPaymentModal
+          isOpen={isMultiPaymentOpen}
+          grandTotal={grandTotal}
+          isProcessing={isProcessing}
+          onClose={() => setMultiPaymentOpen(false)}
+          onConfirm={handleMultiPaymentConfirm}
+          onCreditSelect={() => {
+            setMultiPaymentOpen(false);
+            setCustomerModalOpen(true);
+          }}
+        />
+      )}
+
       <GlobalLoadingOverlay isOpen={isProcessing} message="Processing Transaction..." />
     </div>
   );

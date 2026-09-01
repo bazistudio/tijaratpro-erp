@@ -4,6 +4,9 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ledgerApi } from '@/services/ledger.api';
 import { useAuthStore } from '@/lib/auth/core/auth.store';
 import { invalidateQueries } from '@/lib/react-query/invalidate';
+import { usePrintStore } from '@/lib/printer';
+import { usePrinterStore } from '@/features/settings/printer/store/printer.store';
+import { printFormatter } from '@/features/settings/printer/utils/printFormatter';
 
 interface MakeSupplierPaymentModalProps {
   isOpen: boolean;
@@ -18,10 +21,8 @@ export const MakeSupplierPaymentModal = ({ isOpen, onClose, supplier, onPaymentS
 
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
-
-  const { openPreview } = require('@/lib/printer').usePrintStore();
-  const { settings, shopHeader } = require('@/features/settings/printer/store/printer.store').usePrinterStore();
-  const { printFormatter } = require('@/features/settings/printer/utils/printFormatter');
+  const { openPreview } = usePrintStore();
+  const { settings, shopHeader } = usePrinterStore();
 
   const paymentMutation = useMutation({
     mutationFn: ledgerApi.recordPayment,

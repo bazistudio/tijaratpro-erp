@@ -38,6 +38,15 @@ export const salesApi = {
     return response.data;
   },
 
+  updateOrderStatus: async (orderId: string, status: string) => {
+    const response = await axiosInstance.patch<{
+      success: boolean;
+      message: string;
+      order?: any;
+    }>(`/api/v1/orders/${orderId}/status`, { status });
+    return response.data;
+  },
+
   cancelOrder: async (orderId: string) => {
     const response = await axiosInstance.patch<{
       success: boolean;

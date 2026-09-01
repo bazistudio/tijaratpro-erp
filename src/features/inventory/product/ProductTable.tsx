@@ -8,6 +8,7 @@ import { ProductActions } from './components/ProductActions';
 import { ProductEditModal } from './components/ProductEditModal';
 import { ProductDeleteDialog } from './components/ProductDeleteDialog';
 import { ProductDetailsDrawer } from './components/ProductDetailsDrawer';
+import { QuickStockAdjustModal } from '../components/QuickStockAdjustModal';
 import { selectSortConfig, selectSetSort } from '@/features/inventory/core/inventory.selectors';
 
 interface ProductTableProps {
@@ -30,6 +31,7 @@ export const ProductTable = ({ products, isLoading }: ProductTableProps) => {
   const [editProduct, setEditProduct] = useState<InventoryProduct | null>(null);
   const [deleteProduct, setDeleteProduct] = useState<InventoryProduct | null>(null);
   const [viewProduct, setViewProduct] = useState<InventoryProduct | null>(null);
+  const [adjustProduct, setAdjustProduct] = useState<InventoryProduct | null>(null);
 
   const handleSort = (field: SortField) => {
     setSort({
@@ -142,6 +144,7 @@ export const ProductTable = ({ products, isLoading }: ProductTableProps) => {
                     onView={setViewProduct}
                     onEdit={setEditProduct}
                     onDelete={setDeleteProduct}
+                    onAdjustStock={setAdjustProduct}
                   />
                 </td>
               </tr>
@@ -149,6 +152,15 @@ export const ProductTable = ({ products, isLoading }: ProductTableProps) => {
           </tbody>
         </table>
       </div>
+
+      {/* Quick Stock Adjust Modal */}
+      {adjustProduct && (
+        <QuickStockAdjustModal
+          product={adjustProduct}
+          isOpen={true}
+          onClose={() => setAdjustProduct(null)}
+        />
+      )}
 
       {/* Product Edit Modal */}
       {editProduct && (

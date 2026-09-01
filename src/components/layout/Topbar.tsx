@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Menu, Bell, ShoppingCart, Plus, ReceiptText, RefreshCw } from 'lucide-react';
+import { Menu, Bell, ShoppingCart, Plus, ReceiptText, RefreshCw, Lock } from 'lucide-react';
 import { UserMenu } from './UserMenu';
 import { SearchInput } from '../common/SearchInput';
 import { DesktopAppButton } from './DesktopAppButton';
@@ -11,6 +11,7 @@ import { ShopSwitcher } from './ShopSwitcher';
 import { selectForceSync, selectStatus } from '@/features/inventory/core/inventory.selectors';
 import { useExpensesStore } from '@/features/expenses';
 import { useInventoryUIStore } from '@/features/inventory/store/inventory-ui.store';
+import { useTerminalStore } from '@/store/useTerminalStore';
 
 interface TopbarProps {
   setMobileMenuOpen: (isOpen: boolean) => void;
@@ -24,6 +25,7 @@ export const Topbar = ({ setMobileMenuOpen }: TopbarProps) => {
   const forceSync = selectForceSync();
   const inventoryStatus = selectStatus();
   const isSyncing = inventoryStatus === 'loading';
+  const lockTerminal = useTerminalStore((s) => s.lockTerminal);
 
   return (
     <header className="sticky top-0 z-[var(--z-fixed)] flex h-12 flex-shrink-0 bg-surface/90 backdrop-blur-md border-b border-border transition-colors duration-fast">
@@ -73,7 +75,7 @@ export const Topbar = ({ setMobileMenuOpen }: TopbarProps) => {
             type="button"
             onClick={() => forceSync()}
             disabled={isSyncing}
-            title="Sync Inventory"
+            title={isSyncing ? 'Syncing...' : 'Sync Inventory'}
             aria-label="Sync inventory"
             className={`${topbarIconBtn} disabled:opacity-disabled`}
           >
@@ -92,6 +94,17 @@ export const Topbar = ({ setMobileMenuOpen }: TopbarProps) => {
             className={topbarIconBtn}
           >
             <ReceiptText className="h-4 w-4 text-danger" aria-hidden="true" />
+          </button>
+
+          {/* Lock Terminal (Ctrl+L) */}
+          <button
+            type="button"
+            onClick={() => lockTerminal()}
+            title="Lock Terminal (Ctrl+L)"
+            aria-label="Lock terminal"
+            className={topbarIconBtn}
+          >
+            <Lock className="h-4 w-4" aria-hidden="true" />
           </button>
 
           {/* Desktop App */}

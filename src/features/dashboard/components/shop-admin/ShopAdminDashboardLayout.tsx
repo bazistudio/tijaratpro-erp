@@ -6,6 +6,8 @@ import { Sidebar } from '@/components/layout/Sidebar';
 import { MobileSidebar } from '@/components/layout/MobileSidebar';
 import { Topbar } from '@/components/layout/Topbar';
 import { DashboardShell } from '@/components/layout/DashboardShell';
+import { LockScreenOverlay } from '@/components/layout/desktop/LockScreenOverlay';
+import { GlobalFooter } from '@/components/layout/desktop/GlobalFooter';
 import { useSyncEngine } from '@/features/realtime-sync/hooks/useSyncEngine';
 import { useDashboardShortcuts } from '@/hooks/useDashboardShortcuts';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
@@ -26,7 +28,10 @@ export const ShopAdminDashboardLayout = ({ children }: ShopAdminDashboardLayoutP
 
   return (
     <ThemeProvider>
-      <div className="flex flex-1 h-full w-full min-h-0 overflow-hidden bg-background">
+      <div className="flex flex-1 h-full w-full min-h-0 overflow-hidden bg-background relative">
+        {/* Terminal Fast PIN Lock Screen Overlay */}
+        <LockScreenOverlay />
+
         {/* Mobile Sidebar */}
         <MobileSidebar isOpen={mobileMenuOpen} setIsOpen={setMobileMenuOpen} />
 
@@ -34,7 +39,7 @@ export const ShopAdminDashboardLayout = ({ children }: ShopAdminDashboardLayoutP
         <Sidebar />
 
         {/* Main Content Area */}
-        <div className="flex w-0 flex-1 flex-col transition-all duration-200">
+        <div className="flex w-0 flex-1 flex-col transition-all duration-200 min-h-0 overflow-hidden">
           {/* Topbar */}
           <Topbar setMobileMenuOpen={setMobileMenuOpen} />
 
@@ -42,6 +47,9 @@ export const ShopAdminDashboardLayout = ({ children }: ShopAdminDashboardLayoutP
           <DashboardShell variant={pathname?.includes('/pos') ? 'pos' : 'default'}>
             {children}
           </DashboardShell>
+
+          {/* Global Desktop Footer */}
+          <GlobalFooter />
         </div>
       </div>
     </ThemeProvider>
@@ -49,3 +57,4 @@ export const ShopAdminDashboardLayout = ({ children }: ShopAdminDashboardLayoutP
 };
 
 export default ShopAdminDashboardLayout;
+

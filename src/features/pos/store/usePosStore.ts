@@ -508,7 +508,10 @@ export const usePosStore = create<PosStore>()(
             paymentMethod: method,
             transactionType: session.transactionType,
             taxRate: 0,
-            discount: session.invoiceDiscountValue || 0,
+            // T1 Contract Adaptation: calculated monetary discount
+            discount: session.invoiceDiscountType === 'percentage'
+              ? Math.round((session.cart.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0)) * ((session.invoiceDiscountValue || 0) / 100))
+              : (session.invoiceDiscountValue || 0),
             linkedInvoiceId: session.linkedInvoiceId || undefined,
             idempotencyKey,
           };

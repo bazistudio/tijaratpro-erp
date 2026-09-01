@@ -49,7 +49,7 @@ export const CreditLedgerTab = () => {
     refetchOnWindowFocus: false,
   });
 
-  const ledgerEntries = ledgerResponse?.data?.history || [];
+  const ledgerEntries: any[] = (ledgerResponse?.data as any)?.timeline || (ledgerResponse?.data as any)?.history || [];
 
   // 3. Compute Transaction count for Quick Stats (count 'sale' or 'invoice' items from history)
   const totalInvoices = useMemo(() => {

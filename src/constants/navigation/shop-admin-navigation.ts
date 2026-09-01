@@ -13,6 +13,8 @@ import {
   FileUp,
   Bug,
   BookOpen,
+  ChefHat,
+  Megaphone,
 } from 'lucide-react';
 import { NavigationGroup } from '../../types/navigation';
 
@@ -38,6 +40,8 @@ export const shopAdminNavigation: NavigationGroup[] = [
   {
     label: 'Operations',
     items: [
+      { name: 'Kitchen Display (KDS)', href: '/dashboard/shop-admin/kds', icon: ChefHat, permission: 'POS_ACCESS' },
+      { name: 'Marketing & Broadcasts', href: '/dashboard/shop-admin/marketing', icon: Megaphone, permission: 'VIEW_REPORTS' },
       { name: 'Repairs', href: '/dashboard/shop-admin/repairs', icon: Wrench },
       { name: 'Expenses', href: '/dashboard/shop-admin/expenses', icon: Receipt, permission: 'VIEW_EXPENSES' },
     ],

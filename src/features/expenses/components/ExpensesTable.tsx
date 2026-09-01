@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useExpensesStore } from '../store/expenses.store';
 import { FileText, MoreHorizontal, Activity, Trash2, Edit, Download, Printer } from 'lucide-react';
 import { ExpenseLedgerTraceModal } from './ExpenseLedgerTraceModal';
+import { CashFlowSummaryCard } from './CashFlowSummaryCard';
 import { usePrintStore } from '@/lib/printer';
 import { usePrinterStore } from '@/features/settings/printer/store/printer.store';
 import { printFormatter } from '@/features/settings/printer/utils/printFormatter';
@@ -48,6 +49,7 @@ export const ExpensesTable: React.FC = () => {
 
   return (
     <>
+      <CashFlowSummaryCard />
       <div className="bg-white dark:bg-neutral-900 rounded-xl shadow-sm border border-neutral-100 dark:border-neutral-800 overflow-visible">
         <div className="overflow-x-auto min-h-[300px]">
           <table className="w-full text-sm text-left">

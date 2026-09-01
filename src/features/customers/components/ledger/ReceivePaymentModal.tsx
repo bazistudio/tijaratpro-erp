@@ -5,6 +5,9 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ledgerApi } from '@/services/ledger.api';
 import { useAuthStore } from '@/lib/auth/core/auth.store';
 import { invalidateQueries } from '@/lib/react-query/invalidate';
+import { usePrintStore } from '@/lib/printer';
+import { usePrinterStore } from '@/features/settings/printer/store/printer.store';
+import { printFormatter } from '@/features/settings/printer/utils/printFormatter';
 
 interface ReceivePaymentModalProps {
   isOpen: boolean;
@@ -19,16 +22,14 @@ export const ReceivePaymentModal = ({ isOpen, onClose, customer, onPaymentSucces
 
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
-
-  const { openPreview } = require('@/lib/printer').usePrintStore();
-  const { settings, shopHeader } = require('@/features/settings/printer/store/printer.store').usePrinterStore();
-  const { printFormatter } = require('@/features/settings/printer/utils/printFormatter');
+  const { openPreview } = usePrintStore();
+  const { settings, shopHeader } = usePrinterStore();
 
   const paymentMutation = useMutation({
     mutationFn: ledgerApi.recordPayment,
     onSuccess: (data: any) => {
       invalidateQueries.customers(queryClient, user);
-      invalidateQueries.ledger(queryClient, user, 'CUSTOMER', customer.id);
+      invalidateQueries.ledger(queryClient, user, 'CUSTOMER', customer?.id);
       setAmount('');
       
       // Attempt to Print Receipt automatically
@@ -65,7 +66,7 @@ export const ReceivePaymentModal = ({ isOpen, onClose, customer, onPaymentSucces
     if (!amount || isNaN(Number(amount))) return;
     
     paymentMutation.mutate({
-      partyId: customer.id,
+      partyId: customer?.id,
       partyType: 'CUSTOMER',
       amount: Number(amount),
       method: method.toLowerCase() === 'bank transfer' ? 'bank' : method.toLowerCase() as any,
@@ -95,7 +96,7 @@ export const ReceivePaymentModal = ({ isOpen, onClose, customer, onPaymentSucces
           <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl border border-gray-100 dark:border-gray-800 flex justify-between items-center">
             <div>
               <p className="text-sm text-gray-500 dark:text-gray-400">Customer</p>
-              <p className="font-semibold text-gray-900 dark:text-white">{customer.name}</p>
+              <p className="font-semibold text-gray-900 dark:text-white">{customer?.name}</p>
             </div>
             <div className="text-right">
               <p className="text-sm text-gray-500 dark:text-gray-400">Outstanding</p>

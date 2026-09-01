@@ -103,7 +103,7 @@ export const UserMenu = () => {
           {/* Menu items */}
           <div className="py-1" role="none">
             <Link
-              href="/dashboard/shop-admin/settings"
+              href="/dashboard/shop-admin/profile"
               onClick={() => setIsOpen(false)}
               role="menuitem"
               className={menuItemClass}

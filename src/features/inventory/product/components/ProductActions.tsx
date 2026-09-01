@@ -9,9 +9,10 @@ interface ProductActionsProps {
   onView: (product: InventoryProduct) => void;
   onEdit: (product: InventoryProduct) => void;
   onDelete: (product: InventoryProduct) => void;
+  onAdjustStock?: (product: InventoryProduct) => void;
 }
 
-export const ProductActions = ({ product, onView, onEdit, onDelete }: ProductActionsProps) => {
+export const ProductActions = ({ product, onView, onEdit, onDelete, onAdjustStock }: ProductActionsProps) => {
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -42,7 +43,7 @@ export const ProductActions = ({ product, onView, onEdit, onDelete }: ProductAct
       </button>
 
       {open && (
-        <div className="absolute right-0 top-8 z-50 w-40 rounded-xl border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg py-1 animate-in fade-in slide-in-from-top-2 duration-150">
+        <div className="absolute right-0 top-8 z-50 w-48 rounded-xl border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg py-1 animate-in fade-in slide-in-from-top-2 duration-150">
           <button
             onClick={() => handleAction(() => onView(product))}
             className="flex w-full items-center gap-2.5 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
@@ -57,6 +58,15 @@ export const ProductActions = ({ product, onView, onEdit, onDelete }: ProductAct
             <Edit2 className="h-3.5 w-3.5 text-blue-400" />
             Edit Product
           </button>
+          {onAdjustStock && (
+            <button
+              onClick={() => handleAction(() => onAdjustStock(product))}
+              className="flex w-full items-center gap-2.5 px-3 py-2 text-sm text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 transition-colors font-medium"
+            >
+              <span className="text-xs">⚡</span>
+              Quick Adjust Stock
+            </button>
+          )}
           <div className="my-1 border-t border-gray-100 dark:border-gray-800" />
           <button
             onClick={() => handleAction(() => onDelete(product))}
