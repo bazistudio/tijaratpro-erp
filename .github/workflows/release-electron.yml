@@ -3,7 +3,8 @@ name: Release Electron App
 on:
   push:
     tags:
-      - 'v*' # Trigger on version tags like v0.1.0, v1.0.0, etc.
+      - 'v*'
+  workflow_dispatch: # Trigger on version tags like v0.1.0, v1.0.0, etc.
 
 jobs:
   release:
@@ -32,3 +33,4 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NEXT_PUBLIC_API_URL: https://tijaratpro-api-598374253827.asia-south1.run.app
         run: npm run release
+
