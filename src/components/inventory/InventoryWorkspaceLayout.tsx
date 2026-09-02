@@ -7,18 +7,21 @@ import { InventoryFilterProvider } from './InventoryFilterContext';
 import { InventoryFilterBar } from './InventoryFilterBar';
 import { AddProductDrawer } from './AddProductDrawer';
 import { useInventoryUIStore } from '@/features/inventory/store/inventory-ui.store';
+import { selectProducts } from '@/features/inventory/core/inventory.selectors';
+
 export function InventoryWorkspaceLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [formatInMillions, setFormatInMillions] = useState(false);
   const { isAddProductOpen, setAddProductOpen } = useInventoryUIStore();
+  const products = selectProducts();
 
   // Basic check for which tab is active based on the URL path
   const isProducts = pathname === '/dashboard/shop-admin/inventory';
   const isStock = pathname.includes('/dashboard/shop-admin/inventory/stock');
   const isImport = pathname.includes('/dashboard/shop-admin/inventory/import');
 
-  // Dummy volume for the shell - this would ideally come from an API or a data context
-  const dummyTotalVolume = 124000;
+  // Compute live inventory investment volume from active products
+  const totalVolume = products.reduce((sum, p) => sum + ((p.stock || 0) * (p.purchasePrice || 0)), 0);
 
   const formatCurrency = (value: number) => {
     if (formatInMillions) {
@@ -85,7 +88,7 @@ export function InventoryWorkspaceLayout({ children }: { children: React.ReactNo
                 title="Click to toggle millions format"
               >
                 <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total Invest Volume:</span>
-                <span className="text-sm font-bold text-[#006970] dark:text-[#00B4BB]">{formatCurrency(dummyTotalVolume)}</span>
+                <span className="text-sm font-bold text-[#006970] dark:text-[#00B4BB]">{formatCurrency(totalVolume)}</span>
               </button>
             </div>
           </div>

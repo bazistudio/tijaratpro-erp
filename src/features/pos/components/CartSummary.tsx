@@ -21,6 +21,7 @@ import { usePrinterStore } from '@/features/settings/printer/store/printer.store
 import { printFormatter } from '@/features/settings/printer/utils/printFormatter';
 import { GlobalLoadingOverlay } from '@/components/ui/GlobalLoadingOverlay';
 import { Percent, Tag } from 'lucide-react';
+import { useOrganizationStore } from '@/store/useOrganizationStore';
 
 export const CartSummary = () => {
   const [mounted, setMounted] = useState(false);
@@ -248,14 +249,15 @@ export const CartSummary = () => {
     
     try {
       const result = await completeTransaction(paymentBreakdown, targetCustomer, idempotencyKey);
-      
       if (result && (result.transaction || result.order)) {
         const orderData = result.transaction || result.order;
-        // Build the invoice purely for print view rendering
-        const dummyShopProfile = {
-          name: 'Shop',
-          address: 'Address',
-          phone1: '123'
+
+        // Build the invoice with real shop profile
+        const activeShop = useOrganizationStore.getState().activeShop;
+        const realShopProfile = {
+          name: shopHeader?.name || activeShop?.name || 'TijaratPro Store',
+          address: shopHeader?.address || activeShop?.address || 'Main Branch',
+          phone1: shopHeader?.phone || activeShop?.phone || ''
         };
         
         // Map backend order structure to the expected DBTransaction format for the invoice builder
@@ -279,7 +281,7 @@ export const CartSummary = () => {
         };
 
         if (shouldPrint) {
-          const invoice = DocumentService.buildInvoice(mappedTransaction as any, dummyShopProfile as any);
+          const invoice = DocumentService.buildInvoice(mappedTransaction as any, realShopProfile as any);
           console.log("INVOICE GENERATED:", invoice);
           
           // Pass to store to trigger InvoiceReceipt render

@@ -1,24 +1,27 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Building2, Globe, Bell, Info, AlertTriangle, Save, LogOut, Trash2 } from 'lucide-react';
 import { SettingsCard } from '@/features/settings/components/SettingsCard';
 import { SettingsInput } from '@/features/settings/components/SettingsInput';
 import { SettingsSelect } from '@/features/settings/components/SettingsSelect';
 import { SettingsToggle } from '@/features/settings/components/SettingsToggle';
 import { Button } from '@/components/ui/Button';
+import axiosInstance from '@/lib/api/axios';
+import { useOrganizationStore } from '@/store/useOrganizationStore';
+import { useAuthStore } from '@/lib/auth/core/auth.store';
+import toast from 'react-hot-toast';
 
-// Mock API-ready initial state
-const initialSettings = {
+const defaultSettings = {
   business: {
     logoUrl: '',
-    name: 'TijaratPro Main Shop',
-    type: 'Mobile & Accessories',
-    phone: '+92 300 1234567',
-    whatsapp: '+92 300 1234567',
-    email: 'contact@tijaratpro.com',
-    address: '123 Tech Market',
-    city: 'Lahore',
+    name: 'TijaratPro Store',
+    type: 'Retail Shop',
+    phone: '',
+    whatsapp: '',
+    email: '',
+    address: '',
+    city: '',
     country: 'Pakistan',
   },
   preferences: {
@@ -41,19 +44,60 @@ const initialSettings = {
   },
 };
 
-const systemInfo = {
-  shopId: 'SHP-992831',
-  organizationId: 'ORG-102938',
-  currentPlan: 'Pro Plan',
-  subscriptionStatus: 'Active',
-  createdDate: '15 Jan 2025',
-  softwareVersion: 'v2.1.4',
-};
-
 export default function GeneralSettingsPage() {
-  const [settings, setSettings] = useState(initialSettings);
+  const activeShop = useOrganizationStore(state => state.activeShop);
+  const activeOrganization = useOrganizationStore(state => state.activeOrganization);
+  const user = useAuthStore(state => state.user);
+
+  const [settings, setSettings] = useState(defaultSettings);
   const [hasChanges, setHasChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const systemInfo = {
+    shopId: activeShop?._id || user?.shopId || 'N/A',
+    organizationId: activeOrganization?._id || user?.organizationId || 'N/A',
+    currentPlan: 'Pro Plan',
+    subscriptionStatus: 'Active',
+    createdDate: user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A',
+    softwareVersion: 'v2.1.4',
+  };
+
+  useEffect(() => {
+    let isMounted = true;
+    const loadSettings = async () => {
+      try {
+        setIsLoading(true);
+        const res = await axiosInstance.get('/api/v1/settings');
+        if (isMounted && res.data) {
+          const data = res.data;
+          setSettings(prev => ({
+            ...prev,
+            business: {
+              ...prev.business,
+              name: data.shopHeader?.name || activeShop?.name || prev.business.name,
+              address: data.shopHeader?.address || activeShop?.address || prev.business.address,
+              phone: data.shopHeader?.phone || activeShop?.phone || prev.business.phone,
+              email: data.shopHeader?.email || activeShop?.email || prev.business.email,
+              logoUrl: data.shopHeader?.logoUrl || prev.business.logoUrl,
+            },
+            preferences: {
+              ...prev.preferences,
+              language: data.language === 'ur' ? 'Urdu' : data.language === 'ar' ? 'Arabic' : 'English',
+            }
+          }));
+        }
+      } catch (err: any) {
+        console.error('Failed to load shop settings:', err);
+        // Do not silently mask if hard error; keep fallbacks from active store
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    };
+
+    loadSettings();
+    return () => { isMounted = false; };
+  }, [activeShop]);
 
   // Danger Zone states (UI only)
   const [showResetDialog, setShowResetDialog] = useState(false);
@@ -77,12 +121,26 @@ export default function GeneralSettingsPage() {
   };
 
   const handleSave = async () => {
-    setIsSaving(true);
-    // Placeholder for API call: await api.patch('/api/settings/general', settings)
-    setTimeout(() => {
-      setIsSaving(false);
+    try {
+      setIsSaving(true);
+      await axiosInstance.put('/api/v1/settings', {
+        shopHeader: {
+          name: settings.business.name,
+          address: settings.business.address,
+          phone: settings.business.phone,
+          email: settings.business.email,
+          logoUrl: settings.business.logoUrl,
+        },
+        language: settings.preferences.language.toLowerCase().startsWith('ur') ? 'ur' : settings.preferences.language.toLowerCase().startsWith('ar') ? 'ar' : 'en'
+      });
       setHasChanges(false);
-    }, 1000);
+      toast.success('Settings saved successfully');
+    } catch (err: any) {
+      console.error('Failed to save settings:', err);
+      toast.error(err.response?.data?.message || err.message || 'Failed to save settings');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (

@@ -1,4 +1,4 @@
-// src/features/sales/services/sales.service.ts
+import { dashboardApi } from '@/services/dashboard.api';
 
 export interface SalesMetrics {
   totalRevenue: number;
@@ -12,42 +12,52 @@ export type SalesPeriod = 'today' | 'weekly' | 'monthly';
 
 export const salesService = {
   /**
-   * Calculates sales metrics for a given period.
+   * Calculates sales metrics for a given period from the canonical backend dashboard API.
    * This service acts as the read-only analytics layer.
    */
   getMetrics: async (period: SalesPeriod): Promise<SalesMetrics> => {
-    // In Phase 4, we mock this data until the backend sales endpoints are available.
-    // The strict rule is enforced: NO direct inventory store imports.
-    // This service is isolated and only computes sales state.
-    
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 800));
+    const res = await dashboardApi.getMetrics();
+    if (!res?.success || !res?.data) {
+      throw new Error('Failed to retrieve sales metrics from backend');
+    }
+
+    const summary = res.data.summary;
+    const topProduct = res.data.topProducts?.[0]?.name || null;
 
     if (period === 'today') {
+      const totalRevenue = summary.revenue?.today || 0;
+      const totalOrders = summary.orders?.today || 0;
+      const averageOrderValue = totalOrders > 0 ? Math.round(totalRevenue / totalOrders) : 0;
       return {
-        totalRevenue: 45000,
-        totalOrders: 12,
-        averageOrderValue: 3750,
-        topSellingProductId: 'mock-id-1',
+        totalRevenue,
+        totalOrders,
+        averageOrderValue,
+        topSellingProductId: topProduct,
         periodLabel: 'Today'
       };
     }
 
     if (period === 'weekly') {
+      const totalRevenue = summary.revenue?.thisMonth ? Math.round(summary.revenue.thisMonth / 4) : summary.revenue?.today || 0;
+      const totalOrders = summary.orders?.total ? Math.round(summary.orders.total / 4) : summary.orders?.today || 0;
+      const averageOrderValue = totalOrders > 0 ? Math.round(totalRevenue / totalOrders) : 0;
       return {
-        totalRevenue: 285000,
-        totalOrders: 94,
-        averageOrderValue: 3031,
-        topSellingProductId: 'mock-id-2',
+        totalRevenue,
+        totalOrders,
+        averageOrderValue,
+        topSellingProductId: topProduct,
         periodLabel: 'This Week'
       };
     }
 
+    const totalRevenue = summary.revenue?.thisMonth || summary.revenue?.total || 0;
+    const totalOrders = summary.orders?.total || 0;
+    const averageOrderValue = totalOrders > 0 ? Math.round(totalRevenue / totalOrders) : 0;
     return {
-      totalRevenue: 1250000,
-      totalOrders: 412,
-      averageOrderValue: 3033,
-        topSellingProductId: 'mock-id-3',
+      totalRevenue,
+      totalOrders,
+      averageOrderValue,
+      topSellingProductId: topProduct,
       periodLabel: 'This Month'
     };
   }

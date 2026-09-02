@@ -10,20 +10,26 @@ export const SalesAnalyticsWidget = () => {
   const [period, setPeriod] = useState<SalesPeriod>('today');
   const [metrics, setMetrics] = useState<SalesMetrics | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
 
     const fetchMetrics = () => {
       setIsLoading(true);
+      setError(null);
       salesService.getMetrics(period).then((data) => {
         if (isMounted) {
           setMetrics(data);
+          setError(null);
           setIsLoading(false);
         }
       }).catch(err => {
         console.error(err);
-        if (isMounted) setIsLoading(false);
+        if (isMounted) {
+          setError(err.message || 'Failed to load sales analytics');
+          setIsLoading(false);
+        }
       });
     };
 
@@ -82,6 +88,27 @@ export const SalesAnalyticsWidget = () => {
       {isLoading ? (
         <div className="h-40 flex items-center justify-center border border-gray-100 dark:border-gray-800 rounded-xl bg-white dark:bg-gray-900">
           <Loader2 className="w-6 h-6 animate-spin text-[#006970]" />
+        </div>
+      ) : error ? (
+        <div className="p-6 rounded-xl border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-950/20 text-red-700 dark:text-red-400 flex flex-col items-center justify-center text-center">
+          <p className="font-semibold text-sm">{error}</p>
+          <button
+            type="button"
+            onClick={() => {
+              setIsLoading(true);
+              setError(null);
+              salesService.getMetrics(period).then((data) => {
+                setMetrics(data);
+                setIsLoading(false);
+              }).catch(err => {
+                setError(err.message || 'Failed to load sales analytics');
+                setIsLoading(false);
+              });
+            }}
+            className="mt-3 px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-medium transition-colors cursor-pointer"
+          >
+            Retry
+          </button>
         </div>
       ) : metrics ? (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

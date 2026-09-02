@@ -2,12 +2,15 @@ import React from 'react';
 import { HistoryItem } from '../types/history.types';
 import { X, Printer, Download } from 'lucide-react';
 
+import { useOrganizationStore } from '@/store/useOrganizationStore';
+
 interface Props {
   item: HistoryItem;
   onClose: () => void;
 }
 
 export const InvoicePreviewModal: React.FC<Props> = ({ item, onClose }) => {
+  const activeShop = useOrganizationStore(state => state.activeShop);
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-3xl overflow-hidden flex flex-col max-h-[90vh]">
@@ -43,8 +46,8 @@ export const InvoicePreviewModal: React.FC<Props> = ({ item, onClose }) => {
                 <p className="text-sm text-gray-500 mt-1"># {item.referenceId}</p>
               </div>
               <div className="text-right">
-                <p className="font-semibold text-gray-900 dark:text-white">TijaratPro Store</p>
-                <p className="text-sm text-gray-500">123 Market Street, City</p>
+                <p className="font-semibold text-gray-900 dark:text-white">{activeShop?.name || 'TijaratPro Store'}</p>
+                <p className="text-sm text-gray-500">{activeShop?.address || 'Main Branch'}</p>
               </div>
             </div>
 
@@ -70,12 +73,15 @@ export const InvoicePreviewModal: React.FC<Props> = ({ item, onClose }) => {
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
                   <tr>
-                    <td className="px-4 py-4 text-gray-600 dark:text-gray-400">Mock Item 1</td>
-                    <td className="px-4 py-4 text-right font-medium text-gray-900 dark:text-white">Rs {(item.amount * 0.6).toLocaleString()}</td>
-                  </tr>
-                  <tr>
-                    <td className="px-4 py-4 text-gray-600 dark:text-gray-400">Mock Item 2</td>
-                    <td className="px-4 py-4 text-right font-medium text-gray-900 dark:text-white">Rs {(item.amount * 0.4).toLocaleString()}</td>
+                    <td className="px-4 py-4 text-gray-600 dark:text-gray-400">
+                      <div className="font-medium text-gray-900 dark:text-white capitalize">
+                        {item.type.replace('_', ' ')}
+                      </div>
+                      <div className="text-xs text-gray-500 mt-0.5">
+                        Ref: {item.referenceId} &bull; Source: {item.source.toUpperCase()}
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 text-right font-medium text-gray-900 dark:text-white">Rs {item.amount.toLocaleString()}</td>
                   </tr>
                 </tbody>
               </table>
