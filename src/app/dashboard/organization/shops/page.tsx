@@ -3,13 +3,18 @@
 import React, { useState, useEffect } from 'react';
 import { shopApi, ShopData } from '@/services/shop.api';
 import { AddShopModal } from '@/features/organization/components/shops/AddShopModal';
-import { Store, MapPin, Phone, CheckCircle, XCircle } from 'lucide-react';
+import { EditShopModal } from '@/features/organization/components/shops/EditShopModal';
+import { Store, MapPin, Phone, CheckCircle, XCircle, Edit, Trash2, Power, AlertTriangle } from 'lucide-react';
 import { Loader2 } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export default function ShopsManagementPage() {
   const [shops, setShops] = useState<ShopData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [editingShop, setEditingShop] = useState<ShopData | null>(null);
+  const [deletingShop, setDeletingShop] = useState<ShopData | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
 
   const fetchShops = async () => {
     try {
@@ -20,6 +25,7 @@ export default function ShopsManagementPage() {
       }
     } catch (error) {
       console.error('Failed to fetch shops', error);
+      toast.error('Failed to load shops');
     } finally {
       setLoading(false);
     }
@@ -29,6 +35,37 @@ export default function ShopsManagementPage() {
     fetchShops();
   }, []);
 
+  const handleDeleteShop = async () => {
+    if (!deletingShop) return;
+    try {
+      setActionLoading(true);
+      const res = await shopApi.deleteShop(deletingShop._id);
+      if (res.success) {
+        toast.success(res.message || 'Shop deleted successfully');
+        setDeletingShop(null);
+        fetchShops();
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || err.message || 'Failed to delete shop');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleToggleStatus = async (shop: ShopData) => {
+    const isCurrentlyActive = shop.status === 'active' || shop.status === 'ACTIVE';
+    const newStatus = isCurrentlyActive ? 'inactive' : 'active';
+    try {
+      const res = await shopApi.toggleShopStatus(shop._id, newStatus);
+      if (res.success) {
+        toast.success(`Shop status changed to ${newStatus}`);
+        fetchShops();
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || err.message || 'Failed to update shop status');
+    }
+  };
+
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <div className="flex justify-between items-center mb-6">
@@ -37,7 +74,7 @@ export default function ShopsManagementPage() {
           <p className="text-sm text-gray-500 mt-1">Manage all branches within your organization</p>
         </div>
         <button 
-          onClick={() => setIsModalOpen(true)}
+          onClick={() => setIsAddModalOpen(true)}
           className="bg-[#006970] text-white px-4 py-2 flex items-center gap-2 rounded-md hover:bg-[#005a60] transition-colors shadow-sm"
         >
           <Store className="w-4 h-4" />
@@ -46,10 +83,50 @@ export default function ShopsManagementPage() {
       </div>
 
       <AddShopModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
+        isOpen={isAddModalOpen} 
+        onClose={() => setIsAddModalOpen(false)} 
         onSuccess={fetchShops} 
       />
+
+      <EditShopModal
+        isOpen={!!editingShop}
+        shop={editingShop}
+        onClose={() => setEditingShop(null)}
+        onSuccess={fetchShops}
+      />
+
+      {/* Delete Confirmation Modal */}
+      {deletingShop && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md p-6">
+            <div className="flex items-center gap-3 text-red-600 mb-4">
+              <AlertTriangle className="w-6 h-6" />
+              <h3 className="text-lg font-bold">Remove Shop</h3>
+            </div>
+            <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">
+              Are you sure you want to deactivate and remove <strong>{deletingShop.name}</strong>? This branch will no longer accept operations. Historical records will be preserved.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setDeletingShop(null)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={actionLoading}
+                onClick={handleDeleteShop}
+                className="flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 disabled:opacity-70"
+              >
+                {actionLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                Confirm Remove
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {loading ? (
         <div className="flex items-center justify-center h-64 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700">
@@ -63,7 +140,7 @@ export default function ShopsManagementPage() {
           <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-1">No shops found</h3>
           <p className="text-gray-500 mb-6">You haven't created any shops yet. Add your first shop to get started.</p>
           <button 
-            onClick={() => setIsModalOpen(true)}
+            onClick={() => setIsAddModalOpen(true)}
             className="text-[#006970] font-medium hover:underline"
           >
             Create your first shop
@@ -103,6 +180,35 @@ export default function ShopsManagementPage() {
                   </div>
                 )}
               </div>
+              
+              {/* Actions Footer */}
+              <div className="px-5 py-3 border-t border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 flex justify-between items-center">
+                <button
+                  onClick={() => handleToggleStatus(shop)}
+                  title={shop.status === 'active' || shop.status === 'ACTIVE' ? 'Deactivate Shop' : 'Activate Shop'}
+                  className="flex items-center gap-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 hover:text-[#006970] transition-colors"
+                >
+                  <Power className="w-3.5 h-3.5" />
+                  {shop.status === 'active' || shop.status === 'ACTIVE' ? 'Deactivate' : 'Activate'}
+                </button>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setEditingShop(shop)}
+                    title="Edit Shop"
+                    className="p-1.5 text-gray-500 hover:text-[#006970] hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
+                  >
+                    <Edit className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => setDeletingShop(shop)}
+                    title="Delete Shop"
+                    className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
             </div>
           ))}
         </div>
@@ -110,3 +216,4 @@ export default function ShopsManagementPage() {
     </div>
   );
 }
+

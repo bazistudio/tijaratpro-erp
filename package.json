@@ -73,8 +73,7 @@
       "target": [
         "nsis",
         "portable"
-      ],
-      "icon": "build/icon.ico"
+      ]
     },
     "nsis": {
       "artifactName": "${productName}-Setup-${version}.${ext}",
@@ -86,12 +85,7 @@
       "displayLanguageSelector": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "TijaratPro",
-      "license": "build/license.txt",
-      "installerIcon": "build/installer.ico",
-      "uninstallerIcon": "build/uninstaller.ico",
-      "installerHeader": "build/banner.bmp",
-      "installerSidebar": "build/sidebar.bmp"
+      "shortcutName": "TijaratPro"
     },
     "executableName": "TijaratPro",
     "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",

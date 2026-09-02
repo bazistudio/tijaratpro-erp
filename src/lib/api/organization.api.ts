@@ -41,10 +41,14 @@ export const getOrganizationDashboard = async (orgId: string): Promise<Dashboard
 
 export const createOrganizationShop = async (orgId: string, payload: {
   name: string;
-  phone: string;
-  address: string;
-  city: string;
+  phone?: string;
+  address?: string;
+  city?: string;
 }) => {
-  const response = await api.post(`/api/v1/organizations/${orgId}/shops`, payload);
+  const response = await api.post(`/api/v1/shops`, {
+    ...payload,
+    organizationId: orgId
+  });
   return response.data.data;
 };
+
