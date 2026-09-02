@@ -3,16 +3,30 @@ import { clearSession } from "@/lib/auth/core/auth.session";
 import toast from "react-hot-toast";
 
 // ─── REQUEST INTERCEPTOR ──────────────────────────────────────────────────────
-// Attach device ID header for POS session tracking
+// Attach device ID and active org/shop context headers
 axiosInstance.interceptors.request.use(
   (config) => {
-    console.log("[DEBUG] AXIOS REQUEST interceptor:", config.baseURL, config.url);
     // tp_token cookie sent automatically via withCredentials: true
-    // Attach device ID for POS terminal tracking (key matches auth.session.ts)
     if (typeof window !== "undefined") {
       const deviceId = localStorage.getItem("tijarat_device_id");
       if (deviceId) {
         config.headers["x-device-id"] = deviceId;
+      }
+
+      try {
+        const orgStorage = localStorage.getItem("organization-storage");
+        if (orgStorage) {
+          const parsed = JSON.parse(orgStorage);
+          const state = parsed?.state;
+          if (state?.activeOrganizationId && !config.headers["x-organization-id"]) {
+            config.headers["x-organization-id"] = state.activeOrganizationId;
+          }
+          if (state?.activeShopId && !config.headers["x-shop-id"]) {
+            config.headers["x-shop-id"] = state.activeShopId;
+          }
+        }
+      } catch (e) {
+        // Non-blocking fallback
       }
     }
     return config;
