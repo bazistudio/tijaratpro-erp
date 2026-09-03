@@ -40,8 +40,10 @@ export const ShopAdminDashboardLayout = ({ children }: ShopAdminDashboardLayoutP
 
         {/* Main Content Area */}
         <div className="flex w-0 flex-1 flex-col transition-all duration-200 min-h-0 overflow-hidden">
-          {/* Topbar */}
-          <Topbar setMobileMenuOpen={setMobileMenuOpen} />
+          {/* Topbar: Suppressed inside POS to provide an immersive cashier terminal */}
+          {!pathname?.includes('/pos') && (
+            <Topbar setMobileMenuOpen={setMobileMenuOpen} />
+          )}
 
           {/* Dashboard Content Area */}
           <DashboardShell variant={pathname?.includes('/pos') ? 'pos' : 'default'}>

@@ -59,6 +59,7 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
   setSort: (sort) => set({ sort }),
 
   fetchProducts: async (params) => {
+    if (get().status === 'loading') return;
     console.log("[DEBUG] FETCH PRODUCTS CALLED");
     try {
       set({ status: 'loading', error: null });

@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, UserCircle2, AlertTriangle, X } from 'lucide-react';
@@ -51,10 +51,10 @@ export const CustomerSelector: React.FC<CustomerSelectorProps> = ({ onSelectCust
 
     if (e.key === 'ArrowDown') {
       e.preventDefault();
-      setSelectedIndex(prev => (prev < searchResults.length - 1 ? prev + 1 : prev));
+      setSelectedIndex((prev) => (prev < searchResults.length - 1 ? prev + 1 : prev));
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
-      setSelectedIndex(prev => (prev > 0 ? prev - 1 : 0));
+      setSelectedIndex((prev) => (prev > 0 ? prev - 1 : 0));
     } else if (e.key === 'Enter') {
       e.preventDefault();
       if (searchResults[selectedIndex]) {
@@ -74,54 +74,62 @@ export const CustomerSelector: React.FC<CustomerSelectorProps> = ({ onSelectCust
     const { currentBalance = 0, creditLimit = 0 } = selectedCustomer;
     const availableCredit = creditLimit - currentBalance;
     const usagePercentage = creditLimit > 0 ? (currentBalance / creditLimit) * 100 : 0;
-    
-    let statusColor = 'text-green-600 bg-green-50 dark:text-green-400 dark:bg-green-900/20';
-    let dotColor = 'bg-green-500';
+
+    let statusColor = 'text-success bg-success/10 border-success/20';
+    let dotColor = 'bg-success';
     let statusText = 'Safe';
     let isWarning = false;
 
     if (usagePercentage > 100) {
-      statusColor = 'text-red-600  dark:text-red-400 dark:/20';
-      dotColor = '';
+      statusColor = 'text-danger bg-danger/10 border-danger/20';
+      dotColor = 'bg-danger';
       statusText = 'Over Limit';
       isWarning = true;
     } else if (usagePercentage > 80) {
-      statusColor = 'text-orange-600 bg-orange-50 dark:text-orange-400 dark:bg-orange-900/20';
-      dotColor = 'bg-orange-500';
+      statusColor = 'text-warning bg-warning/10 border-warning/20';
+      dotColor = 'bg-warning';
       statusText = 'Near Limit';
       isWarning = true;
     }
 
     return (
-      <div className="mb-3 border border-gray-200 dark:border-gray-700 rounded-lg p-3 bg-white dark:bg-gray-900 shadow-sm relative">
-        <button 
+      <div className="border border-border rounded-xl p-2.5 bg-surface shadow-xs relative">
+        <button
+          type="button"
           onClick={handleClear}
-          className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+          className="absolute top-2 right-2 text-text-muted hover:text-text-primary p-1 rounded-md hover:bg-surface-hover transition-colors"
+          title="Clear Customer (Reset to Walk-in)"
         >
-          <X className="w-4 h-4" />
+          <X className="w-3.5 h-3.5" />
         </button>
-        
-        <div className="flex items-center gap-2 mb-2">
-          <UserCircle2 className="w-5 h-5 text-gray-500" />
-          <span className="font-semibold text-gray-900 dark:text-white">{selectedCustomer.name}</span>
-          <div className={`px-2 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1 ${statusColor}`}>
-            <span className={`w-1.5 h-1.5 rounded-full ${dotColor}`}></span>
+
+        <div className="flex items-center gap-2 mb-1.5 pr-6">
+          <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
+            <UserCircle2 className="w-4 h-4" />
+          </div>
+          <span className="font-bold text-xs text-text-primary truncate">{selectedCustomer.name}</span>
+          <div className={`px-2 py-0.2 rounded-full text-[9px] font-black border flex items-center gap-1 ${statusColor}`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${dotColor}`} />
             {statusText}
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-2 text-xs">
+        <div className="grid grid-cols-3 gap-2 text-xs pt-1 border-t border-border/60">
           <div className="flex flex-col">
-            <span className="text-gray-500">Balance</span>
-            <span className="font-semibold text-gray-900 dark:text-white">Rs {currentBalance.toLocaleString()}</span>
+            <span className="text-[10px] text-text-muted font-medium uppercase tracking-wider">Balance</span>
+            <span className="font-black text-text-primary tabular-nums text-xs">
+              Rs {currentBalance.toLocaleString()}
+            </span>
           </div>
           <div className="flex flex-col">
-            <span className="text-gray-500">Limit</span>
-            <span className="font-semibold text-gray-900 dark:text-white">Rs {creditLimit.toLocaleString()}</span>
+            <span className="text-[10px] text-text-muted font-medium uppercase tracking-wider">Limit</span>
+            <span className="font-bold text-text-secondary tabular-nums text-xs">
+              Rs {creditLimit.toLocaleString()}
+            </span>
           </div>
           <div className="flex flex-col">
-            <span className="text-gray-500">Available</span>
-            <span className={`font-semibold ${isWarning ? 'text-red-500' : 'text-green-600'}`}>
+            <span className="text-[10px] text-text-muted font-medium uppercase tracking-wider">Available</span>
+            <span className={`font-black tabular-nums text-xs ${isWarning ? 'text-danger' : 'text-success'}`}>
               Rs {availableCredit.toLocaleString()}
             </span>
           </div>
@@ -131,15 +139,13 @@ export const CustomerSelector: React.FC<CustomerSelectorProps> = ({ onSelectCust
   }
 
   return (
-    <div className="mb-3 relative" ref={dropdownRef}>
+    <div className="relative" ref={dropdownRef}>
       <div className="relative">
-        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          <Search className="h-4 w-4 text-gray-400" />
-        </div>
+        <Search className="h-4 w-4 text-text-muted absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
         <input
           type="text"
-          className="block w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#006970] focus:border-transparent sm:text-sm transition-colors"
-          placeholder="Search customer for sale..."
+          className="w-full pl-9 pr-3 py-2 text-xs border border-border rounded-xl bg-surface text-text-primary placeholder:text-text-muted focus:outline-none focus:border-primary focus:ring-2 focus:ring-focus-ring transition-all"
+          placeholder="Search customer (Name, Phone, Khata)..."
           value={searchTerm}
           onChange={(e) => {
             setSearchTerm(e.target.value);
@@ -152,38 +158,38 @@ export const CustomerSelector: React.FC<CustomerSelectorProps> = ({ onSelectCust
       </div>
 
       {isDropdownOpen && searchTerm.length > 0 && (
-        <div className="absolute z-50 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg max-h-60 overflow-auto">
+        <div className="absolute z-50 mt-1.5 w-full bg-surface border border-border rounded-xl shadow-modal max-h-60 overflow-y-auto custom-scrollbar p-1">
           {isLoading ? (
-            <div className="p-3 text-sm text-gray-500 text-center">Searching...</div>
+            <div className="p-3 text-xs text-text-muted text-center">Searching customers...</div>
           ) : searchResults.length > 0 ? (
-            <ul className="py-1">
+            <ul className="space-y-0.5">
               {searchResults.map((customer, index) => (
-                <li 
+                <li
                   key={customer.id}
-                  className={`px-3 py-2 cursor-pointer flex justify-between items-center transition-colors ${
-                    index === selectedIndex 
-                      ? 'bg-blue-50 dark:bg-gray-700 border-l-4 ' 
-                      : 'hover:bg-gray-100 dark:hover:bg-gray-700 border-l-4 border-transparent'
+                  className={`px-3 py-2 rounded-lg cursor-pointer flex justify-between items-center transition-colors ${
+                    index === selectedIndex
+                      ? 'bg-primary/10 text-primary font-bold'
+                      : 'hover:bg-surface-hover text-text-primary'
                   }`}
                   onClick={() => handleSelect(customer)}
                 >
-                  <div className="flex flex-col">
-                    <span className={`text-sm font-medium ${index === selectedIndex ? 'text-blue-700 dark:text-white' : 'text-gray-900 dark:text-white'}`}>
-                      {customer.name}
-                    </span>
-                    <span className="text-xs text-gray-500">{customer.phone}</span>
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-xs font-bold truncate">{customer.name}</span>
+                    <span className="text-[10px] text-text-muted">{customer.phone || customer.mobile || 'No phone'}</span>
                   </div>
-                  <div className="text-xs font-semibold text-[#006970]">
-                    Rs {customer.currentBalance.toLocaleString()}
+                  <div className="text-xs font-black tabular-nums text-text-secondary shrink-0">
+                    Rs {(customer.currentBalance || 0).toLocaleString()}
                   </div>
                 </li>
               ))}
             </ul>
           ) : (
-            <div className="p-3 text-sm text-gray-500 text-center">No customers found</div>
+            <div className="p-3 text-xs text-text-muted text-center">No customers found</div>
           )}
         </div>
       )}
     </div>
   );
 };
+
+export default CustomerSelector;

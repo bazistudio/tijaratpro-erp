@@ -2,7 +2,6 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { PosHeader } from '@/features/pos/components/PosHeader';
-import { SaleTabNavigation } from '@/features/pos/components/SaleTabNavigation';
 import { SaleWorkspace } from '@/features/pos/components/SaleWorkspace';
 import { ReturnOverflowModal } from '@/features/pos/components/ReturnOverflowModal';
 import { InvoiceReceipt } from '@/features/pos/components/invoice/InvoiceReceipt';

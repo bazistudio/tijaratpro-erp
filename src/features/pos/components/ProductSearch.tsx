@@ -15,11 +15,7 @@ export const ProductSearch = () => {
 
   const activeSession = usePosStore(state => state.getActiveSession());
   const addToCart = usePosStore(state => state.addToCart);
-  const { products, fetchProducts } = useInventoryStore();
-
-  useEffect(() => {
-    fetchProducts();
-  }, [fetchProducts]);
+  const products = useInventoryStore((s) => s.products);
 
   const isReplaceMode = activeSession?.mode === 'replace';
   const [targetBucket, setTargetBucket] = useState<'new' | 'return'>('new');

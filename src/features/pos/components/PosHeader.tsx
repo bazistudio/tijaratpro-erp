@@ -1,59 +1,79 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { usePosStore } from '../store/usePosStore';
-import { Plus } from 'lucide-react';
+import React, { useState } from 'react';
 import { ProductSearch } from './ProductSearch';
-import { InvoiceSearch } from './InvoiceSearch';
 import { SaleTabNavigation } from './SaleTabNavigation';
+import { PosActionsDropdown } from './PosActionsDropdown';
+import { InvoiceLookupModal } from './modals/InvoiceLookupModal';
+import { ShopSwitcher } from '@/components/layout/ShopSwitcher';
+import { UserMenu } from '@/components/layout/UserMenu';
+import { useTerminalStore } from '@/store/useTerminalStore';
+import { Lock } from 'lucide-react';
 
-export const PosHeader = () => {
-  const [currentTime, setCurrentTime] = useState<Date | null>(null);
-  const { saleTabs, createSaleTab } = usePosStore();
-
-  useEffect(() => {
-    setCurrentTime(new Date());
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  const timeString = currentTime ? currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }) : '--:--';
-  const secondsString = currentTime ? currentTime.getSeconds().toString().padStart(2, '0') : '--';
-  const dateString = currentTime ? currentTime.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '---';
+export const PosHeader: React.FC = () => {
+  const [isInvoiceLookupOpen, setInvoiceLookupOpen] = useState(false);
+  const lockTerminal = useTerminalStore((s) => s.lockTerminal);
 
   return (
-    <header className="grid grid-cols-1 md:grid-cols-4 items-center gap-4 h-auto md:h-16 py-2 md:py-0 border-b border-gray-200 bg-white px-4 shadow-sm dark:border-gray-800 dark:bg-gray-900 z-50">
-      
-      {/* Section 1: Product Search */}
-      <div className="flex items-center w-full relative z-50">
-        <ProductSearch />
-      </div>
+    <>
+      <header className="h-[52px] min-h-[52px] px-3 sm:px-4 border-b border-border bg-surface flex items-center justify-between gap-2 sm:gap-4 shrink-0 z-40 select-none shadow-xs">
+        {/* Left Section: Brand Badge & Shop Switcher */}
+        <div className="flex items-center gap-2.5 shrink-0">
+          <div className="flex items-center gap-1.5">
+            <span className="w-6 h-6 rounded-md bg-primary text-white flex items-center justify-center font-black text-xs shadow-xs">
+              T
+            </span>
+            <span className="hidden md:inline font-bold text-xs tracking-tight text-text-primary">
+              Tijarat<span className="text-primary font-black">POS</span>
+            </span>
+          </div>
 
-      {/* Section 2: Sale Tabs */}
-      <div className="flex justify-center items-center h-full w-full">
-        <SaleTabNavigation />
-      </div>
-      
-      {/* Section 3: Invoice Search */}
-      <div className="flex justify-center items-center relative z-50 w-full">
-        <InvoiceSearch />
-      </div>
+          <div className="h-4 w-px bg-border hidden sm:block" />
 
-      {/* Section 4: Date & Time */}
-      <div className="flex items-center justify-end gap-2 w-full">
-        <div className="flex items-center justify-center bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 px-3 h-8 rounded-md shadow-sm border border-emerald-100 dark:border-emerald-800/30">
-          <span className="text-sm font-bold tabular-nums">{timeString}</span>
+          {/* Active Shop Context */}
+          <div className="shrink-0">
+            <ShopSwitcher />
+          </div>
         </div>
-        <div className="flex items-center justify-center bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 px-2 h-8 rounded-md shadow-sm border border-red-100 dark:border-red-800/30">
-          <span className="text-xs font-bold tabular-nums">{secondsString}</span>
+
+        {/* Center Section: Primary Product / Barcode Omnibox */}
+        <div className="flex-1 max-w-xl min-w-0">
+          <ProductSearch />
         </div>
-        <div className="flex items-center justify-center bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 px-3 h-8 rounded-md shadow-sm border border-emerald-100 dark:border-emerald-800/30">
-          <span className="text-xs font-semibold">{dateString}</span>
+
+        {/* Right-Center: Multi-Sale Tabs */}
+        <div className="hidden lg:flex items-center shrink-0">
+          <SaleTabNavigation />
         </div>
-      </div>
-      
-    </header>
+
+        {/* Right Section: Actions Dropdown, Lock Terminal, Cashier Profile */}
+        <div className="flex items-center gap-1.5 shrink-0">
+          {/* Real Return / Exchange Actions Dropdown */}
+          <PosActionsDropdown onOpenInvoiceLookup={() => setInvoiceLookupOpen(true)} />
+
+          {/* Lock Terminal Button (Ctrl+L) */}
+          <button
+            type="button"
+            onClick={() => lockTerminal()}
+            className="h-9 w-9 rounded-lg border border-border bg-surface text-text-secondary hover:text-text-primary hover:bg-surface-hover flex items-center justify-center transition-colors shadow-xs"
+            title="Lock Terminal (Ctrl+L)"
+            aria-label="Lock terminal"
+          >
+            <Lock className="w-3.5 h-3.5" />
+          </button>
+
+          {/* Cashier / User Profile Menu */}
+          <UserMenu />
+        </div>
+      </header>
+
+      {/* On-Demand Return by Invoice Lookup Modal */}
+      <InvoiceLookupModal
+        isOpen={isInvoiceLookupOpen}
+        onClose={() => setInvoiceLookupOpen(false)}
+      />
+    </>
   );
 };
+
+export default PosHeader;
