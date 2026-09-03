@@ -1,6 +1,6 @@
 {
   "name": "tijaratpro",
-  "version": "0.1.4",
+  "version": "5.0.3",
   "main": "dist-electron/main.js",
   "private": true,
   "scripts": {
