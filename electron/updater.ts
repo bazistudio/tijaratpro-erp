@@ -42,14 +42,23 @@ export function setupUpdater(mainWindow: BrowserWindow) {
 
     autoUpdater.on('checking-for-update', () => {
       logger.info('Updater: Checking for updates...');
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('updater:status', 'checking');
+      }
     });
 
     autoUpdater.on('update-available', (info) => {
       logger.info(`Updater: Update available: version ${info.version}`);
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('updater:available', info);
+      }
     });
 
     autoUpdater.on('update-not-available', () => {
       logger.info('Updater: App is up to date.');
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('updater:status', 'up-to-date');
+      }
     });
 
     autoUpdater.on('error', (err) => {
@@ -57,15 +66,24 @@ export function setupUpdater(mainWindow: BrowserWindow) {
       if (err.stack) {
         logger.error(`Updater Stack Trace: ${err.stack}`);
       }
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('updater:error', err.message);
+      }
     });
 
     autoUpdater.on('download-progress', (progressObj) => {
       const percent = Math.round(progressObj.percent);
       logger.info(`Updater: Downloading update... ${percent}%`);
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('updater:progress', progressObj);
+      }
     });
 
     autoUpdater.on('update-downloaded', (info) => {
       logger.info(`Updater: Update downloaded: version ${info.version}`);
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('updater:downloaded', info);
+      }
       
       dialog.showMessageBox(mainWindow, {
         type: 'info',

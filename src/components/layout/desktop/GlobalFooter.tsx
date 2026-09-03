@@ -49,7 +49,7 @@ export const GlobalFooter: React.FC = () => {
           Cashier: <strong className="font-medium text-text-secondary">{displayName}</strong>
         </span>
         <span className="hidden md:inline text-border">|</span>
-        <span className="hidden md:inline font-mono text-[10px]">v0.1.3</span>
+        <span className="hidden md:inline font-mono text-[10px]">v0.1.4</span>
       </div>
     </footer>
   );
