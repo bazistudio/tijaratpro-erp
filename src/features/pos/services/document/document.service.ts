@@ -1,5 +1,3 @@
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
 import { DBTransaction } from '@/types/db.types';
 
 export interface ShopProfile {
@@ -83,6 +81,11 @@ export class DocumentService {
     const element = document.getElementById("print-area");
     if (!element) return;
 
+    const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
+      import('html2canvas'),
+      import('jspdf')
+    ]);
+
     const canvas = await html2canvas(element, {
       scale: 2
     });
@@ -103,6 +106,11 @@ export class DocumentService {
   static async generateLedgerPDF(elementId: string, customerName: string) {
     const element = document.getElementById(elementId);
     if (!element) throw new Error("Could not find ledger element");
+
+    const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
+      import('html2canvas'),
+      import('jspdf')
+    ]);
 
     const canvas = await html2canvas(element, { scale: 2 });
     const imgData = canvas.toDataURL("image/png");
@@ -136,4 +144,5 @@ export class DocumentService {
 
     pdf.save(`Ledger_${customerName.replace(/\s+/g, '_')}.pdf`);
   }
+
 }

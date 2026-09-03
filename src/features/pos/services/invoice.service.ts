@@ -3,10 +3,16 @@
  * and structure generation have been migrated to the backend ERP layer.
  * Use the backend response payload to render invoice layouts.
  */
-
-import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
 import { Transaction, CartItem } from '../store/usePosStore';
+
+/**
+ * Lazy helper for jsPDF if needed by external callers
+ */
+export const getJsPdf = async () => {
+  const { jsPDF } = await import('jspdf');
+  return jsPDF;
+};
+
 
 export interface ShopProfile {
   name: string;
