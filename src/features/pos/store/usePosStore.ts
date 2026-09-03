@@ -57,16 +57,22 @@ export interface Transaction {
   previousHash?: string;
 }
 
+export interface SaleCustomer {
+  id: string;
+  name: string;
+  phone?: string;
+  mobile?: string;
+  currentBalance?: number;
+  creditLimit?: number;
+}
+
 export interface SaleSession {
   id: string;
   name: string;
   status: 'draft' | 'processing' | 'completed';
   mode: 'sale' | 'replace';
   transactionType: 'sale' | 'replace_exchange' | 'return_only';
-  customer: {
-    id: string;
-    name: string;
-  } | null;
+  customer: SaleCustomer | null;
   
   cart: CartItem[];
   returnedItems: CartItem[];
@@ -106,6 +112,9 @@ interface PosStore {
   clearCart: () => void;
   loadInvoice: (invoice: any) => void;
   
+  // Customer Action (operates on active tab)
+  setCustomer: (customer: SaleCustomer | null) => void;
+
   // Global Discount Action
   setInvoiceDiscount: (discountType: 'percentage' | 'fixed', discountValue: number) => void;
 
@@ -462,6 +471,28 @@ export const usePosStore = create<PosStore>()(
               customer: finalCustomer
             };
           })
+        });
+      },
+
+      setCustomer: (customer) => {
+        const { saleTabs, activeTabId } = get();
+        set({
+          saleTabs: saleTabs.map((tab) => {
+            if (tab.id !== activeTabId) return tab;
+            return {
+              ...tab,
+              customer: customer
+                ? {
+                    id: customer.id,
+                    name: customer.name,
+                    phone: customer.phone || customer.mobile,
+                    mobile: customer.mobile || customer.phone,
+                    currentBalance: customer.currentBalance ?? 0,
+                    creditLimit: customer.creditLimit ?? 0,
+                  }
+                : { id: 'walk-in', name: 'Walk-In Customer' },
+            };
+          }),
         });
       },
 

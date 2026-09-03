@@ -1,5 +1,6 @@
 // ─── Staff User ──────────────────────────────────────────────────────────────
 export interface StaffUser {
+  id?: string;
   _id: string;
   organizationId: string;
   name: string;

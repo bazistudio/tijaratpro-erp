@@ -76,9 +76,9 @@ export default function GeneralSettingsPage() {
             business: {
               ...prev.business,
               name: data.shopHeader?.name || activeShop?.name || prev.business.name,
-              address: data.shopHeader?.address || activeShop?.address || prev.business.address,
-              phone: data.shopHeader?.phone || activeShop?.phone || prev.business.phone,
-              email: data.shopHeader?.email || activeShop?.email || prev.business.email,
+              address: data.shopHeader?.address || (activeShop as any)?.address || prev.business.address,
+              phone: data.shopHeader?.phone || (activeShop as any)?.phone || prev.business.phone,
+              email: data.shopHeader?.email || (activeShop as any)?.email || prev.business.email,
               logoUrl: data.shopHeader?.logoUrl || prev.business.logoUrl,
             },
             preferences: {

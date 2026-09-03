@@ -26,7 +26,7 @@ const SkeletonRow = ({ cols }: { cols: number }) => (
   </tr>
 );
 
-export function DataTable<T extends { id?: string | number }>({
+export function DataTable<T extends { id?: string | number; _id?: string | number } = any>({
   columns,
   data,
   onRowClick,
@@ -72,7 +72,7 @@ export function DataTable<T extends { id?: string | number }>({
           ) : (
             data.map((row, rowIndex) => (
               <tr
-                key={row.id || rowIndex}
+                key={row.id || row._id || rowIndex}
                 onClick={() => onRowClick?.(row)}
                 onKeyDown={(e) => e.key === 'Enter' && onRowClick?.(row)}
                 tabIndex={onRowClick ? 0 : undefined}

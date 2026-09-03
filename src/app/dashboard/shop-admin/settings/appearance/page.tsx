@@ -168,6 +168,7 @@ export default function AppearancePage() {
     primary:    theme?.colors?.primary    ?? '#006970',
     secondary:  theme?.colors?.secondary  ?? '#00b4bb',
     background: theme?.colors?.background ?? '#f8fafc',
+    surface:    theme?.colors?.surface    ?? '#ffffff',
     text: {
       primary:  theme?.colors?.text?.primary  ?? '#111827',
       secondary:theme?.colors?.text?.secondary?? '#4b5563',
@@ -187,6 +188,7 @@ export default function AppearancePage() {
         primary:    theme.colors.primary,
         secondary:  theme.colors.secondary,
         background: theme.colors.background,
+        surface:    theme.colors.surface || '#ffffff',
         text: {
           primary:  theme.colors.text?.primary  || '#111827',
           secondary:theme.colors.text?.secondary|| '#4b5563',
@@ -198,7 +200,7 @@ export default function AppearancePage() {
     }
   }, [theme]);
 
-  const handleColorChange = useCallback((key: 'primary' | 'secondary' | 'background', value: string) => {
+  const handleColorChange = useCallback((key: 'primary' | 'secondary' | 'background' | 'surface', value: string) => {
     const updated = { ...localColors, [key]: value };
     setLocalColors(updated);
     setHasChanges(true);
@@ -255,6 +257,7 @@ export default function AppearancePage() {
       primary:    '#006970',
       secondary:  '#00b4bb',
       background: '#f8fafc',
+      surface:    '#ffffff',
     };
     setLocalColors(defaults);
     setHasChanges(true);
@@ -283,6 +286,7 @@ export default function AppearancePage() {
         primary:    theme.colors.primary,
         secondary:  theme.colors.secondary,
         background: theme.colors.background,
+        surface:    theme.colors.surface || '#ffffff',
         text: {
           primary:  theme.colors.text?.primary  || '#111827',
           secondary:theme.colors.text?.secondary|| '#4b5563',

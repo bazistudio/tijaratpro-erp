@@ -18,15 +18,7 @@ import { usePrinterStore } from '@/features/settings/printer/store/printer.store
 import { GlobalLoadingOverlay } from '@/components/ui/GlobalLoadingOverlay';
 import { useOrganizationStore } from '@/store/useOrganizationStore';
 
-interface CartSummaryProps {
-  selectedCustomer?: DBCustomer | null;
-  setSelectedCustomer?: (customer: DBCustomer | null) => void;
-}
-
-export const CartSummary: React.FC<CartSummaryProps> = ({
-  selectedCustomer: externalCustomer,
-  setSelectedCustomer: externalSetCustomer,
-}) => {
+export const CartSummary: React.FC = () => {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
@@ -35,6 +27,7 @@ export const CartSummary: React.FC<CartSummaryProps> = ({
   const setSessionMode = usePosStore((s) => s.setSessionMode);
   const setInvoiceDiscount = usePosStore((s) => s.setInvoiceDiscount);
   const completeTransaction = usePosStore((s) => s.completeTransaction);
+  const setCustomer = usePosStore((s) => s.setCustomer);
 
   const { settings, shopHeader, fetchSettings } = usePrinterStore();
 
@@ -50,9 +43,9 @@ export const CartSummary: React.FC<CartSummaryProps> = ({
   const [isDiscountModalOpen, setDiscountModalOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<'sale' | 'print' | null>(null);
   
-  const [internalCustomer, setInternalCustomer] = useState<DBCustomer | null>(null);
-  const selectedCustomer = externalCustomer !== undefined ? externalCustomer : internalCustomer;
-  const setSelectedCustomer = externalSetCustomer || setInternalCustomer;
+  const selectedCustomer = activeSession?.customer && activeSession.customer.id !== 'walk-in'
+    ? activeSession.customer
+    : null;
 
   const [pendingTransaction, setPendingTransaction] = useState<{
     paymentBreakdown: { method: string; amount: number }[];
@@ -66,49 +59,6 @@ export const CartSummary: React.FC<CartSummaryProps> = ({
   // Editable Total Due States
   const [isEditingTotal, setIsEditingTotal] = useState(false);
   const [editedTotal, setEditedTotal] = useState('');
-
-  const searchParams = useSearchParams();
-  const preSelectedCustomerId = searchParams.get('customerId');
-
-  useEffect(() => {
-    if (preSelectedCustomerId) {
-      customerApi
-        .getCustomerDetail(preSelectedCustomerId)
-        .then((res) => {
-          if (res.data?.customer) {
-            setSelectedCustomer({
-              ...res.data.customer,
-              currentBalance: res.data.stats?.outstanding || 0,
-            });
-          }
-        })
-        .catch((err) => console.error('Failed to load preselected customer', err));
-    }
-  }, [preSelectedCustomerId]);
-
-  // Sync session customer (e.g. from invoice return load) into local selectedCustomer state
-  useEffect(() => {
-    const sessionId = activeSession?.customer?.id;
-    if (sessionId && sessionId !== 'walk-in') {
-      if (!selectedCustomer || selectedCustomer.id !== sessionId) {
-        customerApi
-          .getCustomerDetail(sessionId)
-          .then((res) => {
-            if (res.data?.customer) {
-              setSelectedCustomer({
-                ...res.data.customer,
-                currentBalance: res.data.stats?.outstanding || 0,
-              });
-            }
-          })
-          .catch((err) => console.error('Failed to sync session customer', err));
-      }
-    } else if (sessionId === 'walk-in' || !sessionId) {
-      if (selectedCustomer) {
-        setSelectedCustomer(null);
-      }
-    }
-  }, [activeSession?.customer?.id]);
 
   // Global Keyboard Shortcuts
   useEffect(() => {
@@ -300,17 +250,7 @@ export const CartSummary: React.FC<CartSummaryProps> = ({
         toast.success(isRefund ? `Refund Processed. Paid: Rs ${Math.abs(grandTotal).toLocaleString()}` : 'Sale completed successfully');
 
         // Reset customer selection
-        setSelectedCustomer(null);
-        const { saleTabs, activeTabId } = usePosStore.getState();
-        usePosStore.setState({
-          saleTabs: saleTabs.map((tab) => {
-            if (tab.id !== activeTabId) return tab;
-            return {
-              ...tab,
-              customer: { id: 'walk-in', name: 'Walk-In Customer' },
-            };
-          }),
-        });
+        setCustomer(null);
       }
     } catch (error) {
       // Error handled by store
@@ -476,17 +416,18 @@ export const CartSummary: React.FC<CartSummaryProps> = ({
         <CreditCustomerModal
           onClose={() => setCustomerModalOpen(false)}
           onSelect={(customer) => {
-            setSelectedCustomer(customer);
-            const { saleTabs, activeTabId } = usePosStore.getState();
-            usePosStore.setState({
-              saleTabs: saleTabs.map((tab) => {
-                if (tab.id !== activeTabId) return tab;
-                return {
-                  ...tab,
-                  customer: customer ? { id: customer.id, name: customer.name } : null,
-                };
-              }),
-            });
+            if (customer) {
+              setCustomer({
+                id: customer.id || (customer as any)._id,
+                name: customer.name,
+                phone: customer.phone || customer.mobile,
+                mobile: customer.mobile || customer.phone,
+                currentBalance: customer.currentBalance ?? 0,
+                creditLimit: customer.creditLimit ?? 0,
+              });
+            } else {
+              setCustomer(null);
+            }
             setCustomerModalOpen(false);
             setLedgerModalOpen(true);
           }}
@@ -496,7 +437,7 @@ export const CartSummary: React.FC<CartSummaryProps> = ({
       {/* Ledger Settlement Modal */}
       {isLedgerModalOpen && selectedCustomer && (
         <LedgerSettlementModal
-          customer={selectedCustomer}
+          customer={selectedCustomer as any}
           invoiceTotal={grandTotal}
           onClose={() => setLedgerModalOpen(false)}
           onSuccess={handleLedgerSuccess}
@@ -526,7 +467,7 @@ export const CartSummary: React.FC<CartSummaryProps> = ({
       {/* Credit Limit Warning Modal — WIRED UP TO PREVENT CHECKOUT FREEZES */}
       {pendingTransaction && selectedCustomer && (
         <CreditLimitWarningModal
-          customer={selectedCustomer}
+          customer={selectedCustomer as any}
           projectedBalance={pendingTransaction.projectedBalance}
           onProceed={() => {
             const { paymentBreakdown, customerObj, shouldPrint } = pendingTransaction;
@@ -537,7 +478,7 @@ export const CartSummary: React.FC<CartSummaryProps> = ({
             setPendingTransaction(null);
           }}
           onLimitUpdated={(updatedCustomer) => {
-            setSelectedCustomer(updatedCustomer);
+            setCustomer(updatedCustomer);
           }}
         />
       )}

@@ -77,11 +77,17 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         ...theme,
         ...partial,
         colors: {
+          surface: partial.colors?.surface ?? theme?.colors?.surface ?? '#ffffff',
+          background: partial.colors?.background ?? theme?.colors?.background ?? '#f8fafc',
+          primary: partial.colors?.primary ?? theme?.colors?.primary ?? '#006970',
+          secondary: partial.colors?.secondary ?? theme?.colors?.secondary ?? '#00b4bb',
           ...(theme?.colors ?? {}),
           ...(partial.colors ?? {}),
           text: {
-            ...(theme?.colors?.text ?? {}),
-            ...(partial.colors?.text ?? {}),
+            primary: partial.colors?.text?.primary ?? theme?.colors?.text?.primary ?? '#111827',
+            secondary: partial.colors?.text?.secondary ?? theme?.colors?.text?.secondary ?? '#4b5563',
+            muted: partial.colors?.text?.muted ?? theme?.colors?.text?.muted ?? '#6b7280',
+            disabled: partial.colors?.text?.disabled ?? theme?.colors?.text?.disabled ?? '#9ca3af',
           },
         },
         typography: {
