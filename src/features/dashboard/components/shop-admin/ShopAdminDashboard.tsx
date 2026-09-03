@@ -12,8 +12,6 @@ import { DailySalesModal } from './DailySalesModal';
 
 import { useQuery } from '@tanstack/react-query';
 import { dashboardApi } from '@/services/dashboard.api';
-import { salesApi } from '@/services/sales.api';
-import { useInventoryStore } from '@/features/inventory/core/inventory.store';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { useTenantQueryKeys } from '@/lib/react-query/useTenantQueryKeys';
 
@@ -26,15 +24,6 @@ export const ShopAdminDashboard = () => {
   const router = useRouter();
   const pathname = usePathname();
   const searchInvoice = searchParams.get('invoice');
-
-  // Inventory store for low stock items and categories
-  const { products, fetchProducts } = useInventoryStore();
-
-  useEffect(() => {
-    if (products.length === 0) {
-      fetchProducts();
-    }
-  }, [fetchProducts, products.length]);
 
   useEffect(() => {
     if (searchInvoice) {
@@ -62,127 +51,40 @@ export const ShopAdminDashboard = () => {
     refetchOnWindowFocus: false,
   });
 
-  // 2. Authoritative Orders Query for Today's Hourly and Category Aggregation
-  const todayStartISO = useMemo(() => {
-    const d = new Date();
-    d.setHours(0, 0, 0, 0);
-    return d.toISOString();
-  }, []);
-
+  // 2. Dedicated Backend Hourly Breakdown Query (Pre-aggregated hourly, category, and top product)
   const {
-    data: ordersResponse,
-    isLoading: isOrdersLoading,
-    refetch: refetchOrders,
+    data: hourlyBreakdownResponse,
+    isLoading: isHourlyLoading,
+    refetch: refetchHourly,
   } = useQuery({
-    queryKey: ['sales', 'today-orders', todayStartISO],
-    queryFn: () => salesApi.getOrders({ startDate: todayStartISO, limit: 500 }),
+    queryKey: keys.dashboard ? [...keys.dashboard, 'hourly-breakdown'] : ['dashboard', 'hourly-breakdown'],
+    queryFn: () => dashboardApi.getHourlyBreakdown(),
     staleTime: 30000,
     retry: 1,
     refetchOnWindowFocus: false,
   });
 
   const metrics = dashboardResponse?.data;
+  const hourlyData = hourlyBreakdownResponse?.data;
 
-  // 3. Hourly Sales Aggregation (24 buckets: 00:00 to 23:00)
   const hourlySalesData = useMemo<HourlySalesData[]>(() => {
-    const buckets: HourlySalesData[] = Array.from({ length: 24 }, (_, i) => ({
+    if (hourlyData?.hourlySales && hourlyData.hourlySales.length > 0) {
+      return hourlyData.hourlySales;
+    }
+    return Array.from({ length: 24 }, (_, i) => ({
       hour: `${i.toString().padStart(2, '0')}:00`,
       sales: 0,
       ordersCount: 0,
     }));
+  }, [hourlyData?.hourlySales]);
 
-    const orders = ordersResponse?.data || [];
-    if (!orders || orders.length === 0) return buckets;
-
-    orders.forEach((order: any) => {
-      if (order.status === 'cancelled' || order.status === 'void') return;
-
-      const date = order.createdAt ? new Date(order.createdAt) : null;
-      if (!date || isNaN(date.getTime())) return;
-
-      const hour = date.getHours();
-      if (hour >= 0 && hour < 24) {
-        const amount = order.totalAmount ?? order.grandTotal ?? order.total ?? 0;
-        buckets[hour].sales += amount;
-        buckets[hour].ordersCount += 1;
-      }
-    });
-
-    return buckets;
-  }, [ordersResponse?.data]);
-
-  // 4. Category Sales Distribution Aggregation
   const categorySalesData = useMemo<CategorySalesData[]>(() => {
-    const orders = ordersResponse?.data || [];
-    if (!orders || orders.length === 0) return [];
+    return hourlyData?.categorySales || [];
+  }, [hourlyData?.categorySales]);
 
-    const map = new Map<string, { categoryName: string; salesAmount: number; itemsSold: number }>();
-    let totalSales = 0;
-
-    orders.forEach((order: any) => {
-      if (order.status === 'cancelled' || order.status === 'void') return;
-
-      (order.items || []).forEach((item: any) => {
-        const itemPrice = item.price ?? item.unitPrice ?? 0;
-        const itemQty = item.quantity ?? 1;
-        const itemTotal = itemPrice * itemQty;
-
-        // Match product category
-        const prod = products.find((p) => p.id === (item.productId || item._id));
-        const catName = prod?.category || item.category || 'General';
-
-        const existing = map.get(catName) || {
-          categoryName: catName,
-          salesAmount: 0,
-          itemsSold: 0,
-        };
-        existing.salesAmount += itemTotal;
-        existing.itemsSold += itemQty;
-        map.set(catName, existing);
-        totalSales += itemTotal;
-      });
-    });
-
-    return Array.from(map.values())
-      .map((c) => ({
-        ...c,
-        percentage: totalSales > 0 ? (c.salesAmount / totalSales) * 100 : 0,
-      }))
-      .sort((a, b) => b.salesAmount - a.salesAmount);
-  }, [ordersResponse?.data, products]);
-
-  // 5. Top Product derivation from today's orders
   const computedTopProduct = useMemo(() => {
-    const orders = ordersResponse?.data || [];
-    if (!orders || orders.length === 0) return undefined;
-
-    const map = new Map<string, { name: string; quantitySold: number; revenue: number }>();
-    orders.forEach((order: any) => {
-      if (order.status === 'cancelled' || order.status === 'void') return;
-
-      (order.items || []).forEach((item: any) => {
-        const id = item.productId || item.name;
-        const name = item.productName || item.name || 'Product';
-        const qty = item.quantity || 1;
-        const rev = (item.price || item.unitPrice || 0) * qty;
-
-        const existing = map.get(id) || { name, quantitySold: 0, revenue: 0 };
-        existing.quantitySold += qty;
-        existing.revenue += rev;
-        map.set(id, existing);
-      });
-    });
-
-    const sorted = Array.from(map.values()).sort((a, b) => b.quantitySold - a.quantitySold);
-    return sorted[0];
-  }, [ordersResponse?.data]);
-
-  // Low stock products from inventory store
-  const lowStockItems = useMemo(() => {
-    return products
-      .filter((p) => (p.stock || 0) <= (p.minStockThreshold || 3))
-      .map((p) => ({ name: p.name, stock: p.stock || 0 }));
-  }, [products]);
+    return hourlyData?.topProduct || undefined;
+  }, [hourlyData?.topProduct]);
 
   const getFilterValue = (field: 'revenue' | 'profit', currentFilter: 'today' | 'week' | 'month') => {
     if (!metrics) return 0;
@@ -201,41 +103,42 @@ export const ShopAdminDashboard = () => {
       onClick: () => setIsDailySalesModalOpen(true),
     },
     {
-      title: 'Net Revenue',
-      value: isMetricsLoading ? 'Loading...' : `₨ ${getFilterValue('revenue', filter).toLocaleString()}`,
+      title: "Today's Revenue",
+      value: isMetricsLoading ? 'Loading...' : `₨ ${(metrics?.summary.revenue.today || 0).toLocaleString()}`,
       trend: 0,
       icon: <DollarSign className="h-5 w-5" />,
       format: 'currency',
+      timeframe: 'vs. Yesterday',
     },
     {
-      title: 'Net Profit',
-      value: isMetricsLoading ? 'Loading...' : `₨ ${getFilterValue('profit', filter).toLocaleString()}`,
-      trend: 0,
+      title: 'Estimated Profit',
+      value: isMetricsLoading ? 'Loading...' : `₨ ${(getFilterValue('profit', filter) || 0).toLocaleString()}`,
+      trend: metrics?.summary.revenue.growth || 0,
       icon: <TrendingUp className="h-5 w-5" />,
       format: 'currency',
+      timeframe: filter === 'today' ? 'Today' : 'This Month',
     },
     {
-      title: 'Pending Payments',
-      value: isMetricsLoading ? 'Loading...' : `₨ ${(metrics?.summary.customers.pendingPayments || 0).toLocaleString()}`,
+      title: 'Gross Margin',
+      value: isMetricsLoading
+        ? 'Loading...'
+        : `${(
+            ((getFilterValue('profit', filter) || 0) / (getFilterValue('revenue', filter) || 1)) *
+            100
+          ).toFixed(1)}%`,
       trend: 0,
       icon: <CreditCard className="h-5 w-5" />,
-      format: 'currency',
-    },
-    {
-      title: 'Inventory Alert',
-      value: isMetricsLoading ? 'Loading...' : `${lowStockItems.length} Low Stock`,
-      trend: 0,
-      icon: <Package className="h-5 w-5" />,
       format: 'number',
-      timeframe: `${products.length} Total SKUs`,
+      timeframe: 'Return on Sales',
     },
   ];
 
+
   return (
-    <div className="flex flex-col gap-6 sm:gap-8 w-full select-none">
-      {/* Top Controls: Filter & Refresh */}
+    <div className="flex flex-col gap-6 p-4 sm:p-6 lg:p-8 max-w-[1600px] mx-auto w-full">
+      {/* 0. Top Bar: Performance KPIs */}
       <section aria-labelledby="kpi-heading" className="space-y-4">
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h2 id="kpi-heading" className="text-lg font-bold text-text-primary">
               Overview & Performance
@@ -248,7 +151,7 @@ export const ShopAdminDashboard = () => {
               type="button"
               onClick={() => {
                 refetchMetrics();
-                refetchOrders();
+                refetchHourly();
               }}
               title="Refresh Dashboard"
               className="p-2 rounded-lg bg-surface border border-border text-text-muted hover:text-text-primary hover:bg-surface-hover transition-colors"
@@ -276,8 +179,8 @@ export const ShopAdminDashboard = () => {
       <section aria-labelledby="hourly-sales-heading">
         <HourlySalesChart
           data={hourlySalesData}
-          isLoading={isOrdersLoading}
-          onRetry={refetchOrders}
+          isLoading={isHourlyLoading}
+          onRetry={refetchHourly}
         />
       </section>
 
@@ -286,17 +189,16 @@ export const ShopAdminDashboard = () => {
         <div className="lg:col-span-6 flex flex-col min-h-0">
           <CategorySalesDistribution
             data={categorySalesData}
-            isLoading={isOrdersLoading}
+            isLoading={isHourlyLoading}
           />
         </div>
 
         <div className="lg:col-span-6 flex flex-col min-h-0">
           <AiRecommendations
-            lowStockCount={lowStockItems.length}
-            lowStockItems={lowStockItems}
+            lowStockCount={metrics?.summary.inventory.lowStockItems || 0}
             topProduct={computedTopProduct}
             pendingPaymentsAmount={metrics?.summary.customers.pendingPayments || 0}
-            isLoading={isMetricsLoading || isOrdersLoading}
+            isLoading={isMetricsLoading || isHourlyLoading}
           />
         </div>
       </section>
