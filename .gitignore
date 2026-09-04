@@ -48,6 +48,7 @@ prisma/migrations
 # cache
 .cache
 .turbo
+*.tsbuildinfo
 
 # lock files (optional depending on team)
 # package-lock.json

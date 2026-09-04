@@ -37,7 +37,15 @@ export function setupTray(mainWindow: BrowserWindow) {
       {
         label: 'Check for Updates',
         click: () => {
-          autoUpdater.checkForUpdatesAndNotify();
+          if (mainWindow && !mainWindow.isDestroyed()) {
+            if (mainWindow.isMinimized()) mainWindow.restore();
+            if (!mainWindow.isVisible()) mainWindow.show();
+            mainWindow.focus();
+            mainWindow.webContents.send('updater:open-modal');
+          }
+          autoUpdater.checkForUpdatesAndNotify().catch((err) => {
+            logger.error(`Tray update check failed: ${err}`);
+          });
         }
       },
       {

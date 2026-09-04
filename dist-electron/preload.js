@@ -24,7 +24,8 @@ var ALLOWED_CHANNELS = [
   "updater:available",
   "updater:error",
   "updater:progress",
-  "updater:downloaded"
+  "updater:downloaded",
+  "updater:open-modal"
 ];
 function isAllowedChannel(channel) {
   return ALLOWED_CHANNELS.includes(channel);
@@ -66,7 +67,8 @@ var electronAPI = {
   },
   updater: {
     checkForUpdates: () => import_electron.ipcRenderer.invoke("updater:check"),
-    installUpdate: () => import_electron.ipcRenderer.invoke("updater:install")
+    installUpdate: () => import_electron.ipcRenderer.invoke("updater:install"),
+    getState: () => import_electron.ipcRenderer.invoke("updater:getState")
   }
 };
 import_electron.contextBridge.exposeInMainWorld("electron", electronAPI);

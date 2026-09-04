@@ -54,6 +54,7 @@ export interface ElectronAPI {
   updater: {
     checkForUpdates: () => Promise<any>;
     installUpdate: () => Promise<void>;
+    getState: () => Promise<{ status: string; progress?: any; version?: string; currentAppVersion: string; error?: string; isCheckingOrDownloading: boolean }>;
   };
 }
 
@@ -67,7 +68,8 @@ const ALLOWED_CHANNELS = [
   "updater:available",
   "updater:error",
   "updater:progress",
-  "updater:downloaded"
+  "updater:downloaded",
+  "updater:open-modal"
 ] as const;
 type AllowedChannel = (typeof ALLOWED_CHANNELS)[number];
 
@@ -122,7 +124,8 @@ const electronAPI: ElectronAPI = {
 
   updater: {
     checkForUpdates: () => ipcRenderer.invoke('updater:check'),
-    installUpdate: () => ipcRenderer.invoke('updater:install')
+    installUpdate: () => ipcRenderer.invoke('updater:install'),
+    getState: () => ipcRenderer.invoke('updater:getState')
   }
 };
 

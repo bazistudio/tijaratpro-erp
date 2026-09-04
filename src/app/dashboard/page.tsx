@@ -38,7 +38,8 @@ export default function DashboardPage() {
         router.replace("/dashboard/staff");
         break;
       default:
-        router.replace("/auth/login");
+        console.warn("[DashboardPage] Unknown user role, routing to shop-admin:", user?.role);
+        router.replace("/dashboard/shop-admin");
     }
   }, [router, user, isHydrated]);
 

@@ -33,10 +33,17 @@ export default function AuthHydrator() {
         try {
           // Fetch fresh user data from backend via tp_token cookie
           const freshUser = await getMeUser();
-          setAuth(freshUser, session); // updates with fresh data
-        } catch {
-          // Token invalid or expired — backend returned 401
-          logout(); // clears state and redirects
+          if (freshUser) {
+            setAuth(freshUser, session); // updates with fresh data
+          }
+        } catch (err: any) {
+          // Token invalid or expired — backend explicitly returned 401
+          if (err?.response?.status === 401) {
+            logout(); // clears state and redirects
+          } else {
+            // Transient error / network blip — keep hydrated session
+            console.warn("[AuthHydrator] Could not refresh user profile, retaining cached session:", err?.message);
+          }
         }
       } else {
         // No session or expired — mark hydrated so dashboard can redirect

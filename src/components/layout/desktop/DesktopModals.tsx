@@ -2,8 +2,10 @@ import React, { useEffect, useState } from 'react';
 
 import { useAuthStore } from '@/lib/auth/core/auth.store';
 
+import { UpdateModal } from './UpdateModal';
+
 type DesktopModalsProps = {
-  activeModal: 'SHORTCUTS' | 'SYSINFO' | 'ABOUT' | 'COMING_SOON' | 'DOCS' | 'SUPPORT' | null;
+  activeModal: 'SHORTCUTS' | 'SYSINFO' | 'ABOUT' | 'COMING_SOON' | 'DOCS' | 'SUPPORT' | 'UPDATES' | null;
   onClose: () => void;
 };
 
@@ -19,6 +21,10 @@ export const DesktopModals = ({ activeModal, onClose }: DesktopModalsProps) => {
   }, [activeModal]);
 
   if (!activeModal) return null;
+
+  if (activeModal === 'UPDATES') {
+    return <UpdateModal isOpen={true} onClose={onClose} />;
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">

@@ -650,25 +650,59 @@ function setupUpdater(mainWindow2) {
     isUpdaterInitialized = true;
     import_electron_updater2.autoUpdater.on("checking-for-update", () => {
       logger.info("Updater: Checking for updates...");
+      currentStatus = "checking";
+      lastError = null;
+      if (mainWindow2 && !mainWindow2.isDestroyed()) {
+        mainWindow2.webContents.send("updater:status", "checking");
+      }
     });
     import_electron_updater2.autoUpdater.on("update-available", (info) => {
       logger.info(`Updater: Update available: version ${info.version}`);
+      currentStatus = "downloading";
+      currentVersion = info.version;
+      lastError = null;
+      if (mainWindow2 && !mainWindow2.isDestroyed()) {
+        mainWindow2.webContents.send("updater:available", info);
+      }
     });
     import_electron_updater2.autoUpdater.on("update-not-available", () => {
       logger.info("Updater: App is up to date.");
+      isCheckingOrDownloading = false;
+      currentStatus = "up-to-date";
+      lastError = null;
+      if (mainWindow2 && !mainWindow2.isDestroyed()) {
+        mainWindow2.webContents.send("updater:status", "up-to-date");
+      }
     });
     import_electron_updater2.autoUpdater.on("error", (err) => {
+      isCheckingOrDownloading = false;
+      currentStatus = "error";
+      lastError = err.message || "Update check failed";
       logger.error(`Updater Error (App version: ${import_electron14.app.getVersion()}): ${err.message}`);
       if (err.stack) {
         logger.error(`Updater Stack Trace: ${err.stack}`);
       }
+      if (mainWindow2 && !mainWindow2.isDestroyed()) {
+        mainWindow2.webContents.send("updater:error", lastError);
+      }
     });
     import_electron_updater2.autoUpdater.on("download-progress", (progressObj) => {
+      currentStatus = "downloading";
+      currentProgress = progressObj;
       const percent = Math.round(progressObj.percent);
       logger.info(`Updater: Downloading update... ${percent}%`);
+      if (mainWindow2 && !mainWindow2.isDestroyed()) {
+        mainWindow2.webContents.send("updater:progress", progressObj);
+      }
     });
     import_electron_updater2.autoUpdater.on("update-downloaded", (info) => {
+      isCheckingOrDownloading = false;
+      currentStatus = "downloaded";
+      currentVersion = info.version;
       logger.info(`Updater: Update downloaded: version ${info.version}`);
+      if (mainWindow2 && !mainWindow2.isDestroyed()) {
+        mainWindow2.webContents.send("updater:downloaded", info);
+      }
       import_electron14.dialog.showMessageBox(mainWindow2, {
         type: "info",
         title: "TijaratPro Update Ready",
@@ -686,9 +720,36 @@ function setupUpdater(mainWindow2) {
   if (import_electron14.ipcMain.listenerCount("updater:check") > 0) {
     import_electron14.ipcMain.removeHandler("updater:check");
   }
-  import_electron14.ipcMain.handle("updater:check", () => {
+  import_electron14.ipcMain.handle("updater:check", async () => {
     logger.info("Updater: Manual update check requested via IPC");
-    return import_electron_updater2.autoUpdater.checkForUpdatesAndNotify();
+    if (isCheckingOrDownloading) {
+      logger.info("Updater: Update check or download already in progress. Re-using active task.");
+      return { status: currentStatus, inProgress: true };
+    }
+    try {
+      isCheckingOrDownloading = true;
+      currentStatus = "checking";
+      lastError = null;
+      return await import_electron_updater2.autoUpdater.checkForUpdatesAndNotify();
+    } catch (err) {
+      isCheckingOrDownloading = false;
+      currentStatus = "error";
+      lastError = err.message;
+      return { status: "error", error: err.message };
+    }
+  });
+  if (import_electron14.ipcMain.listenerCount("updater:getState") > 0) {
+    import_electron14.ipcMain.removeHandler("updater:getState");
+  }
+  import_electron14.ipcMain.handle("updater:getState", () => {
+    return {
+      status: currentStatus,
+      progress: currentProgress,
+      version: currentVersion,
+      currentAppVersion: import_electron14.app.getVersion(),
+      error: lastError,
+      isCheckingOrDownloading
+    };
   });
   if (import_electron14.ipcMain.listenerCount("updater:install") > 0) {
     import_electron14.ipcMain.removeHandler("updater:install");
@@ -698,7 +759,7 @@ function setupUpdater(mainWindow2) {
     performGracefulQuitAndInstall();
   });
 }
-var import_electron_updater2, import_electron14, isUpdaterInitialized;
+var import_electron_updater2, import_electron14, isUpdaterInitialized, isCheckingOrDownloading, currentStatus, currentProgress, currentVersion, lastError;
 var init_updater = __esm({
   "electron/updater.ts"() {
     "use strict";
@@ -708,6 +769,11 @@ var init_updater = __esm({
     init_syncEngine();
     init_db();
     isUpdaterInitialized = false;
+    isCheckingOrDownloading = false;
+    currentStatus = "idle";
+    currentProgress = null;
+    currentVersion = null;
+    lastError = null;
   }
 });
 
@@ -1542,7 +1608,15 @@ function setupTray(mainWindow2) {
       {
         label: "Check for Updates",
         click: () => {
-          import_electron_updater.autoUpdater.checkForUpdatesAndNotify();
+          if (mainWindow2 && !mainWindow2.isDestroyed()) {
+            if (mainWindow2.isMinimized()) mainWindow2.restore();
+            if (!mainWindow2.isVisible()) mainWindow2.show();
+            mainWindow2.focus();
+            mainWindow2.webContents.send("updater:open-modal");
+          }
+          import_electron_updater.autoUpdater.checkForUpdatesAndNotify().catch((err) => {
+            logger.error(`Tray update check failed: ${err}`);
+          });
         }
       },
       {

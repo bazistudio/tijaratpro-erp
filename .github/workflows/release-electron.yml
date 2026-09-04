@@ -4,7 +4,12 @@ on:
   push:
     tags:
       - 'v*'
-  workflow_dispatch: # Trigger on version tags like v0.1.0, v1.0.0, etc.
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to build (must match v + package.json version, e.g. v0.1.4)'
+        required: false
+        default: ''
 
 jobs:
   release:
@@ -25,12 +30,117 @@ jobs:
           cache: 'npm'
           cache-dependency-path: package-lock.json
 
+      - name: Validate Release Tag & Version
+        shell: bash
+        env:
+          INPUT_TAG: ${{ github.event.inputs.tag }}
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          node -e '
+            const fs = require("fs");
+            const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
+            const expectedTag = "v" + pkg.version;
+            const inputTag = process.env.INPUT_TAG;
+            const refType = process.env.REF_TYPE;
+            const refName = process.env.REF_NAME;
+            const actualTag = inputTag || (refType === "tag" ? refName : null);
+
+            if (!actualTag) {
+              console.error("ERROR: Release workflow must be triggered by a git tag (e.g. " + expectedTag + ") or workflow_dispatch with a tag input.");
+              process.exit(1);
+            }
+
+            if (actualTag !== expectedTag) {
+              console.error("\n========================================");
+              console.error("Release tag/version mismatch!");
+              console.error("Git tag:      " + actualTag);
+              console.error("package.json: " + pkg.version);
+              console.error("Expected tag: " + expectedTag);
+              console.error("========================================\n");
+              process.exit(1);
+            }
+
+            console.log("✓ Tag and package.json version verified: " + actualTag);
+          '
+
       - name: Install dependencies
         run: npm ci
 
-      - name: Build Next.js and Release Electron
+      - name: Build Next.js and Release Electron (NSIS)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NEXT_PUBLIC_API_URL: https://tijaratpro-api-598374253827.asia-south1.run.app
-        run: npm run release
+        run: |
+          npm run build:export
+          npm run build:electron
+          npx electron-builder --win nsis --publish always
+
+      - name: Verify GitHub Release Artifacts
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          node -e '
+            const https = require("https");
+            const fs = require("fs");
+            const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
+            const version = pkg.version;
+            const tag = "v" + version;
+            const owner = "bazistudio";
+            const repo = "tijaratpro-erp";
+
+            const expectedFiles = [
+              `TijaratPro-Setup-${version}.exe`,
+              `TijaratPro-Setup-${version}.exe.blockmap`,
+              "latest.yml"
+            ];
+
+            console.log(`Verifying published release assets on GitHub for ${tag}...`);
+
+            const options = {
+              hostname: "api.github.com",
+              path: `/repos/${owner}/${repo}/releases/tags/${tag}`,
+              method: "GET",
+              headers: {
+                "User-Agent": "Release-Verifier",
+                "Authorization": `Bearer ${process.env.GH_TOKEN}`,
+                "Accept": "application/vnd.github.v3+json"
+              }
+            };
+
+            const req = https.request(options, (res) => {
+              let data = "";
+              res.on("data", chunk => data += chunk);
+              res.on("end", () => {
+                if (res.statusCode !== 200) {
+                  console.error(`Failed to fetch release ${tag}: HTTP ${res.statusCode}`);
+                  process.exit(1);
+                }
+
+                const release = JSON.parse(data);
+                const assetNames = (release.assets || []).map(a => a.name);
+                console.log("Published assets found on GitHub Release:", assetNames);
+
+                const missing = expectedFiles.filter(f => !assetNames.includes(f));
+                if (missing.length > 0) {
+                  console.error("\n========================================");
+                  console.error("RELEASE VERIFICATION FAILED!");
+                  console.error("Missing required release assets:", missing);
+                  console.error("Found assets:", assetNames);
+                  console.error("========================================\n");
+                  process.exit(1);
+                }
+
+                console.log("\n✓ All required production release assets verified on GitHub Release:", expectedFiles);
+              });
+            });
+
+            req.on("error", err => {
+              console.error("Verification network error:", err.message);
+              process.exit(1);
+            });
+
+            req.end();
+          '
 

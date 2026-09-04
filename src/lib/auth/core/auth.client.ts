@@ -12,7 +12,17 @@ export interface LoginResponse {
   expiresIn?: number; // seconds
 }
 
-// cookie logic removed since backend handles tp_token
+// ─── Cookie helpers (needed so Next.js middleware can read tp_token) ──────────
+
+function setTokenCookie(token: string, expiresIn: number) {
+  if (typeof document === "undefined") return;
+  document.cookie = `tp_token=${token}; path=/; max-age=${expiresIn}; SameSite=Lax`;
+}
+
+function clearTokenCookie() {
+  if (typeof document === "undefined") return;
+  document.cookie = "tp_token=; path=/; max-age=0; SameSite=Lax";
+}
 
 // ─── Main login ───────────────────────────────────────────────────────────────
 
@@ -46,6 +56,9 @@ export async function loginUser(identifier: string, password: string) {
   // 1. store full session in localStorage
   setSession(session);
 
+  // 2. set cookie so Next.js middleware can gate /dashboard
+  setTokenCookie(data.token, expiresIn);
+
   return {
     user: data.user,
     token: data.token,
@@ -60,6 +73,7 @@ export async function loginUser(identifier: string, password: string) {
  */
 export function logoutUser() {
   clearSession();
+  clearTokenCookie();
 }
 
 /**

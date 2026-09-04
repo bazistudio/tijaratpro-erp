@@ -9,13 +9,25 @@ import { useGlobalShortcuts } from '../../../hooks/useGlobalShortcuts';
 
 export const DesktopShell = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
-  const [activeModal, setActiveModal] = useState<'SHORTCUTS' | 'SYSINFO' | 'ABOUT' | 'COMING_SOON' | 'DOCS' | 'SUPPORT' | null>(null);
+  const [activeModal, setActiveModal] = useState<'SHORTCUTS' | 'SYSINFO' | 'ABOUT' | 'COMING_SOON' | 'DOCS' | 'SUPPORT' | 'UPDATES' | null>(null);
 
   const runningInElectron = isElectron();
   const [mounted, setMounted] = useState(false);
 
   React.useEffect(() => {
     setMounted(true);
+
+    if (!window.electron) return;
+    const handleOpenModal = () => setActiveModal('UPDATES');
+    window.electron.on('updater:open-modal', handleOpenModal);
+    window.electron.on('updater:downloaded', handleOpenModal);
+
+    return () => {
+      if (window.electron) {
+        window.electron.off('updater:open-modal', handleOpenModal);
+        window.electron.off('updater:downloaded', handleOpenModal);
+      }
+    };
   }, []);
 
   const handleAction = (action: string) => {
@@ -68,7 +80,10 @@ export const DesktopShell = ({ children }: { children: React.ReactNode }) => {
 
       // System
       case 'CHECK_UPDATES':
-        if (window.electron) window.electron.updater.checkForUpdates();
+        setActiveModal('UPDATES');
+        if (window.electron?.updater?.checkForUpdates) {
+          window.electron.updater.checkForUpdates();
+        }
         break;
       case 'OPEN_DOCS':
         setActiveModal('DOCS');
